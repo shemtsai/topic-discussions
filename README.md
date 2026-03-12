@@ -11,7 +11,8 @@ Each activity is deployed via **GitHub Pages** and can be accessed using its HTM
 **Examples:**
 
 - `spectrum.html` → [https://shemtsai.github.io/topic-discussions/spectrum](https://shemtsai.github.io/topic-discussions/spectrum)  
-
+- `Staph_aureus_bacteremia.html` → [https://shemtsai.github.io/topic-discussions/spectrum](https://shemtsai.github.io/topic-discussions/Staph_aureus_bacteremia)
+  
 ## How to Use
 
 1. Open the activity in your browser using the deployed GitHub Pages link.  
