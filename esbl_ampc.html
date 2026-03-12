@@ -3,31 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pharmacy Wheel of Knowledge</title>
+<title>Wheel of Knowledge: 1v1 Pharmacy Challenge</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #f7f9fc; margin:0; padding:0; text-align:center; }
-  header { background: #0052cc; color: white; padding:1rem; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f0f4f8; margin:0; padding:0; text-align:center; }
+  header { background:#1a73e8; color:white; padding:1rem; }
+  header h1 { margin:0; font-size:2rem; }
   main { padding:1rem; max-width:1000px; margin:auto; }
-  select, button { margin:0.5rem; padding:0.5rem; font-size:1rem; }
-  #wheel-container { margin: 2rem auto; position: relative; width: 400px; height: 400px; }
-  #wheel { width: 100%; height: 100%; border-radius: 50%; border:5px solid #0052cc; box-shadow:0 0 10px rgba(0,0,0,0.2); transition: transform 5s cubic-bezier(0.33,1,0.68,1); }
+  select, button { margin:0.5rem; padding:0.6rem 1rem; font-size:1rem; border-radius:5px; border:1px solid #ccc; cursor:pointer; }
+  button:hover { background:#1a73e8; color:white; border-color:#1a73e8; }
+  #wheel-container { margin: 2rem auto; position: relative; width:400px; height:400px; }
+  #wheel { width: 100%; height:100%; border-radius:50%; border:5px solid #1a73e8; box-shadow:0 0 15px rgba(0,0,0,0.2); transition: transform 5s cubic-bezier(0.33,1,0.68,1); }
   #pointer { position:absolute; top:-10px; left:50%; width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:30px solid red; transform:translateX(-50%); z-index:2; }
   .question-card { border:1px solid #ccc; background:white; padding:1rem; margin-top:1rem; border-radius:8px; text-align:left; }
   .answer { display:none; margin-top:0.5rem; background:#e6f0ff; padding:0.5rem; border-radius:5px; }
-  .score { font-weight:bold; margin-top:1rem; font-size:1.2rem; }
+  .scoreboard { display:flex; justify-content:center; gap:3rem; margin-top:1rem; font-size:1.2rem; }
+  .turn { margin-top:1rem; font-size:1.2rem; font-weight:bold; color:#d32f2f; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Pharmacy Wheel of Knowledge</h1>
-  <p>Test your antimicrobial stewardship & microbiology knowledge!</p>
+  <h1>Wheel of Knowledge: 1v1 Pharmacy Challenge</h1>
+  <p>Spin, answer, and outscore your opponent!</p>
 </header>
 
 <main>
-  <label for="category">Select Category:</label>
+  <label for="category">Category:</label>
   <select id="category"><option value="All">All</option></select>
-  <label for="difficulty">Select Difficulty:</label>
+  <label for="difficulty">Difficulty:</label>
   <select id="difficulty"><option value="All">All</option></select>
   <button onclick="filterQuestions()">Filter Questions</button>
 
@@ -37,12 +40,17 @@
   </div>
   <button onclick="spinWheel()">Spin the Wheel!</button>
 
+  <div class="turn" id="turnIndicator">Player 1's Turn</div>
   <div id="question-container"></div>
-  <div class="score">Score: <span id="score">0</span></div>
+  
+  <div class="scoreboard">
+    <div>Player 1 Score: <span id="score1">0</span></div>
+    <div>Player 2 Score: <span id="score2">0</span></div>
+  </div>
 </main>
 
 <script>
-// All 25 questions
+// Questions array (all 25 questions)
 const questions = [
   { category:"Resistance Mechanisms", difficulty:"PGY1", question:"What is the key phenotypic difference that distinguishes AmpC β-lactamases from ESBLs in terms of susceptibility to β-lactamase inhibitors?", answer:"AmpC β-lactamases are NOT inhibited by clavulanic acid or tazobactam, whereas ESBLs ARE inhibited by these β-lactamase inhibitors. AmpC enzymes also resist cephamycins (e.g., cefoxitin), unlike ESBLs.", references:"Macesic et al., Lancet 2025; IDSA 2023/2024 Guidance" },
   { category:"Clinical Trials", difficulty:"PGY1", question:"In the MERINO trial comparing piperacillin-tazobactam to meropenem for ESBL-producing Enterobacterales bloodstream infections, which agent had lower 30-day mortality?", answer:"Meropenem (4% mortality vs 12% with piperacillin-tazobactam)", references:"IDSA 2023 Guidance on AMR Gram-Negative Infections" },
@@ -71,16 +79,17 @@ const questions = [
   { category:"Clinical Vignette", difficulty:"PGY1", question:"A 45-year-old man with uncomplicated cystitis due to Enterobacter cloacae (AmpC-producer) presents to urgent care. The organism is susceptible to nitrofurantoin, TMP-SMX, and ciprofloxacin. Which agent would you recommend for outpatient oral therapy?", answer:"Nitrofurantoin or TMP-SMX (ciprofloxacin is also acceptable)", references:"IDSA 2023 Guidance on AMR Gram-Negative Infections" }
 ];
 
+// Player state
+let playerTurn = 1;
+let score1 = 0;
+let score2 = 0;
+let filteredQuestions = [...questions];
+
 // Populate dropdowns
 const categorySelect = document.getElementById("category");
 const difficultySelect = document.getElementById("difficulty");
-const uniqueCategories = [...new Set(questions.map(q=>q.category))];
-uniqueCategories.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;categorySelect.appendChild(o);});
-const uniqueDiffs = [...new Set(questions.map(q=>q.difficulty))];
-uniqueDiffs.forEach(d=>{const o=document.createElement("option");o.value=d;o.textContent=d;difficultySelect.appendChild(o);});
-
-let filteredQuestions = [...questions];
-let score = 0;
+[...new Set(questions.map(q=>q.category))].forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;categorySelect.appendChild(o);});
+[...new Set(questions.map(q=>q.difficulty))].forEach(d=>{const o=document.createElement("option");o.value=d;o.textContent=d;difficultySelect.appendChild(o);});
 
 function filterQuestions(){
   const cat=categorySelect.value, diff=difficultySelect.value;
@@ -102,7 +111,7 @@ function drawWheel(){
     ctx.beginPath();
     ctx.moveTo(200,200);
     ctx.arc(200,200,200,i*sliceAngle,(i+1)*sliceAngle);
-    ctx.fillStyle=i%2===0?"#0052cc":"#66a3ff";
+    ctx.fillStyle=i%2===0?"#1a73e8":"#66a3ff";
     ctx.fill();ctx.stroke();
     ctx.save();
     ctx.translate(200,200);ctx.rotate((i+0.5)*sliceAngle);ctx.textAlign="right";ctx.fillStyle="white";ctx.font="bold 14px Arial";
@@ -117,8 +126,9 @@ function spinWheel(){
   const spins= Math.floor(Math.random()*3)+3;
   const extra = Math.random()*360;
   const angleDeg = spins*360 + extra;
+  canvas.style.transition="transform 5s cubic-bezier(0.33,1,0.68,1)";
   canvas.style.transform = `rotate(${angleDeg}deg)`;
-  setTimeout(()=>{displayQuestion(angleDeg);spinning=false;},5000);
+  setTimeout(()=>{displayQuestion(angleDeg); spinning=false;},5000);
 }
 
 function displayQuestion(angleDeg){
@@ -130,6 +140,7 @@ function displayQuestion(angleDeg){
   container.innerHTML=`
     <div class="question-card">
       <strong>Category:</strong> ${q.category}<br>
+      <strong>Difficulty:</strong> ${q.difficulty}<br>
       <strong>Question:</strong> ${q.question}<br>
       <button onclick="revealAnswer(this)">Reveal Answer</button>
       <div class="answer">${q.answer}<br><em>References: ${q.references}</em></div>
@@ -138,10 +149,4 @@ function displayQuestion(angleDeg){
 }
 
 function revealAnswer(button){
-  const answerDiv=button.nextElementSibling;
-  if(answerDiv.style.display==="none"||answerDiv.style.display===""){answerDiv.style.display="block"; score+=1; document.getElementById("score").textContent=score;}
-}
-</script>
-
-</body>
-</html>
+  const answerDiv=button
