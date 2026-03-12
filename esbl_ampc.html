@@ -1,3 +1,57 @@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+
+canvas.width = 400;
+canvas.height = 400;
+
+const questions = [
+  {category:"Category 1"},
+  {category:"Category 2"},
+  {category:"Category 3"},
+  {category:"Category 4"},
+  {category:"Category 5"}
+];
+
+function drawWheel() {
+
+  const slices = questions.length;
+  const sliceAngle = 2 * Math.PI / slices;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < slices; i++) {
+
+    ctx.beginPath();
+    ctx.moveTo(200, 200);
+    ctx.arc(200, 200, 200, i * sliceAngle, (i + 1) * sliceAngle);
+
+    ctx.fillStyle = i % 2 === 0 ? "#1a73e8" : "#66a3ff";
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(200, 200);
+    ctx.rotate((i + 0.5) * sliceAngle);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "white";
+    ctx.font = "bold 14px Arial";
+
+    ctx.fillText(questions[i].category, 190, 0);
+
+    ctx.restore();
+  }
+}
+
+drawWheel();
+
+});
+</script>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,3 +219,4 @@ function revealAnswer(button) {
 </script>
 </body>
 </html>
+
