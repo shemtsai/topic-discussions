@@ -11,7 +11,6 @@ Each activity is deployed via **GitHub Pages** and can be accessed using its HTM
 **Examples:**
 
 - `spectrum.html` → [https://shemtsai.github.io/topic-discussions/spectrum](https://shemtsai.github.io/topic-discussions/spectrum)  
-- `wheel-of-knowledge.html` → [https://shemtsai.github.io/topic-discussions/wheel-of-knowledge](https://shemtsai.github.io/topic-discussions/wheel-of-knowledge)  
 
 ## How to Use
 
