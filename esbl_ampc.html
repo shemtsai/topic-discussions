@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wheel of Knowledge: 1v1 Pharmacy Challenge</title>
+<title>Wheel of Knowledge 1v1</title>
 <style>
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f0f4f8; margin:0; padding:0; text-align:center; }
-  header { background:#1a73e8; color:white; padding:1rem; }
-  header h1 { margin:0; font-size:2rem; }
-  main { padding:1rem; max-width:1000px; margin:auto; }
-  select, button { margin:0.5rem; padding:0.6rem 1rem; font-size:1rem; border-radius:5px; border:1px solid #ccc; cursor:pointer; }
-  button:hover { background:#1a73e8; color:white; border-color:#1a73e8; }
-  #wheel-container { margin: 2rem auto; position: relative; width:400px; height:400px; }
-  #wheel { width: 100%; height:100%; border-radius:50%; border:5px solid #1a73e8; box-shadow:0 0 15px rgba(0,0,0,0.2); transition: transform 5s cubic-bezier(0.33,1,0.68,1); }
-  #pointer { position:absolute; top:-10px; left:50%; width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:30px solid red; transform:translateX(-50%); z-index:2; }
-  .question-card { border:1px solid #ccc; background:white; padding:1rem; margin-top:1rem; border-radius:8px; text-align:left; }
-  .answer { display:none; margin-top:0.5rem; background:#e6f0ff; padding:0.5rem; border-radius:5px; }
-  .scoreboard { display:flex; justify-content:center; gap:3rem; margin-top:1rem; font-size:1.2rem; }
-  .turn { margin-top:1rem; font-size:1.2rem; font-weight:bold; color:#d32f2f; }
+body { font-family: 'Segoe UI', sans-serif; background:#f0f4f8; margin:0; padding:0; text-align:center; }
+header { background:#1a73e8; color:white; padding:1rem; }
+header h1 { margin:0; font-size:2rem; }
+main { padding:1rem; max-width:800px; margin:auto; }
+select, button { margin:0.5rem; padding:0.6rem 1rem; font-size:1rem; border-radius:5px; border:1px solid #ccc; cursor:pointer; }
+button:hover { background:#1a73e8; color:white; border-color:#1a73e8; }
+#wheel-container { margin:2rem auto; position: relative; width:400px; height:400px; }
+#wheel { width:100%; height:100%; border-radius:50%; border:5px solid #1a73e8; box-shadow:0 0 15px rgba(0,0,0,0.2); transition: transform 5s cubic-bezier(0.33,1,0.68,1); }
+#pointer { position:absolute; top:-10px; left:50%; width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:30px solid red; transform:translateX(-50%); z-index:2; }
+.question-card { border:1px solid #ccc; background:white; padding:1rem; margin-top:1rem; border-radius:8px; text-align:left; }
+.answer { display:none; margin-top:0.5rem; background:#e6f0ff; padding:0.5rem; border-radius:5px; }
+.scoreboard { display:flex; justify-content:center; gap:3rem; margin-top:1rem; font-size:1.2rem; }
+.turn { margin-top:1rem; font-size:1.2rem; font-weight:bold; color:#d32f2f; }
 </style>
 </head>
 <body>
@@ -28,12 +28,6 @@
 </header>
 
 <main>
-  <label for="category">Category:</label>
-  <select id="category"><option value="All">All</option></select>
-  <label for="difficulty">Difficulty:</label>
-  <select id="difficulty"><option value="All">All</option></select>
-  <button onclick="filterQuestions()">Filter Questions</button>
-
   <div id="wheel-container">
     <div id="pointer"></div>
     <canvas id="wheel"></canvas>
@@ -79,74 +73,95 @@ const questions = [
   { category:"Clinical Vignette", difficulty:"PGY1", question:"A 45-year-old man with uncomplicated cystitis due to Enterobacter cloacae (AmpC-producer) presents to urgent care. The organism is susceptible to nitrofurantoin, TMP-SMX, and ciprofloxacin. Which agent would you recommend for outpatient oral therapy?", answer:"Nitrofurantoin or TMP-SMX (ciprofloxacin is also acceptable)", references:"IDSA 2023 Guidance on AMR Gram-Negative Infections" }
 ];
 
-// Player state
+// Game state
+// -----------------------------
 let playerTurn = 1;
 let score1 = 0;
 let score2 = 0;
 let filteredQuestions = [...questions];
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+canvas.width = 400;
+canvas.height = 400;
+let spinning = false;
 
-// Populate dropdowns
-const categorySelect = document.getElementById("category");
-const difficultySelect = document.getElementById("difficulty");
-[...new Set(questions.map(q=>q.category))].forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;categorySelect.appendChild(o);});
-[...new Set(questions.map(q=>q.difficulty))].forEach(d=>{const o=document.createElement("option");o.value=d;o.textContent=d;difficultySelect.appendChild(o);});
+// -----------------------------
+// Draw the wheel
+// -----------------------------
+function drawWheel() {
+  const slices = filteredQuestions.length;
+  const sliceAngle = 2 * Math.PI / slices;
+  ctx.clearRect(0, 0, 400, 400);
 
-function filterQuestions(){
-  const cat=categorySelect.value, diff=difficultySelect.value;
-  filteredQuestions = questions.filter(q=>(cat==="All"||q.category===cat)&&(diff==="All"||q.difficulty===diff));
-  drawWheel();
-}
-
-// Wheel setup
-const canvas=document.getElementById("wheel");
-const ctx=canvas.getContext("2d");
-canvas.width=400;canvas.height=400;
-let spinning=false;
-
-function drawWheel(){
-  const slices=filteredQuestions.length;
-  const sliceAngle=2*Math.PI/slices;
-  ctx.clearRect(0,0,400,400);
-  for(let i=0;i<slices;i++){
+  for (let i = 0; i < slices; i++) {
     ctx.beginPath();
-    ctx.moveTo(200,200);
-    ctx.arc(200,200,200,i*sliceAngle,(i+1)*sliceAngle);
-    ctx.fillStyle=i%2===0?"#1a73e8":"#66a3ff";
-    ctx.fill();ctx.stroke();
+    ctx.moveTo(200, 200);
+    ctx.arc(200, 200, 200, i * sliceAngle, (i + 1) * sliceAngle);
+    ctx.fillStyle = i % 2 === 0 ? "#1a73e8" : "#66a3ff";
+    ctx.fill();
+    ctx.stroke();
     ctx.save();
-    ctx.translate(200,200);ctx.rotate((i+0.5)*sliceAngle);ctx.textAlign="right";ctx.fillStyle="white";ctx.font="bold 14px Arial";
-    ctx.fillText(filteredQuestions[i].category,190,0);ctx.restore();
+    ctx.translate(200, 200);
+    ctx.rotate((i + 0.5) * sliceAngle);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "white";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText(filteredQuestions[i].category, 190, 0);
+    ctx.restore();
   }
 }
 drawWheel();
 
-function spinWheel(){
-  if(spinning||filteredQuestions.length===0) return;
-  spinning=true;
-  const spins= Math.floor(Math.random()*3)+3;
-  const extra = Math.random()*360;
-  const angleDeg = spins*360 + extra;
-  canvas.style.transition="transform 5s cubic-bezier(0.33,1,0.68,1)";
+// -----------------------------
+// Spin the wheel
+// -----------------------------
+function spinWheel() {
+  if (spinning || filteredQuestions.length === 0) return;
+  spinning = true;
+  const spins = Math.floor(Math.random() * 3) + 3;
+  const extra = Math.random() * 360;
+  const angleDeg = spins * 360 + extra;
+  canvas.style.transition = "transform 5s cubic-bezier(0.33,1,0.68,1)";
   canvas.style.transform = `rotate(${angleDeg}deg)`;
-  setTimeout(()=>{displayQuestion(angleDeg); spinning=false;},5000);
+  setTimeout(() => { displayQuestion(angleDeg); spinning = false; }, 5000);
 }
 
-function displayQuestion(angleDeg){
-  const slices=filteredQuestions.length;
-  const sliceDeg=360/slices;
-  const index = slices - Math.floor(((angleDeg%360)/sliceDeg)) -1;
-  const q=filteredQuestions[index];
-  const container=document.getElementById("question-container");
-  container.innerHTML=`
+// -----------------------------
+// Display selected question
+// -----------------------------
+function displayQuestion(angleDeg) {
+  const slices = filteredQuestions.length;
+  const sliceDeg = 360 / slices;
+  const index = slices - Math.floor(((angleDeg % 360) / sliceDeg)) - 1;
+  const q = filteredQuestions[index];
+  const container = document.getElementById("question-container");
+  container.innerHTML = `
     <div class="question-card">
       <strong>Category:</strong> ${q.category}<br>
       <strong>Difficulty:</strong> ${q.difficulty}<br>
       <strong>Question:</strong> ${q.question}<br>
       <button onclick="revealAnswer(this)">Reveal Answer</button>
-      <div class="answer">${q.answer}<br><em>References: ${q.references}</em></div>
+      <div class="answer">${q.answer}</div>
     </div>
   `;
 }
 
-function revealAnswer(button){
-  const answerDiv=button
+// -----------------------------
+// Reveal answer and update score
+// -----------------------------
+function revealAnswer(button) {
+  const answerDiv = button.nextElementSibling;
+  answerDiv.style.display = "block";
+  button.disabled = true;
+
+  // Add points to current player
+  if (playerTurn === 1) { score1 += 1; document.getElementById("score1").textContent = score1; }
+  else { score2 += 1; document.getElementById("score2").textContent = score2; }
+
+  // Switch turn
+  playerTurn = playerTurn === 1 ? 2 : 1;
+  document.getElementById("turnIndicator").textContent = `Player ${playerTurn}'s Turn`;
+}
+</script>
+</body>
+</html>
