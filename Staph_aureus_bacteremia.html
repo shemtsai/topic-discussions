@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeopardy! - S. aureus Bacteremia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #6b21a8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 4rem;
+            color: #fbbf24;
+            font-family: serif;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .header p {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .reset-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #fbbf24;
+            color: #1e3a8a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: #f59e0b;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .category {
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .cat-0 { background: #2563eb; }
+        .cat-1 { background: #16a34a; }
+        .cat-2 { background: #9333ea; }
+        .cat-3 { background: #dc2626; }
+        .cat-4 { background: #eab308; }
+
+        .question-tile {
+            padding: 50px 20px;
+            text-align: center;
+            background: #1e40af;
+            color: #fbbf24;
+            font-size: 2.5rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            width: 100%;
+        }
+
+        .question-tile:hover:not(.answered) {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .question-tile.answered {
+            background: #172554;
+            color: #172554;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e40af;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #fbbf24;
+        }
+
+        .points {
+            text-align: center;
+            color: #fbbf24;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .answer-box {
+            background: #1e3a8a;
+            padding: 40px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-text {
+            color: white;
+            font-size: 1.8rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .question-box {
+            background: #15803d;
+            padding: 40px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            color: white;
+            font-size: 1.5rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .reference {
+            color: #86efac;
+            font-size: 1rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .reveal-btn, .continue-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .reveal-btn {
+            background: #fbbf24;
+            color: #1e3a8a;
+        }
+
+        .reveal-btn:hover {
+            background: #f59e0b;
+        }
+
+        .continue-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .continue-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .question-tile {
+                padding: 30px 10px;
+                font-size: 1.8rem;
+            }
+
+            .category {
+                font-size: 0.7rem;
+                padding: 15px 10px;
+            }
+
+            .answer-text {
+                font-size: 1.3rem;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>JEOPARDY!</h1>
+            <p>Staphylococcus aureus Bacteremia Edition</p>
+            <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="points" id="modalPoints"></div>
+            <div class="answer-box">
+                <p class="answer-text" id="answerText"></p>
+            </div>
+            <div id="answerSection">
+                <button class="reveal-btn" onclick="revealAnswer()">Reveal Answer</button>
+            </div>
+            <div id="questionSection" class="hidden">
+                <div class="question-box">
+                    <p class="question-text" id="questionText"></p>
+                    <p class="reference" id="referenceText"></p>
+                </div>
+                <button class="continue-btn" onclick="closeModal()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const categories = [
+            { name: "Clinical Presentation", class: "cat-0" },
+            { name: "First-Line Treatment", class: "cat-1" },
+            { name: "Diagnostics", class: "cat-2" },
+            { name: "Advanced Management", class: "cat-3" },
+            { name: "Special Scenarios", class: "cat-4" }
+        ];
+
+        const questions = {
+            100: [
+                { answer: "This percentage of patients with S. aureus bacteremia present with fever.", question: "What is approximately 73%?", ref: "[1]" },
+                { answer: "This is the recommended first-line antibiotic for methicillin-susceptible S. aureus bacteremia.", question: "What is cefazolin (or an antistaphylococcal penicillin)?", ref: "[1]" },
+                { answer: "This type of echocardiography detects endocarditis in 14-28% of S. aureus bacteremia cases, compared to 2-15% with transthoracic echo.", question: "What is transesophageal echocardiography (TEE)?", ref: "[2]" },
+                { answer: "This is the mortality rate associated with S. aureus bacteremia.", question: "What is approximately 25% (or 15-25%)?", ref: "[3][4]" },
+                { answer: "This finding should prompt consideration of underlying S. aureus bacteremia, especially in hospitalized patients.", question: "What is S. aureus bacteriuria?", ref: "[1]" }
+            ],
+            200: [
+                { answer: "These are the two first-line antibiotic choices for MRSA bacteremia.", question: "What are vancomycin and daptomycin?", ref: "[2][1]" },
+                { answer: "This duration of antibiotic therapy is recommended for uncomplicated, low-risk S. aureus bacteremia.", question: "What is 2 weeks (14 days)?", ref: "[1]" },
+                { answer: "This rapid diagnostic test reduces time to targeted therapy for S. aureus from 25.5 hours to this many hours.", question: "What is 5 hours?", ref: "[1]" },
+                { answer: "This percentage of S. aureus bacteremia cases have no identifiable source.", question: "What is approximately 20%?", ref: "[1]" },
+                { answer: "This antibiotic should NOT be used for methicillin-resistant S. aureus pneumonia despite being effective for bacteremia.", question: "What is daptomycin?", ref: "[1]" }
+            ],
+            300: [
+                { answer: "These are the five core interventions that should be performed for all cases of S. aureus bacteremia.", question: "What are appropriate anti-staphylococcal therapy, screening echocardiography, assessment for metastatic phenomena and source control, decision on duration of therapy, and Infectious Diseases consultation?", ref: "[3]" },
+                { answer: "This is the recommended cefazolin dosing interval for critically unwell patients with methicillin-susceptible S. aureus bacteremia.", question: "What is 2 g every 6 hours?", ref: "[1]" },
+                { answer: "These characteristics define low-risk patients in whom transesophageal echocardiography may be safely avoided.", question: "What are absence of permanent intracardiac device, sterile follow-up blood cultures within 4 days, no hemodialysis dependence, nosocomial acquisition, absence of secondary foci, and no clinical signs of endocarditis?", ref: "[2]" },
+                { answer: "This is the recommended vancomycin AUC target range for S. aureus bacteremia.", question: "What is 400-600?", ref: "[1]" },
+                { answer: "According to expert consensus, combination therapy with rifampin is only relevant in these two specific clinical scenarios in S. aureus bacteremia.", question: "What are prosthetic valve endocarditis and prosthetic joint infection?", ref: "[6]" }
+            ],
+            400: [
+                { answer: "This is the FDA-approved daptomycin dose for S. aureus bacteremia, though many clinicians favor higher dosing.", question: "What is 6 mg/kg once daily (with many using 8-10 mg/kg)?", ref: "[1]" },
+                { answer: "This recently FDA-approved cephalosporin has an indication for S. aureus bloodstream infections including right-sided endocarditis.", question: "What is ceftobiprole?", ref: "[5][1]" },
+                { answer: "This is the recommended duration of therapy for complicated, high-risk S. aureus bacteremia.", question: "What is 4 to 6 weeks?", ref: "[1]" },
+                { answer: "This is the median time reduction to reporting methicillin susceptibility when using rapid molecular diagnostic tests versus conventional microbiology.", question: "What is approximately 21.5 hours (from 25.4 hours to 3.9 hours)?", ref: "[1]" },
+                { answer: "This vancomycin minimum inhibitory concentration range, while still technically susceptible, is associated with worse clinical outcomes in both MRSA and MSSA bacteremia.", question: "What is 1.5-2 mg/L?", ref: "[7]" }
+            ]
+        };
+
+        let answeredQuestions = new Set();
+        let currentQuestion = null;
+
+        function initBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+
+            // Add category headers
+            categories.forEach((cat, i) => {
+                const catDiv = document.createElement('div');
+                catDiv.className = `category ${cat.class}`;
+                catDiv.textContent = cat.name;
+                board.appendChild(catDiv);
+            });
+
+            // Add question tiles
+            [100, 200, 300, 400].forEach(points => {
+                categories.forEach((_, catIndex) => {
+                    const key = `${points}-${catIndex}`;
+                    const button = document.createElement('button');
+                    button.className = 'question-tile';
+                    button.textContent = `$${points}`;
+                    button.onclick = () => openQuestion(points, catIndex, key);
+                    button.id = key;
+                    board.appendChild(button);
+                });
+            });
+        }
+
+        function openQuestion(points, index, key) {
+            if (answeredQuestions.has(key)) return;
+
+            currentQuestion = { points, index, key };
+            const q = questions[points][index];
+
+            document.getElementById('modalPoints').textContent = `$${points}`;
+            document.getElementById('answerText').textContent = q.answer;
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('referenceText').textContent = q.ref;
+
+            document.getElementById('answerSection').classList.remove('hidden');
+            document.getElementById('questionSection').classList.add('hidden');
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function revealAnswer() {
+            document.getElementById('answerSection').classList.add('hidden');
+            document.getElementById('questionSection').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            if (currentQuestion) {
+                answeredQuestions.add(currentQuestion.key);
+                const tile = document.getElementById(currentQuestion.key);
+                tile.classList.add('answered');
+                tile.textContent = '';
+            }
+            document.getElementById('modal').classList.remove('active');
+            currentQuestion = null;
+        }
+
+        function resetGame() {
+            answeredQuestions.clear();
+            initBoard();
+            closeModal();
+        }
+
+        // Initialize the game
+        initBoard();
+    </script>
+</body>
+</html>
