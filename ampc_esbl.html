@@ -3,876 +3,1032 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rx Jeopardy — AMR Gram-Negative Infections</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>AMR Blitz — Team Buzzer Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --navy: #0a0f1e;
-    --navy-mid: #111827;
-    --navy-light: #1e2a3a;
-    --gold: #e8c84a;
-    --gold-dim: #b89d38;
-    --gold-light: #f5e180;
-    --teal: #2dd4bf;
-    --red: #f87171;
-    --green: #4ade80;
-    --text: #e8e4d9;
-    --text-dim: #8a9bb0;
-    --border: rgba(232, 200, 74, 0.18);
-    --glow: 0 0 24px rgba(232, 200, 74, 0.2);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--navy);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-    background-image:
-      radial-gradient(ellipse at 20% 50%, rgba(45, 212, 191, 0.04) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 20%, rgba(232, 200, 74, 0.06) 0%, transparent 50%);
-  }
+:root {
+  --black: #080a0f;
+  --dark: #0d1117;
+  --panel: #12181f;
+  --cyan: #00f5d4;
+  --pink: #ff2d78;
+  --yellow: #ffe600;
+  --white: #f0f4f8;
+  --dim: #4a5568;
+  --cyan-glow: 0 0 20px rgba(0,245,212,0.4), 0 0 60px rgba(0,245,212,0.15);
+  --pink-glow: 0 0 20px rgba(255,45,120,0.4), 0 0 60px rgba(255,45,120,0.15);
+  --yellow-glow: 0 0 20px rgba(255,230,0,0.5);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* HEADER */
-  header {
-    text-align: center;
-    padding: 2rem 1rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-  }
-  header::before {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 10%; right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  }
-  .game-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.8rem, 4vw, 3rem);
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dim) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-transform: uppercase;
-    text-shadow: none;
-  }
-  .game-subtitle {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-top: 0.4rem;
-  }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(0,245,212,0.03) 59px, rgba(0,245,212,0.03) 60px),
+    repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(0,245,212,0.03) 59px, rgba(0,245,212,0.03) 60px);
+}
 
-  /* SCOREBOARD */
-  .scoreboard {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    padding: 1.2rem 2rem;
-    background: var(--navy-mid);
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-  .score-display {
-    text-align: center;
-  }
-  .score-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    font-family: 'DM Mono', monospace;
-  }
-  .score-value {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--gold);
-    line-height: 1;
-  }
-  .score-divider { width: 1px; height: 40px; background: var(--border); }
-  .btn-reset {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    padding: 0.4rem 1.2rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    transition: all 0.2s;
-  }
-  .btn-reset:hover {
-    border-color: var(--gold-dim);
-    color: var(--gold);
-  }
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
 
-  /* BOARD */
-  .board-container {
-    padding: 1.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
-    overflow-x: auto;
-  }
-  .board {
-    display: grid;
-    gap: 8px;
-    min-width: 700px;
-  }
-  .category-headers {
-    display: grid;
-    gap: 8px;
-  }
-  .category-header {
-    background: var(--gold);
-    color: var(--navy);
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    font-size: 0.75rem;
-    text-align: center;
-    padding: 0.7rem 0.5rem;
-    border-radius: 4px;
-    letter-spacing: 0.04em;
-    line-height: 1.3;
-    text-transform: uppercase;
-  }
-  .questions-grid {
-    display: grid;
-    gap: 8px;
-  }
-  .q-row {
-    display: grid;
-    gap: 8px;
-  }
+/* ── SETUP SCREEN ── */
+#setupScreen {
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 2rem;
+}
+.logo {
+  text-align: center;
+}
+.logo-main {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  letter-spacing: 0.06em;
+  line-height: 0.9;
+  color: var(--cyan);
+  text-shadow: var(--cyan-glow);
+}
+.logo-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-top: 0.5rem;
+}
+.setup-card {
+  background: var(--panel);
+  border: 1px solid rgba(0,245,212,0.15);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 560px;
+}
+.setup-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 1.5rem;
+}
+.team-inputs { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
+.team-row { display: flex; align-items: center; gap: 0.75rem; }
+.team-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.team-dot.c { background: var(--cyan); box-shadow: var(--cyan-glow); }
+.team-dot.p { background: var(--pink); box-shadow: var(--pink-glow); }
+.team-dot.y { background: var(--yellow); box-shadow: var(--yellow-glow); }
+.team-dot.w { background: #a78bfa; box-shadow: 0 0 20px rgba(167,139,250,0.4); }
 
-  /* QUESTION TILES */
-  .tile {
-    background: var(--navy-light);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-    min-height: 72px;
-    aspect-ratio: unset;
-  }
-  .tile::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, transparent 60%, rgba(232,200,74,0.05));
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .tile:hover:not(.used) {
-    border-color: var(--gold-dim);
-    transform: translateY(-2px);
-    box-shadow: var(--glow), 0 8px 24px rgba(0,0,0,0.4);
-  }
-  .tile:hover:not(.used)::before { opacity: 1; }
-  .tile-value {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    color: var(--gold);
-    font-size: 1.4rem;
-    text-shadow: 0 0 20px rgba(232,200,74,0.4);
-  }
-  .tile.used {
-    background: rgba(255,255,255,0.02);
-    border-color: rgba(255,255,255,0.04);
-    cursor: default;
-  }
-  .tile.used .tile-value { opacity: 0; }
+.team-input {
+  flex: 1;
+  background: var(--dark);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.team-input:focus { border-color: rgba(0,245,212,0.4); }
+.team-key {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  min-width: 60px;
+  text-align: right;
+}
 
-  /* MODAL */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(5, 8, 18, 0.92);
-    backdrop-filter: blur(8px);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-  }
-  .modal-overlay.active {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .modal {
-    background: var(--navy-mid);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 680px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    transform: translateY(20px);
-    transition: transform 0.3s;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.7), var(--glow);
-  }
-  .modal-overlay.active .modal {
-    transform: translateY(0);
-  }
-  .modal-header {
-    padding: 1.5rem 1.5rem 1rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  .modal-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-  }
-  .modal-category {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--teal);
-  }
-  .modal-points {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--gold);
-    line-height: 1;
-  }
-  .modal-close {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1rem;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-  .modal-close:hover { border-color: var(--red); color: var(--red); }
-  .modal-body { padding: 1.5rem; }
-  .question-text {
-    font-size: 1.1rem;
-    line-height: 1.7;
-    font-weight: 400;
-    color: var(--text);
-    margin-bottom: 1.5rem;
-  }
-  .reveal-btn {
-    width: 100%;
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
-    color: var(--navy);
-    border: none;
-    padding: 0.9rem 2rem;
-    border-radius: 6px;
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-  }
-  .reveal-btn:hover {
-    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
-    box-shadow: 0 4px 20px rgba(232,200,74,0.35);
-    transform: translateY(-1px);
-  }
-  .answer-section {
-    display: none;
-    margin-top: 1.5rem;
-    animation: slideIn 0.3s ease;
-  }
-  .answer-section.visible { display: block; }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .answer-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold-dim);
-    margin-bottom: 0.5rem;
-  }
-  .answer-text {
-    background: rgba(232, 200, 74, 0.06);
-    border: 1px solid rgba(232, 200, 74, 0.2);
-    border-radius: 6px;
-    padding: 1rem 1.2rem;
-    font-size: 1rem;
-    line-height: 1.6;
-    color: var(--gold-light);
-    font-weight: 500;
-    margin-bottom: 1rem;
-  }
-  .explanation-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 0.5rem;
-  }
-  .explanation-text {
-    font-size: 0.88rem;
-    line-height: 1.65;
-    color: var(--text-dim);
-    margin-bottom: 1rem;
-  }
-  .reference-text {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    color: rgba(138,155,176,0.6);
-    font-style: italic;
-    border-top: 1px solid var(--border);
-    padding-top: 0.8rem;
-    margin-bottom: 1.2rem;
-  }
-  .score-btns {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-  }
-  .score-btn {
-    flex: 1;
-    padding: 0.7rem;
-    border-radius: 6px;
-    border: 1px solid;
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: all 0.2s;
-    font-weight: 500;
-  }
-  .score-btn.correct {
-    background: rgba(74, 222, 128, 0.08);
-    border-color: rgba(74, 222, 128, 0.3);
-    color: var(--green);
-  }
-  .score-btn.correct:hover {
-    background: rgba(74, 222, 128, 0.18);
-    box-shadow: 0 0 16px rgba(74,222,128,0.15);
-  }
-  .score-btn.incorrect {
-    background: rgba(248, 113, 113, 0.08);
-    border-color: rgba(248, 113, 113, 0.3);
-    color: var(--red);
-  }
-  .score-btn.incorrect:hover {
-    background: rgba(248, 113, 113, 0.18);
-    box-shadow: 0 0 16px rgba(248,113,113,0.15);
-  }
+.settings-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.setting-group { flex: 1; min-width: 140px; }
+.setting-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.4rem;
+}
+.setting-select {
+  width: 100%;
+  background: var(--dark);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 0.55rem 0.8rem;
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+}
 
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--navy-mid);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    opacity: 0;
-    transition: all 0.3s;
-    z-index: 200;
-    pointer-events: none;
-  }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-  .toast.positive { border-color: rgba(74,222,128,0.4); color: var(--green); }
-  .toast.negative { border-color: rgba(248,113,113,0.4); color: var(--red); }
+.start-btn {
+  width: 100%;
+  background: var(--cyan);
+  color: var(--black);
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--cyan-glow);
+}
+.start-btn:hover {
+  background: var(--white);
+  box-shadow: 0 0 30px rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
 
-  /* PROGRESS */
-  .progress-bar-wrap {
-    height: 3px;
-    background: rgba(255,255,255,0.05);
-    position: relative;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--teal), var(--gold));
-    transition: width 0.4s ease;
-  }
+/* ── GAME SCREEN ── */
+#gameScreen { flex-direction: column; }
 
-  em { font-style: italic; color: var(--teal); }
+/* SCOREBAR */
+.scorebar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+  height: 80px;
+}
+.team-score-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0 1.5rem;
+  position: relative;
+  transition: all 0.3s;
+}
+.team-score-panel.buzzed {
+  animation: buzzFlash 0.5s ease;
+}
+@keyframes buzzFlash {
+  0%,100% { background: transparent; }
+  50% { background: rgba(0,245,212,0.15); }
+}
+.team-score-panel.buzzed-pink {
+  animation: buzzFlashPink 0.5s ease;
+}
+@keyframes buzzFlashPink {
+  0%,100% { background: transparent; }
+  50% { background: rgba(255,45,120,0.15); }
+}
+.team-name-display {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.team-pts {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.buzz-indicator {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  opacity: 0.2;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.buzz-indicator.active {
+  opacity: 1;
+  animation: pulse 0.6s infinite alternate;
+}
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.5); }
+}
 
-  @media (max-width: 600px) {
-    .tile-value { font-size: 1rem; }
-    .modal-points { font-size: 1.5rem; }
-  }
+.scorebar-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  min-width: 160px;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.q-counter {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.q-counter span { color: var(--white); }
+
+/* TIMER RING */
+.timer-wrap {
+  position: relative;
+  width: 48px; height: 48px;
+}
+.timer-svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+.timer-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 3; }
+.timer-fill {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 126;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke 0.5s;
+}
+.timer-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0;
+  color: var(--cyan);
+  transition: color 0.3s;
+}
+
+/* GAME AREA */
+.game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.category-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 0.3rem 1rem;
+  border-radius: 100px;
+  border: 1px solid rgba(0,245,212,0.3);
+  color: var(--cyan);
+  background: rgba(0,245,212,0.06);
+}
+.points-badge {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  color: var(--yellow);
+  text-shadow: var(--yellow-glow);
+}
+
+.question-card {
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 780px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.question-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.5;
+}
+.question-text {
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--white);
+}
+
+.answer-reveal {
+  display: none;
+  background: rgba(0,245,212,0.05);
+  border: 1px solid rgba(0,245,212,0.2);
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem;
+  max-width: 780px;
+  width: 100%;
+  animation: revealIn 0.3s ease;
+}
+.answer-reveal.visible { display: block; }
+@keyframes revealIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.answer-reveal-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.4rem;
+}
+.answer-reveal-text {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--white);
+  margin-bottom: 0.6rem;
+}
+.explanation-reveal {
+  font-size: 0.82rem;
+  color: rgba(240,244,248,0.55);
+  line-height: 1.55;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+/* BUZZ STATUS BAR */
+.buzz-status {
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim);
+  min-height: 1.2em;
+}
+.buzz-status.active { color: var(--yellow); }
+
+/* CONTROL ROW */
+.control-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 780px;
+  width: 100%;
+}
+.ctrl-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1px solid;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.ctrl-btn.reveal-q {
+  background: transparent;
+  border-color: rgba(255,255,255,0.2);
+  color: var(--white);
+}
+.ctrl-btn.reveal-q:hover { background: rgba(255,255,255,0.06); }
+.ctrl-btn.correct {
+  background: rgba(0,245,212,0.08);
+  border-color: rgba(0,245,212,0.35);
+  color: var(--cyan);
+}
+.ctrl-btn.correct:hover { background: rgba(0,245,212,0.18); box-shadow: var(--cyan-glow); }
+.ctrl-btn.incorrect {
+  background: rgba(255,45,120,0.08);
+  border-color: rgba(255,45,120,0.35);
+  color: var(--pink);
+}
+.ctrl-btn.incorrect:hover { background: rgba(255,45,120,0.18); box-shadow: var(--pink-glow); }
+.ctrl-btn.next-q {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--black);
+  box-shadow: var(--yellow-glow);
+}
+.ctrl-btn.next-q:hover { background: var(--white); border-color: var(--white); }
+.ctrl-btn.skip-q {
+  background: transparent;
+  border-color: rgba(255,255,255,0.1);
+  color: var(--dim);
+}
+.ctrl-btn.skip-q:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+.ctrl-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+
+/* BUZZ BUTTONS (bottom) */
+.buzz-zone {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.buzz-btn {
+  flex: 1;
+  padding: 1.1rem;
+  border: none;
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.1em;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.buzz-btn::after {
+  content: attr(data-key);
+  position: absolute;
+  top: 6px; right: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.4;
+}
+.buzz-btn:disabled { opacity: 0.3; cursor: default; }
+.buzz-btn:not(:disabled):active { transform: scale(0.97); }
+
+/* LEADERBOARD / END SCREEN */
+#endScreen {
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 2rem;
+}
+.end-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  letter-spacing: 0.08em;
+  color: var(--yellow);
+  text-shadow: var(--yellow-glow);
+  text-align: center;
+}
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 500px;
+}
+.podium-place {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.podium-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.podium-pts {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+.podium-block {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+}
+.play-again-btn {
+  background: transparent;
+  border: 2px solid var(--cyan);
+  color: var(--cyan);
+  padding: 0.9rem 3rem;
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--cyan-glow);
+}
+.play-again-btn:hover { background: var(--cyan); color: var(--black); }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  top: 90px; left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s;
+  z-index: 200;
+  border: 1px solid;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+.toast.cyan { background: rgba(0,245,212,0.12); border-color: var(--cyan); color: var(--cyan); box-shadow: var(--cyan-glow); }
+.toast.pink { background: rgba(255,45,120,0.12); border-color: var(--pink); color: var(--pink); box-shadow: var(--pink-glow); }
+.toast.yellow { background: rgba(255,230,0,0.12); border-color: var(--yellow); color: var(--yellow); }
+
+em { font-style: italic; color: rgba(0,245,212,0.8); }
+
+@media (max-width: 500px) {
+  .question-card { padding: 1.5rem; }
+  .scorebar-center { display: none; }
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="game-title">Rx Jeopardy</div>
-  <div class="game-subtitle">AMR Gram-Negative Infections · PGY1 Pharmacy Resident Series</div>
-</header>
-
-<div class="scoreboard">
-  <div class="score-display">
-    <div class="score-label">Score</div>
-    <div class="score-value" id="scoreDisplay">$0</div>
+<!-- ══════════ SETUP ══════════ -->
+<div class="screen active" id="setupScreen">
+  <div class="logo">
+    <div class="logo-main">AMR BLITZ</div>
+    <div class="logo-sub">Rapid-Fire Team Quiz · AMR Gram-Negative Infections</div>
   </div>
-  <div class="score-divider"></div>
-  <div class="score-display">
-    <div class="score-label">Correct</div>
-    <div class="score-value" id="correctDisplay" style="color:var(--green)">0</div>
-  </div>
-  <div class="score-divider"></div>
-  <div class="score-display">
-    <div class="score-label">Attempted</div>
-    <div class="score-value" id="attemptDisplay" style="color:var(--text-dim)">0</div>
-  </div>
-  <div class="score-divider"></div>
-  <div class="score-display">
-    <div class="score-label">Remaining</div>
-    <div class="score-value" id="remainDisplay" style="color:var(--teal)">25</div>
-  </div>
-  <div class="score-divider"></div>
-  <button class="btn-reset" onclick="resetGame()">↺ Reset</button>
-</div>
-
-<div class="progress-bar-wrap">
-  <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
-</div>
-
-<div class="board-container">
-  <div class="board" id="gameBoard"></div>
-</div>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-meta">
-        <div class="modal-category" id="modalCategory">Category</div>
-        <div class="modal-points" id="modalPoints">$200</div>
+  <div class="setup-card">
+    <div class="setup-title">⚡ Team Configuration</div>
+    <div class="team-inputs" id="teamInputs">
+      <div class="team-row">
+        <div class="team-dot c"></div>
+        <input class="team-input" value="Team Alpha" placeholder="Team 1 Name" />
+        <span class="team-key">Press Q</span>
       </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="question-text" id="modalQuestion"></div>
-      <button class="reveal-btn" id="revealBtn" onclick="revealAnswer()">Reveal Answer</button>
-      <div class="answer-section" id="answerSection">
-        <div class="answer-label">Answer</div>
-        <div class="answer-text" id="modalAnswer"></div>
-        <div class="explanation-label">Explanation</div>
-        <div class="explanation-text" id="modalExplanation"></div>
-        <div class="reference-text" id="modalReference"></div>
-        <div class="score-btns">
-          <button class="score-btn correct" onclick="scoreQuestion(true)">✓ Correct</button>
-          <button class="score-btn incorrect" onclick="scoreQuestion(false)">✗ Incorrect</button>
-        </div>
+      <div class="team-row">
+        <div class="team-dot p"></div>
+        <input class="team-input" value="Team Beta" placeholder="Team 2 Name" />
+        <span class="team-key">Press P</span>
       </div>
     </div>
+    <div class="settings-row">
+      <div class="setting-group">
+        <div class="setting-label">Timer (seconds)</div>
+        <select class="setting-select" id="timerSetting">
+          <option value="10">10s — Lightning</option>
+          <option value="15" selected>15s — Standard</option>
+          <option value="20">20s — Relaxed</option>
+          <option value="30">30s — Teaching</option>
+          <option value="0">No timer</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Question Order</div>
+        <select class="setting-select" id="orderSetting">
+          <option value="random">Shuffle</option>
+          <option value="original">Original Order</option>
+          <option value="points-asc">Easy → Hard</option>
+          <option value="points-desc">Hard → Easy</option>
+        </select>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startGame()">START THE BLITZ</button>
   </div>
+</div>
+
+<!-- ══════════ GAME ══════════ -->
+<div class="screen" id="gameScreen">
+  <!-- Scorebar -->
+  <div class="scorebar" id="scorebar"></div>
+
+  <!-- Main area -->
+  <div class="game-area">
+    <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;justify-content:center">
+      <div class="category-badge" id="catBadge">Category</div>
+      <div class="points-badge" id="ptsBadge">+200 pts</div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-text" id="qText">Question loads here...</div>
+    </div>
+
+    <div class="answer-reveal" id="answerReveal">
+      <div class="answer-reveal-label">Answer</div>
+      <div class="answer-reveal-text" id="answerText"></div>
+      <div class="explanation-reveal" id="explanText"></div>
+    </div>
+
+    <div class="buzz-status" id="buzzStatus">— Press buzz button or keyboard to buzz in —</div>
+
+    <div class="control-row" id="controlRow">
+      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
+      <button class="ctrl-btn skip-q" onclick="skipQuestion()">Skip →</button>
+    </div>
+  </div>
+
+  <!-- Buzz zone -->
+  <div class="buzz-zone" id="buzzZone"></div>
+</div>
+
+<!-- ══════════ END ══════════ -->
+<div class="screen" id="endScreen">
+  <div class="end-title">FINAL SCORES</div>
+  <div class="podium" id="podium"></div>
+  <button class="play-again-btn" onclick="goSetup()">↺ Play Again</button>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const questions = [
-  {
-    id: 1, category: "Resistance\nMechanisms", points: 200,
-    question: "What is the key phenotypic difference that distinguishes AmpC β-lactamases from ESBLs in terms of susceptibility to β-lactamase inhibitors?",
-    answer: "AmpC β-lactamases are NOT inhibited by clavulanic acid or tazobactam, whereas ESBLs ARE inhibited by these β-lactamase inhibitors.",
-    explanation: "This phenotypic distinction is clinically important for laboratory differentiation. AmpC enzymes also resist cephamycins (e.g., cefoxitin), unlike ESBLs.",
-    ref: "Macesic et al., Lancet 2025; IDSA 2023/2024 Guidance"
-  },
-  {
-    id: 2, category: "Clinical\nTrials", points: 200,
-    question: "In the MERINO trial comparing piperacillin-tazobactam to meropenem for ESBL-producing Enterobacterales bloodstream infections, which agent had lower 30-day mortality?",
-    answer: "Meropenem (4% mortality vs 12% with piperacillin-tazobactam)",
-    explanation: "This landmark trial established carbapenems as preferred therapy for ESBL-E bloodstream infections, even after reanalysis using revised MIC criteria.",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 3, category: "Organism\nIdentification", points: 200,
-    question: "Name three Enterobacterales species at MODERATE to HIGH risk for clinically significant AmpC production due to inducible ampC gene expression.",
-    answer: "<em>Enterobacter cloacae</em> complex, <em>Klebsiella aerogenes</em>, and <em>Citrobacter freundii</em>",
-    explanation: "These organisms can develop resistance to third-generation cephalosporins during therapy through ampC induction, even if initially susceptible.",
-    ref: "IDSA 2023/2024 Guidance; Macesic et al., Lancet 2025"
-  },
-  {
-    id: 4, category: "Pharmacology", points: 200,
-    question: "Why is cefepime generally effective against AmpC-producing Enterobacterales despite their resistance to third-generation cephalosporins?",
-    answer: "Cefepime is both a weak inducer of ampC AND forms stable acyl enzyme complexes that resist hydrolysis by AmpC β-lactamases.",
-    explanation: "This dual property makes cefepime a preferred agent for AmpC-producing organisms.",
-    ref: "IDSA 2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 5, category: "Antimicrobial\nStewardship", points: 200,
-    question: "For ESBL-producing <em>E. coli</em> urinary tract infections, name three preferred oral step-down options after clinical improvement (assuming susceptibility).",
-    answer: "Trimethoprim-sulfamethoxazole (TMP-SMX), ciprofloxacin, or levofloxacin",
-    explanation: "These agents achieve adequate urinary concentrations and allow carbapenem-sparing strategies after hemodynamic stability is achieved.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 6, category: "Resistance\nMechanisms", points: 400,
-    question: "What are the three mechanisms by which Enterobacterales can exhibit increased AmpC β-lactamase production?",
-    answer: "(1) Inducible chromosomal gene expression, (2) Stable chromosomal gene derepression, (3) Constitutively expressed ampC genes (plasmid-mediated or chromosomally integrated)",
-    explanation: "Understanding these mechanisms helps predict which organisms are at risk for developing resistance during therapy and guides antibiotic selection.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 7, category: "Drug\nSpectrum", points: 400,
-    question: "Which third-generation cephalosporins are at risk for inducing AmpC resistance in organisms like <em>Enterobacter cloacae</em>?",
-    answer: "Ceftriaxone, cefotaxime, and ceftazidime",
-    explanation: "These agents are relatively weak ampC inducers but are susceptible to hydrolysis, making them less effective for organisms at moderate risk for clinically significant AmpC production.",
-    ref: "IDSA 2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 8, category: "Novel BL/BLI\nCombinations", points: 400,
-    question: "Name three newer β-lactam/β-lactamase inhibitor combinations with activity against ESBL-producing Enterobacterales.",
-    answer: "Ceftazidime-avibactam, meropenem-vaborbactam, and imipenem-cilastatin-relebactam",
-    explanation: "These agents should be preferentially reserved for carbapenem-resistant organisms, but may be needed for polymicrobial infections or drug intolerances.",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 9, category: "Urinary Tract\nInfections", points: 400,
-    question: "What are the preferred treatment options for uncomplicated cystitis caused by AmpC-producing Enterobacterales?",
-    answer: "Nitrofurantoin or trimethoprim-sulfamethoxazole (TMP-SMX)",
-    explanation: "Ciprofloxacin, levofloxacin, or a single IV dose of aminoglycoside are alternative options.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 10, category: "Epidemiology", points: 400,
-    question: "What is the approximate prevalence of ESBL-producing Enterobacterales in the United States?",
-    answer: "11–13%",
-    explanation: "ESBL rates vary globally: 5–25% in western Europe, >50% in southern/eastern Europe, 30–80% in Asia, and 10–15% in Australia/New Zealand.",
-    ref: "Macesic et al., Lancet 2025"
-  },
-  {
-    id: 11, category: "Clinical\nVignette", points: 600,
-    question: "A patient with <em>Enterobacter cloacae</em> bacteremia is started on ceftriaxone based on initial susceptibility. Three days later, repeat cultures show resistance to ceftriaxone. What resistance mechanism is most likely responsible?",
-    answer: "Inducible AmpC β-lactamase expression",
-    explanation: "<em>E. cloacae</em> can develop resistance to third-generation cephalosporins during therapy through ampC induction, even if initially susceptible. This can occur after just a few doses.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 12, category: "Pharmacology/\nPK-PD", points: 600,
-    question: "Why is ceftolozane-tazobactam potentially more effective than piperacillin-tazobactam against ESBL-producing Enterobacterales?",
-    answer: "Ceftolozane has greater intrinsic stability to ESBL hydrolysis (e.g., CTX-M-15), is less reliant on tazobactam inhibition, AND the 2:1 ratio provides higher tazobactam concentrations compared to pip-tazo's 8:1 ratio.",
-    explanation: "These pharmacologic advantages make ceftolozane-tazobactam more potent against ESBL-E, with MICs several dilutions lower than piperacillin-tazobactam.",
-    ref: "IDSA 2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 13, category: "Guideline\nRecs", points: 600,
-    question: "According to IDSA guidance, what is the preferred antibiotic class for ESBL-producing Enterobacterales bloodstream infections?",
-    answer: "Carbapenems (meropenem, imipenem-cilastatin, or ertapenem*) — *Ertapenem should be limited to patients with normal serum albumin who are not critically ill.",
-    explanation: "Carbapenems remain the gold standard for ESBL-E BSI based on randomized trial evidence (MERINO).",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 14, category: "Microbiology\nInterpretation", points: 600,
-    question: "An <em>E. coli</em> isolate from a bloodstream infection is resistant to ceftriaxone but susceptible to cefoxitin and piperacillin-tazobactam. Is this more likely an ESBL or AmpC producer?",
-    answer: "ESBL producer",
-    explanation: "ESBLs remain susceptible to cephamycins (cefoxitin) and β-lactamase inhibitors, whereas AmpC producers are resistant to both.",
-    ref: "Macesic et al., Lancet 2025"
-  },
-  {
-    id: 15, category: "Antimicrobial\nStewardship", points: 600,
-    question: "True or False: Newer agents like ceftazidime-avibactam should be used as first-line therapy for all ESBL-producing Enterobacterales infections to preserve carbapenems.",
-    answer: "FALSE",
-    explanation: "IDSA guidance suggests these agents be preferentially reserved for carbapenem-resistant organisms. Carbapenems remain preferred for ESBL-E infections.",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 16, category: "Ertapenem\nLimitations", points: 800,
-    question: "Why is ertapenem NOT recommended for critically ill patients or those with hypoalbuminemia when treating ESBL-producing Enterobacterales?",
-    answer: "Ertapenem is highly protein-bound (~95%). In hypoalbuminemia, increased free fraction leads to increased clearance and decreased serum half-life, suboptimal with once-daily dosing.",
-    explanation: "An observational study found hypoalbuminemia (albumin <2.5 g/dL) was associated with ~5× higher odds of 30-day mortality with ertapenem vs meropenem or imipenem-cilastatin.",
-    ref: "IDSA 2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 17, category: "MIC\nInterpretation", points: 800,
-    question: "A patient has <em>Enterobacter cloacae</em> bacteremia with a cefepime MIC of 4 μg/mL (susceptible dose-dependent). Should you be concerned about using cefepime for definitive therapy?",
-    answer: "Yes — higher cefepime MICs (≥4 μg/mL) in AmpC-producing organisms may indicate ESBL co-production, associated with cefepime treatment failure.",
-    explanation: "In one study, 89% of <em>E. cloacae</em> isolates with cefepime MICs of 4–8 μg/mL were ESBL-producing, and all 10 patients who received cefepime died within 30 days. A carbapenem may be preferred.",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 18, category: "Clinical\nVignette", points: 800,
-    question: "A 65-year-old woman with pyelonephritis due to ESBL-producing <em>E. coli</em> is improving on meropenem. She is afebrile, hemodynamically stable, and tolerating oral intake. The organism is susceptible to ciprofloxacin. What is an appropriate next step?",
-    answer: "Transition to oral ciprofloxacin for step-down therapy",
-    explanation: "Oral fluoroquinolones achieve adequate urinary concentrations and allow carbapenem-sparing strategies after clinical improvement in ESBL-E urinary tract infections.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 19, category: "Resistance\nMechanisms", points: 800,
-    question: "What is the most common ESBL enzyme family found in <em>E. coli</em> and <em>Klebsiella pneumoniae</em> worldwide?",
-    answer: "CTX-M enzymes (particularly CTX-M-15)",
-    explanation: "CTX-M-type ESBLs have largely replaced TEM and SHV variants as the predominant ESBL enzymes globally, with CTX-M-15 being the most widespread.",
-    ref: "Macesic et al., Lancet 2025"
-  },
-  {
-    id: 20, category: "Drug\nSpectrum", points: 800,
-    question: "True or False: Cephalosporins with activity against ESBL-producing organisms (e.g., cefepime) also have reliable activity against AmpC-producing organisms.",
-    answer: "True (with caveats)",
-    explanation: "Cefepime is generally effective against AmpC producers due to weak ampC induction and stability to AmpC hydrolysis. However, caution is needed when cefepime MIC ≥4 μg/mL due to possible ESBL co-production.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 21, category: "Antimicrobial\nStewardship", points: 1000,
-    question: "A patient with <em>Klebsiella pneumoniae</em> bacteremia is started empirically on meropenem. Susceptibilities return showing ESBL-production but susceptibility to piperacillin-tazobactam (MIC 8 μg/mL). Should you de-escalate to piperacillin-tazobactam?",
-    answer: "No — continue meropenem",
-    explanation: "The MERINO trial demonstrated higher mortality with piperacillin-tazobactam compared to meropenem for ESBL-E bloodstream infections, even with susceptible MICs. Carbapenems remain preferred for definitive therapy.",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 22, category: "Pharmacology", points: 1000,
-    question: "Which carbapenem has the NARROWEST spectrum of activity and is therefore preferred when treating ESBL-producing <em>E. coli</em> or <em>Klebsiella</em> infections in non-critically ill patients?",
-    answer: "Ertapenem",
-    explanation: "Ertapenem lacks activity against <em>Pseudomonas aeruginosa</em> and <em>Acinetobacter</em> species, making it a more targeted carbapenem option with potentially less collateral microbiome damage.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 23, category: "Microbiology\nInterpretation", points: 1000,
-    question: "An <em>E. coli</em> isolate shows resistance to ceftriaxone, ceftazidime, and cefotaxime, but is susceptible to cefepime and meropenem. What resistance mechanism is most likely present?",
-    answer: "ESBL production",
-    explanation: "ESBLs confer resistance to third-generation cephalosporins but typically remain susceptible to cefepime (a fourth-generation cephalosporin) and carbapenems.",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 24, category: "Novel BL/BLI\nCombinations", points: 1000,
-    question: "Which newer β-lactamase inhibitor is paired with ceftazidime and has activity against both ESBL-producing and carbapenem-resistant Enterobacterales?",
-    answer: "Avibactam (ceftazidime-avibactam)",
-    explanation: "Avibactam is a non-β-lactam BLI that inhibits Ambler class A (including ESBLs and KPC), class C (AmpC), and some class D enzymes, but NOT metallo-β-lactamases.",
-    ref: "IDSA 2023 Guidance on AMR Gram-Negative Infections"
-  },
-  {
-    id: 25, category: "Clinical\nVignette", points: 1000,
-    question: "A 45-year-old man with uncomplicated cystitis due to <em>Enterobacter cloacae</em> (AmpC-producer) presents to urgent care. The organism is susceptible to nitrofurantoin, TMP-SMX, and ciprofloxacin. Which agent(s) would you recommend for outpatient oral therapy?",
-    answer: "Nitrofurantoin or TMP-SMX (ciprofloxacin is also acceptable)",
-    explanation: "For uncomplicated cystitis caused by AmpC-producing organisms, nitrofurantoin and TMP-SMX are preferred first-line agents. Fluoroquinolones are alternatives but should be reserved when other options are not suitable.",
-    ref: "IDSA 2023/2024 Guidance on AMR Gram-Negative Infections"
-  }
+const ALL_QUESTIONS = [
+  { id:1,  cat:"Resistance Mechanisms",      pts:200,  q:"What is the key phenotypic difference that distinguishes AmpC β-lactamases from ESBLs in terms of susceptibility to β-lactamase inhibitors?", a:"AmpC β-lactamases are NOT inhibited by clavulanic acid or tazobactam, whereas ESBLs ARE inhibited by these β-lactamase inhibitors.", exp:"AmpC enzymes also resist cephamycins (e.g., cefoxitin), unlike ESBLs. This phenotypic distinction is clinically important for laboratory differentiation." },
+  { id:2,  cat:"Clinical Trials",            pts:200,  q:"In the MERINO trial comparing piperacillin-tazobactam to meropenem for ESBL-producing Enterobacterales bloodstream infections, which agent had lower 30-day mortality?", a:"Meropenem — 4% mortality vs 12% with piperacillin-tazobactam.", exp:"This landmark trial established carbapenems as preferred therapy for ESBL-E bloodstream infections, even after reanalysis using revised MIC criteria." },
+  { id:3,  cat:"Organism Identification",    pts:200,  q:"Name three Enterobacterales species at MODERATE to HIGH risk for clinically significant AmpC production due to inducible ampC gene expression.", a:"<em>Enterobacter cloacae</em> complex, <em>Klebsiella aerogenes</em>, and <em>Citrobacter freundii</em>", exp:"These organisms can develop resistance to third-generation cephalosporins during therapy through ampC induction, even if initially susceptible." },
+  { id:4,  cat:"Pharmacology",               pts:200,  q:"Why is cefepime generally effective against AmpC-producing Enterobacterales despite resistance to third-generation cephalosporins?", a:"Cefepime is a weak inducer of ampC AND forms stable acyl enzyme complexes that resist hydrolysis by AmpC β-lactamases.", exp:"This dual property makes cefepime a preferred agent for AmpC-producing organisms." },
+  { id:5,  cat:"Antimicrobial Stewardship",  pts:200,  q:"For ESBL-producing <em>E. coli</em> UTIs, name three preferred oral step-down options after clinical improvement (assuming susceptibility).", a:"Trimethoprim-sulfamethoxazole (TMP-SMX), ciprofloxacin, or levofloxacin", exp:"These agents achieve adequate urinary concentrations and allow carbapenem-sparing after hemodynamic stability." },
+  { id:6,  cat:"Resistance Mechanisms",      pts:400,  q:"What are the three mechanisms by which Enterobacterales can exhibit increased AmpC β-lactamase production?", a:"(1) Inducible chromosomal expression, (2) Stable chromosomal derepression, (3) Constitutively expressed ampC genes (plasmid-mediated or chromosomally integrated)", exp:"Understanding these mechanisms helps predict resistance development risk during therapy and guides antibiotic selection." },
+  { id:7,  cat:"Drug Spectrum",              pts:400,  q:"Which third-generation cephalosporins are at risk for inducing AmpC resistance in organisms like <em>Enterobacter cloacae</em>?", a:"Ceftriaxone, cefotaxime, and ceftazidime", exp:"These agents are relatively weak ampC inducers but susceptible to hydrolysis, making them less effective for moderate-risk AmpC organisms." },
+  { id:8,  cat:"Novel BL/BLI Combinations",  pts:400,  q:"Name three newer β-lactam/β-lactamase inhibitor combinations with activity against ESBL-producing Enterobacterales.", a:"Ceftazidime-avibactam, meropenem-vaborbactam, and imipenem-cilastatin-relebactam", exp:"These agents should be reserved for carbapenem-resistant organisms where greater need exists." },
+  { id:9,  cat:"Urinary Tract Infections",   pts:400,  q:"What are the preferred treatment options for uncomplicated cystitis caused by AmpC-producing Enterobacterales?", a:"Nitrofurantoin or TMP-SMX (ciprofloxacin or levofloxacin are alternatives)", exp:"These first-line agents achieve adequate urinary concentrations for uncomplicated cystitis." },
+  { id:10, cat:"Epidemiology",               pts:400,  q:"What is the approximate prevalence of ESBL-producing Enterobacterales in the United States?", a:"11–13%", exp:"ESBL rates vary globally: 5–25% western Europe, >50% southern/eastern Europe, 30–80% Asia, 10–15% Australia/NZ." },
+  { id:11, cat:"Clinical Vignette",          pts:600,  q:"A patient with <em>Enterobacter cloacae</em> bacteremia is started on ceftriaxone based on initial susceptibility. Three days later, repeat cultures show resistance to ceftriaxone. What resistance mechanism is most likely responsible?", a:"Inducible AmpC β-lactamase expression", exp:"<em>E. cloacae</em> can develop resistance to 3rd-gen cephalosporins through ampC induction even after initial susceptibility — sometimes within just a few doses." },
+  { id:12, cat:"Pharmacology/PK-PD",         pts:600,  q:"Why is ceftolozane-tazobactam potentially more effective than piperacillin-tazobactam against ESBL-producing Enterobacterales?", a:"Greater intrinsic stability to ESBL hydrolysis (CTX-M-15), less reliance on tazobactam inhibition, AND a 2:1 ratio providing higher tazobactam concentrations vs pip-tazo's 8:1 ratio.", exp:"These pharmacologic advantages yield MICs several dilutions lower than piperacillin-tazobactam." },
+  { id:13, cat:"Guideline Recommendations",  pts:600,  q:"According to IDSA guidance, what is the preferred antibiotic class for ESBL-producing Enterobacterales bloodstream infections?", a:"Carbapenems (meropenem, imipenem-cilastatin, or ertapenem*). *Ertapenem limited to non-critically ill patients with normal albumin.", exp:"Based on MERINO trial evidence, carbapenems are the gold standard for ESBL-E BSI." },
+  { id:14, cat:"Microbiology Interpretation",pts:600,  q:"An <em>E. coli</em> BSI isolate is resistant to ceftriaxone but susceptible to cefoxitin and piperacillin-tazobactam. ESBL or AmpC producer?", a:"ESBL producer", exp:"ESBLs remain susceptible to cephamycins (cefoxitin) and β-lactamase inhibitors. AmpC producers are resistant to both." },
+  { id:15, cat:"Antimicrobial Stewardship",  pts:600,  q:"True or False: Newer agents like ceftazidime-avibactam should be used as first-line therapy for ALL ESBL-producing Enterobacterales to preserve carbapenems.", a:"FALSE — these agents should be reserved for carbapenem-resistant organisms.", exp:"IDSA guidance specifies reserving novel BL/BLI combinations for CRE, where the clinical need is greater. Carbapenems remain preferred for ESBL-E." },
+  { id:16, cat:"Ertapenem Limitations",      pts:800,  q:"Why is ertapenem NOT recommended for critically ill patients or those with hypoalbuminemia when treating ESBL-E?", a:"Ertapenem is ~95% protein-bound. Hypoalbuminemia increases free fraction → increased clearance → decreased half-life, suboptimal with once-daily dosing.", exp:"Hypoalbuminemia (albumin <2.5 g/dL) associated with ~5× higher odds of 30-day mortality with ertapenem vs meropenem." },
+  { id:17, cat:"MIC Interpretation",         pts:800,  q:"A patient has <em>Enterobacter cloacae</em> bacteremia with a cefepime MIC of 4 μg/mL (susceptible dose-dependent). Should you be concerned?", a:"Yes — cefepime MIC ≥4 μg/mL in AmpC producers may indicate ESBL co-production, associated with treatment failure.", exp:"89% of <em>E. cloacae</em> isolates with cefepime MICs 4–8 μg/mL were ESBL-producing in one study; all 10 patients on cefepime died within 30 days." },
+  { id:18, cat:"Clinical Vignette",          pts:800,  q:"A 65-year-old woman with ESBL-E. coli pyelonephritis is improving on meropenem, now afebrile, hemodynamically stable, tolerating PO. Organism susceptible to ciprofloxacin. What's next?", a:"Transition to oral ciprofloxacin for step-down therapy.", exp:"Oral fluoroquinolones achieve adequate urinary concentrations and allow carbapenem-sparing after clinical improvement." },
+  { id:19, cat:"Resistance Mechanisms",      pts:800,  q:"What is the most common ESBL enzyme family found in <em>E. coli</em> and <em>Klebsiella pneumoniae</em> worldwide?", a:"CTX-M enzymes (particularly CTX-M-15)", exp:"CTX-M-type ESBLs have largely replaced TEM and SHV variants globally, with CTX-M-15 being the most widespread." },
+  { id:20, cat:"Drug Spectrum",              pts:800,  q:"True or False: Cephalosporins with activity against ESBL-producing organisms (e.g., cefepime) also have reliable activity against AmpC-producing organisms.", a:"True (with caveats) — cefepime effective against AmpC producers due to weak induction + stability.", exp:"Caution when cefepime MIC ≥4 μg/mL due to possible ESBL co-production." },
+  { id:21, cat:"Antimicrobial Stewardship",  pts:1000, q:"A patient with <em>Klebsiella pneumoniae</em> ESBL-E bacteremia on empiric meropenem: susceptibilities show susceptibility to pip-tazo (MIC 8). De-escalate?", a:"No — continue meropenem. MERINO trial showed higher mortality with pip-tazo even at susceptible MICs.", exp:"Carbapenems remain preferred for definitive therapy of ESBL-E bloodstream infections regardless of pip-tazo susceptibility." },
+  { id:22, cat:"Pharmacology",               pts:1000, q:"Which carbapenem has the narrowest spectrum and is preferred for ESBL-producing <em>E. coli</em>/<em>Klebsiella</em> in non-critically ill patients?", a:"Ertapenem — lacks activity against <em>Pseudomonas aeruginosa</em> and <em>Acinetobacter</em> species.", exp:"More targeted option with potentially less collateral microbiome damage, limited to non-critically ill patients with normal albumin." },
+  { id:23, cat:"Microbiology Interpretation",pts:1000, q:"An <em>E. coli</em> isolate is resistant to ceftriaxone, ceftazidime, and cefotaxime, but susceptible to cefepime and meropenem. What resistance mechanism is most likely?", a:"ESBL production", exp:"ESBLs confer resistance to 3rd-gen cephalosporins but typically remain susceptible to cefepime (4th-gen) and carbapenems." },
+  { id:24, cat:"Novel BL/BLI Combinations",  pts:1000, q:"Which newer β-lactamase inhibitor is paired with ceftazidime and has activity against both ESBL-E and carbapenem-resistant Enterobacterales?", a:"Avibactam (ceftazidime-avibactam) — inhibits class A (ESBL, KPC), class C (AmpC), and some class D; does NOT inhibit metallo-β-lactamases.", exp:"Non-β-lactam BLI with broad inhibitory spectrum except for MBLs." },
+  { id:25, cat:"Clinical Vignette",          pts:1000, q:"A 45-year-old man with uncomplicated <em>Enterobacter cloacae</em> cystitis (AmpC producer) — susceptible to nitrofurantoin, TMP-SMX, and ciprofloxacin. Preferred outpatient treatment?", a:"Nitrofurantoin or TMP-SMX (ciprofloxacin acceptable but reserve if alternatives available)", exp:"Nitrofurantoin and TMP-SMX are preferred first-line for uncomplicated cystitis in AmpC producers. Fluoroquinolones are alternatives." }
 ];
 
-// Organize by category
-const categoryOrder = [
-  "Resistance\nMechanisms",
-  "Clinical\nTrials",
-  "Organism\nIdentification",
-  "Pharmacology",
-  "Antimicrobial\nStewardship"
-];
+// ── Game state
+let teams = [];
+let questions = [];
+let qIndex = 0;
+let timerDuration = 15;
+let timerInterval = null;
+let timeLeft = 15;
+let buzzedTeam = null;
+let answerRevealed = false;
+let scoringDone = false;
+const TEAM_COLORS = ['#00f5d4','#ff2d78','#ffe600','#a78bfa'];
+const TEAM_BUZZ_KEYS = ['q','p','z','m'];
 
-// Build 5 categories × 5 point levels
-const pointLevels = [200, 400, 600, 800, 1000];
+function startGame() {
+  const inputs = document.querySelectorAll('.team-input');
+  teams = Array.from(inputs).map((inp, i) => ({
+    name: inp.value.trim() || `Team ${i+1}`,
+    score: 0,
+    color: TEAM_COLORS[i],
+    key: TEAM_BUZZ_KEYS[i]
+  }));
 
-// Map questions to a grid: categorize & level
-function buildGrid() {
-  // 5 columns, one per category; 5 rows by point value
-  // We'll use a flat list of 25 questions, distributed evenly
-  const grid = Array.from({length: 5}, () => Array(5).fill(null));
-  
-  // Category mapping
-  const catMap = {
-    "Resistance\nMechanisms": 0,
-    "Clinical\nTrials": 1,
-    "Organism\nIdentification": 2,
-    "Pharmacology": 3,
-    "Antimicrobial\nStewardship": 4
-  };
-  
-  // Just lay them out sequentially: cols 0-4 as categories, rows 0-4 as point tiers
-  // Since we have 25 questions across varying categories, we'll arrange by point tier
-  const byPoints = {};
-  pointLevels.forEach(p => byPoints[p] = []);
-  questions.forEach(q => byPoints[q.points].push(q));
-  
-  // Fill grid row by row
-  const result = [];
-  pointLevels.forEach((pts, row) => {
-    const rowQs = byPoints[pts];
-    result.push(rowQs);
-  });
-  return result;
+  timerDuration = parseInt(document.getElementById('timerSetting').value);
+  const order = document.getElementById('orderSetting').value;
+
+  questions = [...ALL_QUESTIONS];
+  if (order === 'random') questions.sort(() => Math.random()-0.5);
+  else if (order === 'points-asc') questions.sort((a,b) => a.pts - b.pts);
+  else if (order === 'points-desc') questions.sort((a,b) => b.pts - a.pts);
+
+  qIndex = 0;
+  buildScorebBar();
+  buildBuzzZone();
+  showScreen('gameScreen');
+  loadQuestion();
 }
 
-// State
-let score = 0;
-let correct = 0;
-let attempted = 0;
-let usedTiles = new Set();
-let currentQ = null;
-let scoredCurrentQ = false;
-
-// Build board
-function buildBoard() {
-  const board = document.getElementById('gameBoard');
-  const grid = buildGrid();
-  
-  // Get unique categories for headers
-  const cats = ["Resistance\nMechanisms", "Clinical Trials", "Organism ID", "Pharmacology", "AMS"];
-  
-  // We have 5 rows × 5 cols = 25 questions
-  // Determine columns from first row
-  const colCount = grid[0].length;
-  
-  // Category headers
-  const catHeaders = document.createElement('div');
-  catHeaders.className = 'category-headers';
-  catHeaders.style.gridTemplateColumns = `repeat(${colCount}, 1fr)`;
-  
-  // Gather category names from q's in each column
-  grid[0].forEach((q, ci) => {
-    const hdr = document.createElement('div');
-    hdr.className = 'category-header';
-    hdr.textContent = q.category.replace('\n', ' ');
-    catHeaders.appendChild(hdr);
+function buildScorebBar() {
+  const bar = document.getElementById('scorebar');
+  bar.innerHTML = '';
+  const half = Math.ceil(teams.length/2);
+  teams.forEach((t, i) => {
+    if (i === half) {
+      const center = document.createElement('div');
+      center.className = 'scorebar-center';
+      center.innerHTML = `
+        <div class="q-counter">Q <span id="qNum">1</span> / ${questions.length}</div>
+        <div class="timer-wrap" id="timerWrap">
+          <svg class="timer-svg" viewBox="0 0 48 48" width="48" height="48">
+            <circle class="timer-track" cx="24" cy="24" r="20"/>
+            <circle class="timer-fill" id="timerArc" cx="24" cy="24" r="20"/>
+          </svg>
+          <div class="timer-num" id="timerNum">—</div>
+        </div>`;
+      bar.appendChild(center);
+    }
+    const panel = document.createElement('div');
+    panel.className = 'team-score-panel';
+    panel.id = `panel-${i}`;
+    panel.innerHTML = `
+      <div class="buzz-indicator" id="buzz-ind-${i}" style="background:${t.color}"></div>
+      <div>
+        <div class="team-name-display" style="color:${t.color}">${t.name}</div>
+        <div class="team-pts" id="score-${i}" style="color:${t.color}">0</div>
+      </div>`;
+    bar.appendChild(panel);
   });
-  board.appendChild(catHeaders);
-  
-  // Rows
-  const qGrid = document.createElement('div');
-  qGrid.className = 'questions-grid';
-  
-  grid.forEach((row, ri) => {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'q-row';
-    rowEl.style.gridTemplateColumns = `repeat(${colCount}, 1fr)`;
-    row.forEach((q, ci) => {
-      const tile = document.createElement('div');
-      tile.className = 'tile';
-      tile.id = `tile-${q.id}`;
-      tile.innerHTML = `<span class="tile-value">$${q.points}</span>`;
-      tile.onclick = () => openQuestion(q);
-      rowEl.appendChild(tile);
-    });
-    qGrid.appendChild(rowEl);
-  });
-  
-  board.appendChild(qGrid);
-  updateProgress();
-}
-
-function openQuestion(q) {
-  if (usedTiles.has(q.id)) return;
-  currentQ = q;
-  scoredCurrentQ = false;
-  
-  document.getElementById('modalCategory').textContent = q.category.replace('\n', ' — ');
-  document.getElementById('modalPoints').textContent = `$${q.points}`;
-  document.getElementById('modalQuestion').innerHTML = q.question;
-  document.getElementById('modalAnswer').innerHTML = q.answer;
-  document.getElementById('modalExplanation').innerHTML = q.explanation;
-  document.getElementById('modalReference').textContent = `Ref: ${q.ref}`;
-  
-  document.getElementById('answerSection').classList.remove('visible');
-  document.getElementById('revealBtn').style.display = 'block';
-  
-  document.getElementById('modalOverlay').classList.add('active');
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('active');
-  if (currentQ && !scoredCurrentQ) {
-    markUsed(currentQ.id);
+  // If even number, add center after last
+  if (teams.length <= 2) {
+    const center = document.createElement('div');
+    center.className = 'scorebar-center';
+    center.innerHTML = `
+      <div class="q-counter">Q <span id="qNum">1</span> / ${questions.length}</div>
+      <div class="timer-wrap">
+        <svg class="timer-svg" viewBox="0 0 48 48" width="48" height="48">
+          <circle class="timer-track" cx="24" cy="24" r="20"/>
+          <circle class="timer-fill" id="timerArc" cx="24" cy="24" r="20"/>
+        </svg>
+        <div class="timer-num" id="timerNum">—</div>
+      </div>`;
+    bar.insertBefore(center, bar.children[1]);
   }
-  currentQ = null;
+}
+
+function buildBuzzZone() {
+  const zone = document.getElementById('buzzZone');
+  zone.innerHTML = '';
+  teams.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'buzz-btn';
+    btn.id = `buzz-btn-${i}`;
+    btn.dataset.key = t.key.toUpperCase();
+    btn.textContent = `⚡ ${t.name}`;
+    btn.style.background = hexToRgba(t.color, 0.08);
+    btn.style.color = t.color;
+    btn.style.borderTop = `3px solid ${t.color}`;
+    btn.onclick = () => teamBuzz(i);
+    zone.appendChild(btn);
+  });
+}
+
+function hexToRgba(hex, a) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function loadQuestion() {
+  if (qIndex >= questions.length) { endGame(); return; }
+  const q = questions[qIndex];
+  buzzedTeam = null;
+  answerRevealed = false;
+  scoringDone = false;
+
+  document.getElementById('catBadge').textContent = q.cat;
+  document.getElementById('ptsBadge').textContent = `+${q.pts} pts`;
+  document.getElementById('qText').innerHTML = q.q;
+  document.getElementById('answerText').innerHTML = q.a;
+  document.getElementById('explanText').innerHTML = q.exp;
+  document.getElementById('answerReveal').classList.remove('visible');
+  document.getElementById('buzzStatus').textContent = '— Press buzz button or keyboard to buzz in —';
+  document.getElementById('buzzStatus').classList.remove('active');
+
+  if (document.getElementById('qNum')) document.getElementById('qNum').textContent = qIndex+1;
+
+  setControlRow('waiting');
+  enableBuzzButtons(true);
+  resetBuzzIndicators();
+
+  if (timerDuration > 0) startTimer();
+  else { document.getElementById('timerNum').textContent = '—'; }
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = timerDuration;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      onTimeUp();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timerNum');
+  const arc = document.getElementById('timerArc');
+  if (!el || !arc) return;
+  el.textContent = timerDuration > 0 ? timeLeft : '—';
+  const pct = timerDuration > 0 ? timeLeft / timerDuration : 1;
+  const circumference = 126;
+  arc.style.strokeDashoffset = circumference * (1 - pct);
+  const color = pct > 0.5 ? '#00f5d4' : pct > 0.25 ? '#ffe600' : '#ff2d78';
+  arc.style.stroke = color;
+  if (el) el.style.color = color;
+}
+
+function onTimeUp() {
+  if (buzzedTeam !== null) return;
+  document.getElementById('buzzStatus').textContent = '⏱ Time\'s up! Reveal answer.';
+  enableBuzzButtons(false);
+  setControlRow('timeup');
+}
+
+function teamBuzz(idx) {
+  if (buzzedTeam !== null || scoringDone) return;
+  clearInterval(timerInterval);
+  buzzedTeam = idx;
+  const t = teams[idx];
+
+  document.getElementById(`buzz-ind-${idx}`).classList.add('active');
+  document.getElementById(`buzz-btn-${idx}`).style.background = hexToRgba(t.color, 0.25);
+  document.getElementById(`buzz-btn-${idx}`).style.boxShadow = `0 0 20px ${hexToRgba(t.color, 0.4)}`;
+
+  document.getElementById('buzzStatus').textContent = `⚡ ${t.name} buzzed in!`;
+  document.getElementById('buzzStatus').classList.add('active');
+  document.getElementById('buzzStatus').style.color = t.color;
+
+  enableBuzzButtons(false);
+  setControlRow('buzzed');
+
+  const panel = document.getElementById(`panel-${idx}`);
+  panel.classList.add(idx === 0 ? 'buzzed' : 'buzzed-pink');
+  setTimeout(() => panel.classList.remove('buzzed','buzzed-pink'), 600);
+
+  showToast(`${t.name} buzzed!`, t.color === '#00f5d4' ? 'cyan' : t.color === '#ff2d78' ? 'pink' : 'yellow');
 }
 
 function revealAnswer() {
-  document.getElementById('answerSection').classList.add('visible');
-  document.getElementById('revealBtn').style.display = 'none';
+  answerRevealed = true;
+  document.getElementById('answerReveal').classList.add('visible');
+  setControlRow('scoring');
 }
 
-function scoreQuestion(isCorrect) {
-  if (scoredCurrentQ) return;
-  scoredCurrentQ = true;
-  
-  const pts = currentQ.points;
-  if (isCorrect) {
-    score += pts;
-    correct++;
-    showToast(`+$${pts}`, 'positive');
-  } else {
-    score -= pts;
-    showToast(`-$${pts}`, 'negative');
+function awardPoints(correct) {
+  if (scoringDone) return;
+  scoringDone = true;
+  clearInterval(timerInterval);
+
+  const q = questions[qIndex];
+  const target = buzzedTeam !== null ? buzzedTeam : null;
+
+  if (target !== null) {
+    if (correct) {
+      teams[target].score += q.pts;
+      updateScoreDisplay(target);
+      showToast(`+${q.pts}`, 'cyan');
+    } else {
+      teams[target].score -= Math.round(q.pts/2);
+      updateScoreDisplay(target);
+      showToast(`-${Math.round(q.pts/2)}`, 'pink');
+    }
   }
-  attempted++;
-  
-  markUsed(currentQ.id);
-  updateScores();
-  
-  setTimeout(closeModal, 400);
+
+  if (!answerRevealed) revealAnswer();
+  setControlRow('next');
 }
 
-function markUsed(id) {
-  usedTiles.add(id);
-  const tile = document.getElementById(`tile-${id}`);
-  if (tile) tile.classList.add('used');
-  updateProgress();
+function skipQuestion() {
+  clearInterval(timerInterval);
+  scoringDone = true;
+  if (!answerRevealed) revealAnswer();
+  setControlRow('next');
 }
 
-function updateScores() {
-  document.getElementById('scoreDisplay').textContent = (score >= 0 ? '$' : '-$') + Math.abs(score).toLocaleString();
-  document.getElementById('correctDisplay').textContent = correct;
-  document.getElementById('attemptDisplay').textContent = attempted;
-  document.getElementById('remainDisplay').textContent = 25 - usedTiles.size;
+function nextQuestion() {
+  qIndex++;
+  loadQuestion();
 }
 
-function updateProgress() {
-  const pct = (usedTiles.size / 25) * 100;
-  document.getElementById('progressBar').style.width = pct + '%';
-  document.getElementById('remainDisplay').textContent = 25 - usedTiles.size;
+function setControlRow(state) {
+  const row = document.getElementById('controlRow');
+  if (state === 'waiting') {
+    row.innerHTML = `
+      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
+      <button class="ctrl-btn skip-q" onclick="skipQuestion()">Skip →</button>`;
+  } else if (state === 'buzzed') {
+    row.innerHTML = `
+      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
+      <button class="ctrl-btn correct" onclick="awardPoints(true)">✓ Correct</button>
+      <button class="ctrl-btn incorrect" onclick="awardPoints(false)">✗ Wrong</button>`;
+  } else if (state === 'timeup') {
+    row.innerHTML = `
+      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
+      <button class="ctrl-btn skip-q" onclick="skipQuestion()">Skip →</button>`;
+  } else if (state === 'scoring') {
+    if (buzzedTeam !== null) {
+      row.innerHTML = `
+        <button class="ctrl-btn correct" onclick="awardPoints(true)">✓ Correct</button>
+        <button class="ctrl-btn incorrect" onclick="awardPoints(false)">✗ Wrong</button>`;
+    } else {
+      row.innerHTML = `<button class="ctrl-btn next-q" onclick="nextQuestion()">Next Question →</button>`;
+    }
+  } else if (state === 'next') {
+    const isLast = qIndex >= questions.length - 1;
+    row.innerHTML = `<button class="ctrl-btn next-q" onclick="${isLast ? 'endGame()' : 'nextQuestion()'}">${isLast ? '🏆 See Final Scores' : 'Next Question →'}</button>`;
+  }
+}
+
+function updateScoreDisplay(idx) {
+  const el = document.getElementById(`score-${idx}`);
+  if (el) el.textContent = teams[idx].score.toLocaleString();
+}
+
+function enableBuzzButtons(enabled) {
+  teams.forEach((_, i) => {
+    const btn = document.getElementById(`buzz-btn-${i}`);
+    if (btn) btn.disabled = !enabled;
+  });
+}
+
+function resetBuzzIndicators() {
+  teams.forEach((t, i) => {
+    const ind = document.getElementById(`buzz-ind-${i}`);
+    if (ind) ind.classList.remove('active');
+    const btn = document.getElementById(`buzz-btn-${i}`);
+    if (btn) {
+      btn.style.background = hexToRgba(t.color, 0.08);
+      btn.style.boxShadow = '';
+    }
+    document.getElementById('buzzStatus').style.color = '';
+  });
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+  const sorted = [...teams].sort((a,b) => b.score - a.score);
+  buildPodium(sorted);
+  showScreen('endScreen');
+}
+
+function buildPodium(sorted) {
+  const podium = document.getElementById('podium');
+  podium.innerHTML = '';
+  const heights = [120, 80, 60, 50];
+  const medals = ['🥇','🥈','🥉','4️⃣'];
+  sorted.forEach((t, i) => {
+    const place = document.createElement('div');
+    place.className = 'podium-place';
+    place.innerHTML = `
+      <div class="podium-name" style="color:${t.color}">${t.name}</div>
+      <div class="podium-pts" style="color:${t.color}">${t.score.toLocaleString()} pts</div>
+      <div class="podium-block" style="height:${heights[i]||40}px;background:${hexToRgba(t.color,0.15)};border:1px solid ${hexToRgba(t.color,0.4)}">${medals[i]||''}</div>`;
+    podium.appendChild(place);
+  });
 }
 
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = `toast show ${type}`;
-  setTimeout(() => t.className = 'toast', 2200);
+  setTimeout(() => t.className = 'toast', 2000);
 }
 
-function resetGame() {
-  score = 0; correct = 0; attempted = 0;
-  usedTiles.clear();
-  document.querySelectorAll('.tile').forEach(t => t.classList.remove('used'));
-  document.querySelectorAll('.tile-value').forEach(v => v.style.opacity = '');
-  updateScores();
-  updateProgress();
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
-// Close on overlay click
-document.getElementById('modalOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+function goSetup() {
+  showScreen('setupScreen');
+}
+
+// Keyboard handlers
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('gameScreen').classList.contains('active')) {
+    const key = e.key.toLowerCase();
+    teams.forEach((t, i) => {
+      if (key === t.key) teamBuzz(i);
+    });
+  }
 });
-
-buildBoard();
 </script>
 </body>
 </html>
