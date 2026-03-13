@@ -8,7 +8,7 @@ This repository hosts **topic discussion activities for pharmacy trainees**. The
 
 Each activity is deployed via **GitHub Pages** and can be accessed using its HTML file name.
 
-**Examples:**
+**Examples (direct links also provided):**
 
 - `spectrum.html` → [https://shemtsai.github.io/topic-discussions/spectrum](https://shemtsai.github.io/topic-discussions/spectrum)  
 - `Staph_aureus_bacteremia.html` → [https://shemtsai.github.io/topic-discussions/Staph_aureus_bacteremia](https://shemtsai.github.io/topic-discussions/Staph_aureus_bacteremia)
