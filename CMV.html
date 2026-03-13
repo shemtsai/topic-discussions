@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Wants to Be a Millionaire - CMV Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+            padding: 2rem;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        #intro-screen {
+            background: linear-gradient(to bottom, #1e3a8a, #581c87, #000);
+        }
+
+        #game-screen {
+            background: linear-gradient(to bottom, #1e3a8a, #581c87, #000);
+        }
+
+        #correct-screen {
+            background: linear-gradient(to bottom, #14532d, #000);
+        }
+
+        #wrong-screen {
+            background: linear-gradient(to bottom, #7f1d1d, #000);
+        }
+
+        #walked-screen {
+            background: linear-gradient(to bottom, #14532d, #000);
+        }
+
+        #won-screen {
+            background: linear-gradient(to bottom, #ca8a04, #eab308, #ca8a04);
+            color: black;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: #fbbf24;
+        }
+
+        .trophy {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+        }
+
+        .lifelines-info {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .lifelines-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            text-align: left;
+            margin-top: 1rem;
+        }
+
+        .lifeline-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .start-btn {
+            background: #eab308;
+            color: black;
+            padding: 1rem 3rem;
+            font-size: 1.5rem;
+            border-radius: 2rem;
+        }
+
+        .start-btn:hover {
+            background: #ca8a04;
+            transform: scale(1.05);
+        }
+
+        .prize-display {
+            font-size: 2.5rem;
+            color: #fbbf24;
+            margin-bottom: 0.5rem;
+        }
+
+        .question-number {
+            color: #d1d5db;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-text {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .answers-grid {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .answer-btn {
+            background: #1e40af;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            width: 100%;
+        }
+
+        .answer-btn:hover:not(:disabled) {
+            background: #1e3a8a;
+        }
+
+        .answer-btn.selected {
+            background: #ca8a04;
+            box-shadow: 0 0 0 4px #fbbf24;
+        }
+
+        .answer-btn:disabled {
+            background: #374151;
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .final-answer-btn {
+            background: #16a34a;
+            color: white;
+            padding: 1rem 2rem;
+            width: 100%;
+        }
+
+        .final-answer-btn:hover {
+            background: #15803d;
+        }
+
+        .lifelines-box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 1.5rem;
+            border-radius: 1rem;
+        }
+
+        .lifelines-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .lifeline-btn {
+            background: #ea580c;
+            color: white;
+            padding: 1rem 0.5rem;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .lifeline-btn:hover:not(:disabled) {
+            background: #c2410c;
+        }
+
+        .lifeline-btn:disabled {
+            background: #374151;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .lifeline-icon {
+            font-size: 1.5rem;
+        }
+
+        .lifeline-result {
+            background: #581c87;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .audience-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .bar-container {
+            flex: 1;
+            background: #374151;
+            height: 1.5rem;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            background: #eab308;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .continue-btn {
+            background: #16a34a;
+            color: white;
+            padding: 1rem 2rem;
+        }
+
+        .continue-btn:hover {
+            background: #15803d;
+        }
+
+        .walk-btn {
+            background: #ca8a04;
+            color: white;
+            padding: 1rem 2rem;
+        }
+
+        .walk-btn:hover {
+            background: #a16207;
+        }
+
+        .replay-btn {
+            background: #2563eb;
+            color: white;
+            padding: 1rem 2rem;
+        }
+
+        .replay-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .result-text {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            .question-text { font-size: 1.2rem; }
+            .lifelines-buttons { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Intro Screen -->
+    <div id="intro-screen" class="screen active">
+        <div class="container">
+            <div class="trophy">🏆</div>
+            <h1>WHO WANTS TO BE A MILLIONAIRE</h1>
+            <h2>CMV Edition</h2>
+            <div class="lifelines-info">
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">YOUR LIFELINES:</h3>
+                <div class="lifelines-grid">
+                    <div class="lifeline-item">❓ 50:50</div>
+                    <div class="lifeline-item">👥 Ask the Audience</div>
+                    <div class="lifeline-item">📞 Phone a Friend</div>
+                    <div class="lifeline-item">🩺 Stewardship Consult</div>
+                </div>
+            </div>
+            <button class="start-btn" onclick="startGame()">START GAME</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div class="container">
+            <div class="prize-display" id="current-prize">$100</div>
+            <div class="question-number" id="question-number">Question 1 of 10</div>
+            
+            <div class="question-box">
+                <div class="question-text" id="question-text"></div>
+                
+                <div id="lifeline-result" class="lifeline-result" style="display: none;"></div>
+                
+                <div class="answers-grid" id="answers-grid"></div>
+                
+                <button id="final-answer-btn" class="final-answer-btn" style="display: none;" onclick="confirmAnswer()">
+                    FINAL ANSWER
+                </button>
+            </div>
+
+            <div class="lifelines-box">
+                <h3 style="margin-bottom: 0.5rem;">LIFELINES:</h3>
+                <div class="lifelines-buttons">
+                    <button class="lifeline-btn" id="fifty-btn" onclick="useFiftyFifty()">
+                        <span class="lifeline-icon">❓</span>
+                        <span>50:50</span>
+                    </button>
+                    <button class="lifeline-btn" id="audience-btn" onclick="useAudience()">
+                        <span class="lifeline-icon">👥</span>
+                        <span>Audience</span>
+                    </button>
+                    <button class="lifeline-btn" id="phone-btn" onclick="usePhone()">
+                        <span class="lifeline-icon">📞</span>
+                        <span>Phone</span>
+                    </button>
+                    <button class="lifeline-btn" id="steward-btn" onclick="useStewardship()">
+                        <span class="lifeline-icon">🩺</span>
+                        <span>Stewardship</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Correct Answer Screen -->
+    <div id="correct-screen" class="screen">
+        <div class="container">
+            <h1 style="color: #4ade80;">CORRECT!</h1>
+            <div class="result-text">
+                You've won: <span style="color: #fbbf24; font-weight: bold;" id="correct-prize"></span>
+            </div>
+            <div class="action-buttons" id="correct-actions"></div>
+        </div>
+    </div>
+
+    <!-- Wrong Answer Screen -->
+    <div id="wrong-screen" class="screen">
+        <div class="container">
+            <h1>INCORRECT!</h1>
+            <div class="result-text">
+                The correct answer was: <span style="color: #fbbf24; font-weight: bold;" id="correct-answer"></span>
+            </div>
+            <p style="font-size: 1.3rem; margin-bottom: 2rem;">You leave with nothing.</p>
+            <button class="replay-btn" onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Walked Away Screen -->
+    <div id="walked-screen" class="screen">
+        <div class="container">
+            <h1>YOU WALKED AWAY!</h1>
+            <div class="result-text">
+                You won: <span style="color: #fbbf24; font-weight: bold;" id="walked-prize"></span>
+            </div>
+            <button class="replay-btn" onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Won Game Screen -->
+    <div id="won-screen" class="screen">
+        <div class="container">
+            <div class="trophy">🏆</div>
+            <h1>CONGRATULATIONS!</h1>
+            <div class="result-text">
+                You won <span style="font-weight: bold;">$1,000,000!</span>
+            </div>
+            <button class="replay-btn" onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                prize: '$100',
+                question: 'Highest CMV risk group post-SOT?',
+                options: ['D−/R−', 'D+/R−', 'D−/R+', 'D+/R+'],
+                correct: 1
+            },
+            {
+                prize: '$200',
+                question: 'First-line prophylaxis agent for high-risk kidney transplant?',
+                options: ['IV ganciclovir', 'Oral valganciclovir', 'Letermovir', 'Foscarnet'],
+                correct: 1
+            },
+            {
+                prize: '$500',
+                question: 'Valganciclovir dose adjustment is based on:',
+                options: ['Weight', 'ANC', 'Creatinine clearance', 'CMV PCR'],
+                correct: 2
+            },
+            {
+                prize: '$1,000',
+                question: 'Primary gene conferring ganciclovir resistance?',
+                options: ['UL56', 'UL83', 'UL97', 'UL27'],
+                correct: 2
+            },
+            {
+                prize: '$2,000',
+                question: 'Which antiviral is associated with nephrotoxicity and electrolyte wasting?',
+                options: ['Maribavir', 'Foscarnet', 'Letermovir', 'Valacyclovir'],
+                correct: 1
+            },
+            {
+                prize: '$4,000',
+                question: 'Which antiviral inhibits the CMV terminase complex?',
+                options: ['Ganciclovir', 'Letermovir', 'Maribavir', 'Foscarnet'],
+                correct: 1
+            },
+            {
+                prize: '$8,000',
+                question: 'Minimum viral load recommended for reliable CMV resistance genotyping?',
+                options: ['100 IU/mL', '500 IU/mL', '1,000 IU/mL', '10,000 IU/mL'],
+                correct: 2
+            },
+            {
+                prize: '$16,000',
+                question: 'Which drug combination is antagonistic and should be avoided?',
+                options: ['Foscarnet + ganciclovir', 'Maribavir + ganciclovir', 'Letermovir + acyclovir', 'Maribavir + foscarnet'],
+                correct: 1
+            },
+            {
+                prize: '$32,000',
+                question: 'Which mutation confers absolute letermovir resistance?',
+                options: ['UL97 T409M', 'UL54 exonuclease mutations', 'UL56 codon 325 mutation', 'UL83 deletion'],
+                correct: 2
+            },
+            {
+                prize: '$1,000,000',
+                question: 'Which statement is correct regarding maribavir use in resistant CMV?',
+                options: [
+                    'It is preferred for high viral loads ≥4.7 log10 IU/mL',
+                    'It is contraindicated in UL97 M460I mutations',
+                    'It should not be used for CMV retinitis or CNS disease',
+                    'It has activity against HSV and VZV'
+                ],
+                correct: 2
+            }
+        ];
+
+        let currentQ = 0;
+        let selectedAnswer = null;
+        let lifelines = {
+            fiftyFifty: true,
+            audience: true,
+            phone: true,
+            stewardship: true
+        };
+        let eliminatedOptions = [];
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            currentQ = 0;
+            selectedAnswer = null;
+            lifelines = { fiftyFifty: true, audience: true, phone: true, stewardship: true };
+            eliminatedOptions = [];
+            
+            document.getElementById('fifty-btn').disabled = false;
+            document.getElementById('audience-btn').disabled = false;
+            document.getElementById('phone-btn').disabled = false;
+            document.getElementById('steward-btn').disabled = false;
+            
+            loadQuestion();
+            showScreen('game-screen');
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQ];
+            document.getElementById('current-prize').textContent = q.prize;
+            document.getElementById('question-number').textContent = `Question ${currentQ + 1} of ${questions.length}`;
+            document.getElementById('question-text').textContent = q.question;
+            document.getElementById('lifeline-result').style.display = 'none';
+            document.getElementById('final-answer-btn').style.display = 'none';
+            
+            selectedAnswer = null;
+            eliminatedOptions = [];
+            
+            const answersGrid = document.getElementById('answers-grid');
+            answersGrid.innerHTML = '';
+            
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.id = `answer-${index}`;
+                btn.innerHTML = `<strong>${['A', 'B', 'C', 'D'][index]}:</strong> ${option}`;
+                btn.onclick = () => selectAnswer(index);
+                answersGrid.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(index) {
+            if (selectedAnswer !== null) return;
+            
+            selectedAnswer = index;
+            document.querySelectorAll('.answer-btn').forEach((btn, i) => {
+                if (i === index) {
+                    btn.classList.add('selected');
+                }
+            });
+            
+            document.getElementById('final-answer-btn').style.display = 'block';
+            
+            // Disable lifelines after selecting
+            document.getElementById('fifty-btn').disabled = true;
+            document.getElementById('audience-btn').disabled = true;
+            document.getElementById('phone-btn').disabled = true;
+            document.getElementById('steward-btn').disabled = true;
+        }
+
+        function confirmAnswer() {
+            if (selectedAnswer === questions[currentQ].correct) {
+                document.getElementById('correct-prize').textContent = questions[currentQ].prize;
+                
+                const actionsDiv = document.getElementById('correct-actions');
+                actionsDiv.innerHTML = '';
+                
+                if (currentQ < questions.length - 1) {
+                    const continueBtn = document.createElement('button');
+                    continueBtn.className = 'continue-btn';
+                    continueBtn.textContent = 'Continue';
+                    continueBtn.onclick = nextQuestion;
+                    
+                    const walkBtn = document.createElement('button');
+                    walkBtn.className = 'walk-btn';
+                    walkBtn.textContent = 'Walk Away';
+                    walkBtn.onclick = walkAway;
+                    
+                    actionsDiv.appendChild(continueBtn);
+                    actionsDiv.appendChild(walkBtn);
+                } else {
+                    const claimBtn = document.createElement('button');
+                    claimBtn.className = 'continue-btn';
+                    claimBtn.textContent = 'Claim Your Prize!';
+                    claimBtn.onclick = () => showScreen('won-screen');
+                    actionsDiv.appendChild(claimBtn);
+                }
+                
+                showScreen('correct-screen');
+            } else {
+                document.getElementById('correct-answer').textContent = ['A', 'B', 'C', 'D'][questions[currentQ].correct];
+                showScreen('wrong-screen');
+            }
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            
+            // Re-enable unused lifelines
+            if (lifelines.fiftyFifty) document.getElementById('fifty-btn').disabled = false;
+            if (lifelines.audience) document.getElementById('audience-btn').disabled = false;
+            if (lifelines.phone) document.getElementById('phone-btn').disabled = false;
+            if (lifelines.stewardship) document.getElementById('steward-btn').disabled = false;
+            
+            loadQuestion();
+            showScreen('game-screen');
+        }
+
+        function walkAway() {
+            document.getElementById('walked-prize').textContent = questions[currentQ].prize;
+            showScreen('walked-screen');
+        }
+
+        function useFiftyFifty() {
+            if (!lifelines.fiftyFifty || selectedAnswer !== null) return;
+            
+            const correct = questions[currentQ].correct;
+            const incorrect = [0, 1, 2, 3].filter(i => i !== correct);
+            eliminatedOptions = incorrect.sort(() => 0.5 - Math.random()).slice(0, 2);
+            
+            eliminatedOptions.forEach(i => {
+                document.getElementById(`answer-${i}`).disabled = true;
+            });
+            
+            lifelines.fiftyFifty = false;
+            document.getElementById('fifty-btn').disabled = true;
+        }
+
+        function useAudience() {
+            if (!lifelines.audience || selectedAnswer !== null) return;
+            
+            const correct = questions[currentQ].correct;
+            const votes = [0, 0, 0, 0];
+            votes[correct] = 45 + Math.floor(Math.random() * 30);
+            let remaining = 100 - votes[correct];
+            
+            for (let i = 0; i < 4; i++) {
+                if (i !== correct) {
+                    const vote = Math.floor(Math.random() * remaining);
+                    votes[i] = vote;
+                    remaining -= vote;
+                }
+            }
+            votes[(correct + 1) % 4] += remaining;
+            
+            const resultDiv = document.getElementById('lifeline-result');
+            resultDiv.innerHTML = '<h3 style="margin-bottom: 1rem;">AUDIENCE VOTES:</h3>';
+            
+            ['A', 'B', 'C', 'D'].forEach((letter, idx) => {
+                resultDiv.innerHTML += `
+                    <div class="audience-bar">
+                        <span style="width: 2rem;">${letter}:</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${votes[idx]}%">
+                                ${votes[idx]}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultDiv.style.display = 'block';
+            lifelines.audience = false;
+            document.getElementById('audience-btn').disabled = true;
+        }
+
+        function usePhone() {
+            if (!lifelines.phone || selectedAnswer !== null) return;
+            
+            const correct = questions[currentQ].correct;
+            const options = ['A', 'B', 'C', 'D'];
+            const confidence = 70 + Math.floor(Math.random() * 25);
+            
+            const resultDiv = document.getElementById('lifeline-result');
+            resultDiv.innerHTML = `<p style="font-style: italic;">"I'm ${confidence}% sure it's ${options[correct]}. That's what we use in our transplant program."</p>`;
+            resultDiv.style.display = 'block';
+            
+            lifelines.phone = false;
+            document.getElementById('phone-btn').disabled = true;
+        }
+
+        function useStewardship() {
+            if (!lifelines.stewardship || selectedAnswer !== null) return;
+            
+            const correct = questions[currentQ].correct;
+            const options = ['A', 'B', 'C', 'D'];
+            
+            const resultDiv = document.getElementById('lifeline-result');
+            resultDiv.innerHTML = `<p style="font-style: italic;">"Based on current guidelines and our institutional protocols, I'd recommend ${options[correct]}."</p>`;
+            resultDiv.style.display = 'block';
+            
+            lifelines.stewardship = false;
+            document.getElementById('steward-btn').disabled = true;
+        }
+    </script>
+</body>
+</html>
