@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic Duel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,800;1,9..144,300;1,9..144,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #f5f2ed;
+  --surface:   #ffffff;
+  --border:    #e2ddd7;
+  --text:      #1a1714;
+  --muted:     #7a7168;
+  --p1:        #0d6e63;
+  --p1-light:  #e6f4f2;
+  --p1-mid:    #0f9384;
+  --p2:        #c13a10;
+  --p2-light:  #fdeee9;
+  --p2-mid:    #e05a2b;
+  --correct:   #14532d;
+  --correct-bg:#dcfce7;
+  --steal:     #713f12;
+  --steal-bg:  #fef9c3;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.08);
+  --radius:    14px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  font-family: 'Outfit', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(13,110,99,0.07) 0%, transparent 70%);
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 16px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  position: sticky; top: 0; z-index: 20;
+  gap: 16px;
+}
+
+.player-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  border-radius: 50px;
+  border: 2px solid var(--border);
+  transition: all 0.3s ease;
+  position: relative;
+}
+.player-bar.p1 { justify-content: flex-start; }
+.player-bar.p2 { justify-content: flex-end; flex-direction: row-reverse; }
+.player-bar.active-turn {
+  border-color: currentColor;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+}
+.player-bar.p1.active-turn { border-color: var(--p1); background: var(--p1-light); color: var(--p1); box-shadow: 0 0 0 4px rgba(13,110,99,0.12); }
+.player-bar.p2.active-turn { border-color: var(--p2); background: var(--p2-light); color: var(--p2); box-shadow: 0 0 0 4px rgba(193,58,16,0.12); }
+
+.player-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 700;
+  font-family: 'Fraunces', serif;
+  flex-shrink: 0;
+}
+.p1 .player-avatar { background: var(--p1-light); color: var(--p1); border: 2px solid var(--p1); }
+.p2 .player-avatar { background: var(--p2-light); color: var(--p2); border: 2px solid var(--p2); }
+.player-bar.active-turn .player-avatar { background: var(--surface); }
+
+.player-info { display: flex; flex-direction: column; }
+.player-label { font-size: 0.68rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); line-height: 1; margin-bottom: 2px; }
+.p1.active-turn .player-label,
+.p2.active-turn .player-label { color: inherit; opacity: 0.7; }
+.player-score { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 600; line-height: 1; color: var(--text); }
+.p1.active-turn .player-score { color: var(--p1); }
+.p2.active-turn .player-score { color: var(--p2); }
+
+.turn-tag {
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.p1 .turn-tag { background: var(--p1); color: white; }
+.p2 .turn-tag { background: var(--p2); color: white; }
+.active-turn .turn-tag { opacity: 1; }
+
+/* Center title block */
+#title-center { text-align: center; }
+#title-center h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1;
+}
+#title-center p { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 3px; }
+
+/* Win bar */
+#win-bar-wrap { 
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 32px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.win-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+.win-label.p1c { color: var(--p1); }
+.win-label.p2c { color: var(--p2); }
+#win-bar { flex:1; height: 5px; background: var(--border); border-radius: 10px; overflow: hidden; }
+#win-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(90deg, var(--p1), var(--p1-mid));
+  width: 50%;
+  transition: width 0.6s cubic-bezier(.4,0,.2,1);
+}
+
+/* ─── MAIN ─── */
+#main {
+  padding: 32px 28px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+#phase-label {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+#phase-label span {
+  display: inline-block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 18px;
+}
+
+/* ─── DECK GRID ─── */
+#deck-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 32px;
+}
+
+.deck-slot {
+  position: relative;
+  cursor: pointer;
+}
+.deck-slot.empty { pointer-events: none; }
+
+/* Stack shadow cards */
+.deck-stack {
+  position: relative;
+  border-radius: var(--radius);
+  transition: transform 0.2s ease;
+}
+.deck-slot:not(.empty):hover .deck-stack { transform: translateY(-4px); }
+.deck-slot:not(.empty):hover .deck-card-face { box-shadow: var(--shadow-lg); }
+
+.stack-ghost {
+  position: absolute;
+  left: 4px; right: -4px;
+  top: 4px; bottom: -4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #ede9e3;
+}
+.stack-ghost2 {
+  position: absolute;
+  left: 8px; right: -8px;
+  top: 8px; bottom: -8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #e5e0d8;
+}
+
+.deck-card-face {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px 18px;
+  box-shadow: var(--shadow-md);
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.2s;
+  z-index: 2;
+}
+
+.deck-slot.empty .deck-card-face {
+  background: #f0ede8;
+  border-style: dashed;
+  box-shadow: none;
+}
+.deck-slot.empty .stack-ghost,
+.deck-slot.empty .stack-ghost2 { display: none; }
+
+.deck-icon { font-size: 1.8rem; line-height: 1; margin-bottom: 10px; }
+.deck-name {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  flex: 1;
+}
+.deck-slot.empty .deck-name { color: var(--muted); }
+
+.deck-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.deck-count {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.deck-dot-row { display: flex; gap: 4px; }
+.deck-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.deck-dot.filled { background: var(--text); opacity: 0.5; }
+.deck-dot.used { background: var(--border); opacity: 0.3; }
+
+.deck-slot:not(.empty) .deck-card-face:hover::after {
+  content: 'Draw Card';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+/* ─── QUESTION STAGE ─── */
+#question-stage {
+  display: none;
+  animation: stageIn 0.35s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes stageIn {
+  from { opacity:0; transform: translateY(16px) scale(0.98); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+#question-stage.visible { display: block; }
+
+.stage-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 36px 40px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.stage-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: 18px 18px 0 0;
+}
+#stage-card-inner.p1-turn::before { background: linear-gradient(90deg, var(--p1), var(--p1-mid)); }
+#stage-card-inner.p2-turn::before { background: linear-gradient(90deg, var(--p2), var(--p2-mid)); }
+
+.stage-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.stage-cat-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.stage-turn-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+.p1-turn .stage-turn-badge { background: var(--p1-light); color: var(--p1); border: 1px solid rgba(13,110,99,0.25); }
+.p2-turn .stage-turn-badge { background: var(--p2-light); color: var(--p2); border: 1px solid rgba(193,58,16,0.25); }
+
+.stage-q {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 28px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+
+/* Answer reveal */
+#answer-reveal {
+  display: none;
+  animation: fadeSlide 0.3s ease both;
+}
+@keyframes fadeSlide {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+#answer-reveal.visible { display: block; }
+
+.answer-box {
+  background: var(--correct-bg);
+  border: 1px solid rgba(20,83,45,0.2);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+.answer-box strong {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--correct);
+  margin-bottom: 8px;
+}
+.answer-box p {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--correct);
+  font-weight: 400;
+}
+
+.ref-box {
+  display: none;
+  background: var(--steal-bg);
+  border: 1px solid rgba(113,63,18,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  animation: fadeSlide 0.25s ease both;
+}
+.ref-box strong {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--steal);
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+.ref-box p { font-size: 0.82rem; color: var(--steal); font-style: italic; line-height: 1.5; }
+
+/* ─── BUTTON SYSTEM ─── */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--text);
+  color: var(--surface);
+}
+.btn-primary:hover { background: #333; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+.btn-p1 {
+  background: var(--p1);
+  color: white;
+  box-shadow: 0 2px 8px rgba(13,110,99,0.3);
+}
+.btn-p1:hover { background: var(--p1-mid); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(13,110,99,0.4); }
+
+.btn-p2 {
+  background: var(--p2);
+  color: white;
+  box-shadow: 0 2px 8px rgba(193,58,16,0.3);
+}
+.btn-p2:hover { background: var(--p2-mid); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(193,58,16,0.4); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: #b0a898; color: var(--text); background: var(--bg); }
+
+.btn-miss {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-miss:hover { border-color: #ccc; background: #f9f8f6; }
+
+.score-section-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+
+/* ─── STATUS BAR ─── */
+#status-bar {
+  text-align: center;
+  margin: 24px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+#status-bar strong { color: var(--text); font-weight: 600; }
+
+/* ─── RESET ─── */
+#controls-bar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── WINNER OVERLAY ─── */
+#winner-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(245,242,237,0.92);
+  backdrop-filter: blur(10px);
+  z-index: 200;
+  align-items: center; justify-content: center;
+}
+#winner-overlay.visible { display: flex; }
+#winner-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 56px 64px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: stageIn 0.4s ease both;
+  max-width: 480px; width: 90%;
+}
+.winner-crown { font-size: 3.5rem; margin-bottom: 16px; display: block; }
+#winner-name {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  font-style: italic;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+#winner-name.p1w { color: var(--p1); }
+#winner-name.p2w { color: var(--p2); }
+#winner-name.tie { color: var(--text); }
+#winner-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 32px; line-height: 1.5; }
+#winner-scores {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 36px;
+}
+.wscore { text-align: center; }
+.wscore-val { font-family: 'Fraunces', serif; font-size: 2.2rem; font-weight: 600; line-height: 1; }
+.wscore-val.p1c { color: var(--p1); }
+.wscore-val.p2c { color: var(--p2); }
+.wscore-lab { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+/* ─── TOAST ─── */
+#toast {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 30px;
+  opacity: 0;
+  transition: all 0.28s ease;
+  pointer-events: none;
+  z-index: 300;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 700px) {
+  #topbar { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; padding: 12px 16px; gap: 10px; }
+  #title-center { grid-column: 1/-1; order: -1; }
+  #deck-grid { grid-template-columns: repeat(2, 1fr); }
+  .stage-card { padding: 24px 20px; }
+  #main { padding: 20px 16px 40px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div id="topbar">
+  <div class="player-bar p1 active-turn" id="p1-bar">
+    <div class="player-avatar">1</div>
+    <div class="player-info">
+      <span class="player-label">Player 1</span>
+      <span class="player-score" id="p1-score">0</span>
+    </div>
+    <span class="turn-tag">Your Turn</span>
+  </div>
+
+  <div id="title-center">
+    <h1>Diagnostic Duel</h1>
+    <p>Medical Microbiology</p>
+  </div>
+
+  <div class="player-bar p2" id="p2-bar">
+    <div class="player-avatar">2</div>
+    <div class="player-info">
+      <span class="player-label">Player 2</span>
+      <span class="player-score" id="p2-score">0</span>
+    </div>
+    <span class="turn-tag">Your Turn</span>
+  </div>
+</div>
+
+<!-- Win bar -->
+<div id="win-bar-wrap">
+  <span class="win-label p1c">P1</span>
+  <div id="win-bar"><div id="win-fill"></div></div>
+  <span class="win-label p2c">P2</span>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="phase-label"><span id="phase-text">Pick a category to draw a question</span></div>
+
+  <!-- Deck Grid -->
+  <div id="deck-grid"></div>
+
+  <!-- Question Stage -->
+  <div id="question-stage">
+    <div class="stage-card" id="stage-card-inner">
+      <div class="stage-meta">
+        <span class="stage-cat-badge" id="stage-cat">Category</span>
+        <span class="stage-turn-badge" id="stage-turn">Player X's Turn</span>
+      </div>
+      <div class="stage-q" id="stage-q"></div>
+
+      <div class="btn-row" id="pre-reveal-btns">
+        <button class="btn btn-primary" onclick="revealAnswer()">▶ Reveal Answer</button>
+      </div>
+
+      <div id="answer-reveal">
+        <div class="divider"></div>
+        <div class="answer-box">
+          <strong>Answer</strong>
+          <p id="stage-answer"></p>
+        </div>
+        <div class="ref-box" id="ref-box">
+          <strong>Reference</strong>
+          <p id="stage-ref"></p>
+        </div>
+
+        <div class="btn-row" style="margin-bottom:6px;">
+          <button class="btn btn-ghost" id="ref-toggle" onclick="toggleRef()">📄 Show Reference</button>
+        </div>
+
+        <span class="score-section-label">Award points</span>
+        <div class="btn-row" id="award-btns">
+          <button class="btn btn-p1" id="award-p1" onclick="award(0)">✓ Player 1 Correct</button>
+          <button class="btn btn-p2" id="award-p2" onclick="award(1)">✓ Player 2 Correct</button>
+          <button class="btn btn-miss" onclick="award(-1)">✗ Nobody</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status-bar"></div>
+
+  <!-- Controls -->
+  <div id="controls-bar">
+    <button class="btn btn-ghost" onclick="resetGame()">↺ Reset Game</button>
+  </div>
+</div>
+
+<!-- Winner Overlay -->
+<div id="winner-overlay">
+  <div id="winner-box">
+    <span class="winner-crown" id="winner-crown">🏆</span>
+    <div id="winner-name"></div>
+    <div id="winner-sub"></div>
+    <div id="winner-scores">
+      <div class="wscore">
+        <div class="wscore-val p1c" id="wscoreP1">0</div>
+        <div class="wscore-lab">Player 1</div>
+      </div>
+      <div class="wscore">
+        <div class="wscore-val p2c" id="wscoreP2">0</div>
+        <div class="wscore-lab">Player 2</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="resetGame()">Play Again</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  {
+    id: 'blood',
+    name: 'Blood Cultures',
+    icon: '🩸',
+    questions: [
+      { q: "According to IDSA guidance, what is the most critical variable in recovering bacteria and fungi from blood cultures—timing of collection or volume of blood collected?", a: "Volume of blood collected is the most critical variable, not timing. For adults, 20–30 mL per culture set is recommended.", ref: "Miller JM, et al. Guide to Utilization of the Microbiology Laboratory for Diagnosis of Infectious Diseases: 2024 Update by IDSA and ASM. Clin Infect Dis. 2024;ciae104." },
+      { q: "A patient with suspected sepsis has already received one dose of piperacillin-tazobactam. How does prior antibiotic administration affect blood culture yield?", a: "Blood culture positivity drops from approximately 51% in antibiotic-naïve patients to 28% in patients already receiving antibiotics. This strongly emphasizes the recommendation to obtain blood cultures before antibiotic administration.", ref: "Scheer CS, et al. Impact of Antibiotic Administration on Blood Culture Positivity at the Beginning of Sepsis. Clin Microbiol Infect. 2019;25(3):326-331." },
+      { q: "Which organisms isolated from blood cultures should almost always be considered true pathogens rather than contaminants?", a: "S. aureus, S. pneumoniae, H. influenzae, N. meningitidis, any gram-negative species, Pseudomonas aeruginosa, Listeria, and Candida should almost always be considered true pathogens.", ref: "Miller JM, et al. Guide to Utilization of the Microbiology Laboratory for Diagnosis of Infectious Diseases: 2024 Update by IDSA and ASM. Clin Infect Dis. 2024;ciae104." },
+      { q: "Why are repeat blood cultures essential in Staphylococcus aureus bacteremia, and what is the recommended interval for obtaining them?", a: "Repeat blood cultures should be performed every 24–48 hours until negative because approximately one-third of patients have persistent bacteremia, which is associated with nearly double the 90-day mortality (39% vs 22%) and increased risk of metastatic infection.", ref: "Tong SYC, et al. Management of Staphylococcus aureus Bacteremia: A Review. JAMA. 2025;334(9):798-808." },
+    ]
+  },
+  {
+    id: 'resp',
+    name: 'Respiratory Diagnostics',
+    icon: '🫁',
+    questions: [
+      { q: "What is the primary clinical utility of a negative MRSA nasal PCR in patients with pneumonia?", a: "A negative MRSA nasal PCR has a high negative predictive value for ruling out MRSA pneumonia, allowing de-escalation of empiric anti-MRSA therapy. It has a poor positive predictive value—a positive swab indicates colonization, not infection.", ref: "Parente DM, et al. The Clinical Utility of MRSA Nasal Screening to Rule Out MRSA Pneumonia. Clin Infect Dis. 2018;67(1):1-7." },
+      { q: "A patient with healthcare-associated pneumonia is started on vancomycin empirically. The MRSA nasal PCR returns negative. What is the expected reduction in vancomycin duration?", a: "MRSA nasal PCR screening reduces vancomycin duration by approximately 1–2 days (mean reduction 0.98–1.55 days) without negatively affecting mortality, length of stay, or acute kidney injury.", ref: "Tanure YCB, et al. Impact of MRSA Nasal Swab Screening and PCR in Pneumonia Treatment and Antimicrobial Stewardship: A Systematic Review and Meta-Analysis. Diagn Microbiol Infect Dis. 2025;114(3):117204." },
+      { q: "In which type of pneumonia does MRSA nasal PCR have the lowest sensitivity, limiting its utility for de-escalation?", a: "Ventilator-associated pneumonia (VAP) has the lowest sensitivity at approximately 40–48%, compared to 85% in CAP/HCAP. A negative result in VAP is less reliable for ruling out MRSA.", ref: "Parente DM, et al. The Clinical Utility of MRSA Nasal Screening to Rule Out MRSA Pneumonia. Clin Infect Dis. 2018;67(1):1-7." },
+      { q: "What are the three key functions of performing a Gram stain alongside sputum culture as recommended by IDSA?", a: "(1) Assess specimen quality, (2) provide rapid preliminary pathogen identification, and (3) guide interpretation of culture results.", ref: "Metlay JP, et al. Diagnosis and Treatment of Adults with Community-acquired Pneumonia. Am J Respir Crit Care Med. 2019;200(7):e45-e67." },
+      { q: "According to ATS/IDSA CAP guidelines, in which patients should sputum Gram stain and culture be obtained?", a: "Sputum cultures are recommended in: (1) severe CAP, especially if intubated; (2) patients empirically treated for MRSA or P. aeruginosa; (3) patients with prior infection with these organisms; and (4) patients hospitalized and receiving parenteral antibiotics within the last 90 days.", ref: "Metlay JP, et al. Diagnosis and Treatment of Adults with Community-acquired Pneumonia. Am J Respir Crit Care Med. 2019;200(7):e45-e67." },
+    ]
+  },
+  {
+    id: 'uat',
+    name: 'Urinary Antigen Tests',
+    icon: '🧪',
+    questions: [
+      { q: "What is the major limitation of the Legionella urinary antigen test?", a: "The test only detects Legionella pneumophila serogroup 1 and may miss infections caused by other serogroups or species. Sensitivity is 56–99% but can be as low as 40% for non-serogroup 1 infections.", ref: "Cunha BA, et al. Legionnaires' Disease. Lancet. 2016;387(10016):376-385." },
+      { q: "According to ATS/IDSA CAP guidelines, in which patients should Legionella urinary antigen testing be performed?", a: "Testing is recommended in: (1) severe CAP requiring ICU admission, (2) association with a Legionella outbreak, (3) recent travel, or (4) epidemiological risk factors. It is not recommended routinely for all CAP patients.", ref: "Metlay JP, et al. Diagnosis and Treatment of Adults with Community-acquired Pneumonia. Am J Respir Crit Care Med. 2019;200(7):e45-e67." },
+      { q: "What is the sensitivity and specificity of the Streptococcus pneumoniae urinary antigen test?", a: "Sensitivity is 60–74% and specificity is 97–100%.", ref: "Metlay JP, et al. Diagnosis and Treatment of Adults with Community-acquired Pneumonia. Am J Respir Crit Care Med. 2019;200(7):e45-e67." },
+      { q: "According to ATS/IDSA guidelines, when should pneumococcal urinary antigen testing be performed in CAP?", a: "Not routinely recommended, but should be considered in adults with severe CAP. Studies show it identifies the causative organism in approximately 71% of pneumococcal cases that would have been missed by culture alone.", ref: "Metlay JP, et al. Diagnosis and Treatment of Adults with Community-acquired Pneumonia. Am J Respir Crit Care Med. 2019;200(7):e45-e67." },
+    ]
+  },
+  {
+    id: 'viral',
+    name: 'Viral Serology',
+    icon: '🧬',
+    questions: [
+      { q: "What serologic pattern distinguishes immunity from vaccination versus immunity from natural hepatitis B infection?", a: "Vaccination produces only anti-HBs (positive anti-HBs, negative anti-HBc). Natural infection produces both anti-HBs and anti-HBc because anti-HBc is only produced following natural infection, not vaccination.", ref: "Terrault NA, et al. Update on Prevention, Diagnosis, and Treatment of Chronic Hepatitis B: AASLD 2018 Hepatitis B Guidance. Hepatology. 2018;67(4):1560-1599." },
+      { q: "A patient has positive HBsAg, positive anti-HBc, and negative anti-HBs. What is the interpretation, and what additional testing is needed?", a: "This pattern indicates chronic hepatitis B infection. Additional testing: HBeAg, anti-HBe, and quantitative HBV DNA to assess viral replication and guide treatment decisions.", ref: "Terrault NA, et al. Update on Prevention, Diagnosis, and Treatment of Chronic Hepatitis B: AASLD 2018 Hepatitis B Guidance. Hepatology. 2018;67(4):1560-1599." },
+      { q: "What is the recommended initial screening test for HIV infection?", a: "The HIV-1/2 antigen/antibody combination (4th generation) immunoassay is used for initial screening.", ref: "CDC HIV Testing Guidelines." },
+      { q: "A patient has a reactive 4th generation HIV Ag/Ab test but a negative/indeterminate HIV-1/HIV-2 differentiation assay. What is the next step?", a: "Perform an HIV-1 RNA nucleic acid test (NAT) to assess for acute HIV infection, as this pattern may indicate early infection before antibody development.", ref: "CDC HIV Testing Algorithm." },
+      { q: "Which syphilis test is the only FDA-approved test for neurosyphilis diagnosis?", a: "CSF-VDRL is the only FDA-approved test for neurosyphilis diagnosis.", ref: "CDC STI Treatment Guidelines 2021." },
+      { q: "What are the sensitivity and specificity limitations of CSF-VDRL for diagnosing neurosyphilis, and how should a negative result be interpreted?", a: "CSF-VDRL is highly specific (78–90%) but only 30–70% sensitive. A negative CSF-VDRL does not rule out neurosyphilis. In patients with neurologic signs/symptoms, reactive serology, and CSF pleocytosis or elevated protein, neurosyphilis should still be considered and treated empirically.", ref: "Ropper AH. Neurosyphilis. N Engl J Med. 2019;381(14):1358-1363." },
+    ]
+  },
+  {
+    id: 'fungal',
+    name: 'Fungal Markers',
+    icon: '🍄',
+    questions: [
+      { q: "Which fungal pathogens are detected by the (1,3)-β-D-glucan assay?", a: "BDG detects cell wall components of Candida, Aspergillus, Pneumocystis jirovecii, Fusarium, and other fungi. It does NOT detect Cryptococcus or Mucorales.", ref: "Pappas PG, et al. Clinical Practice Guideline for the Management of Candidiasis: 2016 Update by IDSA. Clin Infect Dis. 2016;62(4):e1-50." },
+      { q: "Name four causes of false-positive (1,3)-β-D-glucan results that should be considered before initiating antifungal therapy.", a: "False positives: (1) hemodialysis, (2) IV albumin or immunoglobulin infusions, (3) certain antibiotics (IV amoxicillin-clavulanate, some cephalosporins, carbapenems, ampicillin-sulbactam), (4) surgical gauze exposure, (5) GI mucosal disruption/mucositis, and (6) gram-positive or gram-negative bacteremia.", ref: "Pappas PG, et al. Clinical Practice Guideline for the Management of Candidiasis: 2016 Update by IDSA. Clin Infect Dis. 2016;62(4):e1-50." },
+      { q: "What does the Aspergillus galactomannan assay detect?", a: "Galactomannan detects a polysaccharide component of the Aspergillus cell wall. It is recommended as an accurate marker for invasive aspergillosis in high-risk patients (hematologic malignancy, allogeneic HSCT).", ref: "Patterson TF, et al. Practice Guidelines for the Diagnosis and Management of Aspergillosis: 2016 Update by IDSA. Clin Infect Dis. 2016;63(4):e1-e60." },
+      { q: "Why is serum galactomannan NOT recommended for routine screening in patients receiving mold-active antifungal prophylaxis?", a: "Concurrent mold-active antifungal therapy significantly reduces circulating galactomannan levels, decreasing test sensitivity and increasing false-negative results. However, BAL galactomannan can still be applied in these patients.", ref: "Patterson TF, et al. Practice Guidelines for the Diagnosis and Management of Aspergillosis: 2016 Update by IDSA. Clin Infect Dis. 2016;63(4):e1-e60." },
+      { q: "Name three causes of false-positive galactomannan results.", a: "False positives: (1) cross-reactivity with other fungi (Histoplasma, Fusarium, Penicillium, Blastomyces), (2) Plasma-Lyte containing sodium gluconate, and (3) neonatal colonization with Bifidobacterium. Piperacillin-tazobactam was historically a cause but newer formulations are less likely to cross-react.", ref: "Patterson TF, et al. Practice Guidelines for the Diagnosis and Management of Aspergillosis: 2016 Update by IDSA. Clin Infect Dis. 2016;63(4):e1-e60." },
+    ]
+  },
+  {
+    id: 'bio',
+    name: 'Biomarkers & CSF',
+    icon: '📊',
+    questions: [
+      { q: "How quickly does procalcitonin become detectable following an infection?", a: "Procalcitonin becomes detectable 3–4 hours following an infection.", ref: "Samsudin I, Vasikaran SD. Clinical Utility and Measurement of Procalcitonin. Clin Biochem Rev. 2017;38(2):59-68." },
+      { q: "According to the Surviving Sepsis Campaign 2021 guidelines, what is the recommendation for using procalcitonin to guide antibiotic discontinuation in sepsis?", a: "The guidelines suggest using procalcitonin along with clinical evaluation to guide discontinuation of antimicrobials (weak recommendation). Meta-analysis showed improved mortality (RR 0.89) and consistently lower antibiotic exposure with procalcitonin-guided therapy.", ref: "Evans L, et al. Surviving Sepsis Campaign: International Guidelines for Management of Sepsis and Septic Shock 2021. Crit Care Med. 2021;49(11):e1063-e1143." },
+      { q: "What procalcitonin threshold is used to guide antibiotic discontinuation in ICU patients with sepsis?", a: "In ICU patients, antibiotics may be discontinued when procalcitonin decreases to below 0.5 µg/L or decreases by at least 80% from its peak level.", ref: "Schuetz P, et al. Procalcitonin Testing to Guide Antibiotic Therapy in Acute Upper and Lower Respiratory Tract Infections. JAMA. 2018;319(9):925-926." },
+      { q: "What CSF findings would be expected in bacterial meningitis?", a: "Bacterial meningitis typically shows PMN predominance (>50% neutrophils), elevated protein (>100 mg/dL), low glucose (<40 mg/dL or CSF:serum ratio <0.4), elevated opening pressure, and positive Gram stain in 60–90% of cases.", ref: "AAFP Meningitis Review. Am Fam Physician. 2021;103(7):422." },
+      { q: "How does the CSF profile in cryptococcal meningitis differ from bacterial meningitis?", a: "Cryptococcal meningitis shows lymphocyte predominance, mildly elevated protein (usually <150 mg/dL), low to normal glucose, and elevated opening pressure. India ink stain, cryptococcal antigen testing, and culture are diagnostic.", ref: "AAFP Meningitis Review. Am Fam Physician. 2021;103(7):422." },
+    ]
+  }
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let scores = [0, 0];
+let currentTurn = 0; // 0 = P1, 1 = P2
+let deckState = {};   // { catId: { remaining: [...], used: 0 } }
+let currentQ = null;
+let currentCatId = null;
+let refShowing = false;
+let totalQ = 0;
+let answeredQ = 0;
+
+function initState() {
+  scores = [0, 0];
+  currentTurn = 0;
+  deckState = {};
+  answeredQ = 0;
+  totalQ = 0;
+  CATEGORIES.forEach(cat => {
+    const shuffled = [...cat.questions].sort(() => Math.random() - 0.5);
+    deckState[cat.id] = { remaining: shuffled, used: 0, total: shuffled.length };
+    totalQ += shuffled.length;
+  });
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function renderDecks() {
+  const grid = document.getElementById('deck-grid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const state = deckState[cat.id];
+    const empty = state.remaining.length === 0;
+    const slot = document.createElement('div');
+    slot.className = 'deck-slot' + (empty ? ' empty' : '');
+    slot.dataset.catId = cat.id;
+
+    const dotCount = Math.min(state.total, 5);
+    let dots = '';
+    for (let i = 0; i < dotCount; i++) {
+      const isFilled = i < Math.min(state.remaining.length, dotCount);
+      dots += `<div class="deck-dot ${isFilled ? 'filled' : 'used'}"></div>`;
+    }
+
+    slot.innerHTML = `
+      ${!empty ? '<div class="stack-ghost2"></div><div class="stack-ghost"></div>' : ''}
+      <div class="deck-card-face">
+        <div class="deck-icon">${cat.icon}</div>
+        <div class="deck-name">${cat.name}</div>
+        <div class="deck-footer">
+          <span class="deck-count">${empty ? 'Complete' : state.remaining.length + ' left'}</span>
+          <div class="deck-dot-row">${dots}</div>
+        </div>
+      </div>
+    `;
+    if (!empty) {
+      slot.onclick = () => drawCard(cat.id);
+    }
+    grid.appendChild(slot);
+  });
+}
+
+function updateTurnUI() {
+  const p1bar = document.getElementById('p1-bar');
+  const p2bar = document.getElementById('p2-bar');
+  p1bar.classList.toggle('active-turn', currentTurn === 0);
+  p2bar.classList.toggle('active-turn', currentTurn === 1);
+  updateWinBar();
+}
+
+function updateScoreUI() {
+  document.getElementById('p1-score').textContent = scores[0];
+  document.getElementById('p2-score').textContent = scores[1];
+  updateWinBar();
+}
+
+function updateWinBar() {
+  const fill = document.getElementById('win-fill');
+  const total = scores[0] + scores[1];
+  if (total === 0) {
+    fill.style.width = '50%';
+    fill.style.background = 'linear-gradient(90deg, var(--p1), var(--p1-mid))';
+  } else {
+    const pct = Math.round((scores[0] / total) * 100);
+    fill.style.width = pct + '%';
+    if (scores[0] > scores[1]) {
+      fill.style.background = 'linear-gradient(90deg, var(--p1), var(--p1-mid))';
+    } else {
+      fill.style.background = 'linear-gradient(90deg, var(--p1), var(--p2))';
+    }
+  }
+}
+
+function updateStatus() {
+  const rem = totalQ - answeredQ;
+  const bar = document.getElementById('status-bar');
+  if (rem === 0) { bar.innerHTML = ''; return; }
+  bar.innerHTML = `<strong>${rem}</strong> question${rem !== 1 ? 's' : ''} remaining across all categories`;
+}
+
+// ─── GAMEPLAY ────────────────────────────────────────────────────────────────
+function drawCard(catId) {
+  const state = deckState[catId];
+  if (!state || state.remaining.length === 0) return;
+
+  currentCatId = catId;
+  currentQ = state.remaining.shift();
+  state.used++;
+
+  const cat = CATEGORIES.find(c => c.id === catId);
+  const pName = currentTurn === 0 ? "Player 1" : "Player 2";
+  const turnClass = currentTurn === 0 ? 'p1-turn' : 'p2-turn';
+
+  // Populate stage
+  document.getElementById('stage-cat').textContent = cat.name;
+  document.getElementById('stage-turn').textContent = pName + "'s Turn";
+  document.getElementById('stage-q').textContent = currentQ.q;
+  document.getElementById('stage-answer').textContent = currentQ.a;
+  document.getElementById('stage-ref').textContent = currentQ.ref;
+
+  // Reset reveal state
+  const ar = document.getElementById('answer-reveal');
+  ar.classList.remove('visible');
+  document.getElementById('ref-box').style.display = 'none';
+  document.getElementById('ref-toggle').textContent = '📄 Show Reference';
+  refShowing = false;
+  document.getElementById('pre-reveal-btns').style.display = '';
+
+  // Update turn class on card
+  const card = document.getElementById('stage-card-inner');
+  card.classList.remove('p1-turn', 'p2-turn');
+  card.classList.add(turnClass);
+
+  // Show stage
+  const stage = document.getElementById('question-stage');
+  stage.classList.remove('visible');
+  void stage.offsetWidth; // reflow for animation replay
+  stage.classList.add('visible');
+
+  // Update phase label
+  document.getElementById('phase-text').textContent = `${pName} is answering · ${cat.name}`;
+
+  renderDecks();
+  updateStatus();
+
+  // Scroll to question
+  setTimeout(() => stage.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+
+function revealAnswer() {
+  document.getElementById('answer-reveal').classList.add('visible');
+  document.getElementById('pre-reveal-btns').style.display = 'none';
+}
+
+function toggleRef() {
+  refShowing = !refShowing;
+  document.getElementById('ref-box').style.display = refShowing ? 'block' : 'none';
+  document.getElementById('ref-toggle').textContent = refShowing ? '📄 Hide Reference' : '📄 Show Reference';
+}
+
+function award(player) {
+  // player: 0=P1, 1=P2, -1=nobody
+  if (player === 0) {
+    scores[0]++;
+    showToast('✓ Player 1 — correct!');
+  } else if (player === 1) {
+    scores[1]++;
+    showToast('✓ Player 2 — correct!');
+  } else {
+    showToast('No points awarded');
+  }
+
+  answeredQ++;
+  updateScoreUI();
+
+  // Advance turn (always alternates after each question)
+  currentTurn = 1 - currentTurn;
+  updateTurnUI();
+
+  // Hide stage
+  document.getElementById('question-stage').classList.remove('visible');
+  document.getElementById('phase-text').textContent = 'Pick a category to draw a question';
+  currentQ = null;
+
+  // Check game over
+  const allEmpty = CATEGORIES.every(cat => deckState[cat.id].remaining.length === 0);
+  if (allEmpty) {
+    setTimeout(showWinner, 500);
+  }
+}
+
+function showWinner() {
+  const overlay = document.getElementById('winner-overlay');
+  const nameEl = document.getElementById('winner-name');
+  const subEl = document.getElementById('winner-sub');
+  document.getElementById('wscoreP1').textContent = scores[0];
+  document.getElementById('wscoreP2').textContent = scores[1];
+
+  if (scores[0] > scores[1]) {
+    nameEl.textContent = 'Player 1 Wins!';
+    nameEl.className = 'p1w';
+    document.getElementById('winner-crown').textContent = '🏆';
+    subEl.textContent = `Player 1 answered ${scores[0]} of ${totalQ} questions correctly.`;
+  } else if (scores[1] > scores[0]) {
+    nameEl.textContent = 'Player 2 Wins!';
+    nameEl.className = 'p2w';
+    document.getElementById('winner-crown').textContent = '🏆';
+    subEl.textContent = `Player 2 answered ${scores[1]} of ${totalQ} questions correctly.`;
+  } else {
+    nameEl.textContent = "It's a Tie!";
+    nameEl.className = 'tie';
+    document.getElementById('winner-crown').textContent = '🤝';
+    subEl.textContent = `Both players answered ${scores[0]} questions correctly. Well played!`;
+  }
+  overlay.classList.add('visible');
+}
+
+function resetGame() {
+  document.getElementById('winner-overlay').classList.remove('visible');
+  document.getElementById('question-stage').classList.remove('visible');
+  document.getElementById('phase-text').textContent = 'Pick a category to draw a question';
+  document.getElementById('status-bar').innerHTML = '';
+  currentQ = null;
+  initState();
+  updateScoreUI();
+  updateTurnUI();
+  renderDecks();
+  updateStatus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+initState();
+updateScoreUI();
+updateTurnUI();
+renderDecks();
+updateStatus();
+</script>
+</body>
+</html>
