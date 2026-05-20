@@ -15,6 +15,7 @@ Each activity is deployed via **GitHub Pages** and can be accessed using its HTM
 - `ampc_esbl.html` → [https://shemtsai.github.io/topic-discussions/ampc_esbl](https://shemtsai.github.io/topic-discussions/ampc_esbl)
 - `CMV.html` → [https://shemtsai.github.io/topic-discussions/CMV](https://shemtsai.github.io/topic-discussions/CMV)
 - `basic_diagnostics.html` → [https://shemtsai.github.io/topic-discussions/basic_diagnostics](https://shemtsai.github.io/topic-discussions/basic_diagnostics)
+- `endemic_mycoses.html` → [https://shemtsai.github.io/topic-discussions/endemic_mycoses](https://shemtsai.github.io/topic-discussions/endemic_mycoses)
   
 ## How to Use
 
