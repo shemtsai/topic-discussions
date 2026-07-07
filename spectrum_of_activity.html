@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Antimicrobial Spectrum — Clinical Reference</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2B2A;
+    --canvas:#F1F4F1;
+    --card:#FFFFFF;
+    --line:#DCE3DD;
+
+    --violet:#6B4E8E;   /* gram-positive : crystal violet stain */
+    --violet-bg:#F1EDF6;
+    --rose:#BD5A70;     /* gram-negative : safranin counterstain */
+    --rose-bg:#F8EDF0;
+    --slate:#48544D;    /* anaerobe : reduced/anaerobic agar */
+    --slate-bg:#EAEDE9;
+    --amber:#B9852E;    /* atypical : non-gram-staining */
+    --amber-bg:#F7EEDC;
+
+    --s-ring:#3F7A5C;
+    --s-bg:#E2EEE5;
+    --i-ring:#B8863B;
+    --i-bg:#F6ECD8;
+    --r-ring:#AD5142;
+    --r-bg:#F5E3DF;
+  }
+
+  body{
+    background:var(--canvas);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  .font-display{ font-family:'Newsreader', serif; }
+  .font-mono{ font-family:'IBM Plex Mono', monospace; }
+  .organism-name{ font-family:'Newsreader', serif; font-style:italic; }
+
+  /* ---------- scrollbar ---------- */
+  .grid-scroll::-webkit-scrollbar{ height:10px; width:10px; }
+  .grid-scroll::-webkit-scrollbar-track{ background:transparent; }
+  .grid-scroll::-webkit-scrollbar-thumb{ background:#C7D0C9; border-radius:10px; }
+
+  /* ---------- table sticky ---------- */
+  .grid-scroll{ overflow:auto; }
+  table{ border-collapse:separate; border-spacing:0; }
+  thead th{
+    position:sticky; top:0; z-index:20;
+    background:var(--canvas);
+  }
+  tbody th{
+    position:sticky; left:0; z-index:10;
+    background:var(--card);
+  }
+  thead th.corner{ z-index:30; left:0; position:sticky; background:var(--canvas); }
+
+  .col-head{
+    height:132px; width:52px; min-width:52px; max-width:52px;
+    vertical-align:bottom; padding-bottom:10px;
+    border-bottom:1px solid var(--line);
+    transition:background .15s ease;
+  }
+  .col-head span{
+    display:inline-block;
+    transform:rotate(-42deg);
+    transform-origin:left bottom;
+    white-space:nowrap;
+    font-size:11.5px;
+    letter-spacing:.01em;
+    font-weight:500;
+    color:#425048;
+  }
+  .col-head.hl{ background:#E8EEE7; }
+  .col-head.dimmed{ opacity:.25; }
+
+  tbody tr{ transition: background .15s ease; }
+  tbody tr:hover{ background:#F7F9F6; }
+  tbody th{
+    text-align:left; padding:9px 16px 9px 14px; min-width:210px;
+    font-size:14.5px; border-bottom:1px solid var(--line);
+    border-left:3px solid transparent;
+  }
+  tbody th.hl{ background:#F7F9F6; }
+  tbody th .sub{ font-family:'Inter',sans-serif; font-style:normal; font-size:10.5px; color:#8A948C; letter-spacing:.03em; text-transform:uppercase; margin-left:6px;}
+
+  td.cell{
+    padding:0; text-align:center; border-bottom:1px solid var(--line);
+    width:52px; min-width:52px;
+    transition: background .15s ease, opacity .15s ease;
+  }
+  td.cell.dimmed{ opacity:.2; }
+  td.cell.hl{ background:#EEF2EC; }
+
+  .disk{
+    margin:8px auto; display:flex; align-items:center; justify-content:center;
+    border-radius:50%; font-family:'IBM Plex Mono',monospace; font-weight:600;
+    line-height:1;
+  }
+  .disk-S{ width:28px; height:28px; font-size:10.5px; color:var(--s-ring); background:var(--s-bg); border:1.6px solid var(--s-ring); }
+  .disk-I{ width:21px; height:21px; font-size:9.5px;  color:var(--i-ring); background:var(--i-bg); border:1.6px solid var(--i-ring); }
+  .disk-R{ width:13px; height:13px; font-size:0;      color:var(--r-ring); background:var(--r-ring); border:1.6px solid var(--r-ring); }
+  .disk-NA{ width:16px; height:2px; border-radius:2px; background:#C9CFC9; }
+
+  /* row category accent */
+  tr[data-cat="gram-positive"] th{ border-left-color:var(--violet); }
+  tr[data-cat="gram-negative"] th{ border-left-color:var(--rose); }
+  tr[data-cat="anaerobe"] th{ border-left-color:var(--slate); }
+  tr[data-cat="atypical"] th{ border-left-color:var(--amber); }
+
+  .syn-row{ box-shadow: inset 0 0 0 9999px rgba(180,167,120,0.07); }
+  .syn-dim{ opacity:.28; }
+
+  .pill{
+    font-size:12.5px; font-weight:500; padding:6px 13px; border-radius:999px;
+    border:1px solid var(--line); background:#fff; color:#4B564E; cursor:pointer;
+    transition:.15s ease; white-space:nowrap;
+  }
+  .pill:hover{ border-color:#B7C2BA; }
+  .pill.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .syn-pill.active{ background:#8A6E33; border-color:#8A6E33; color:#fff; }
+
+  ::selection{ background:#D9E3DA; }
+
+  fieldset:disabled{ opacity:1; }
+
+  @media (max-width: 640px){
+    .col-head{ height:112px; }
+    tbody th{ min-width:170px; }
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ HEADER ============ -->
+<header class="border-b" style="background:var(--ink); border-color:var(--ink);">
+  <div class="max-w-7xl mx-auto px-5 sm:px-8 py-9">
+    <p class="font-mono text-[11px] tracking-[0.18em] uppercase" style="color:#9FB0A5;">Clinical Reference · Bench Tool</p>
+    <h1 class="font-display italic text-white text-[34px] sm:text-[44px] mt-1 leading-tight">Antimicrobial Spectrum</h1>
+    <p class="text-sm sm:text-[15px] mt-3 max-w-2xl" style="color:#B9C6BC;">
+      A working reference of expected susceptibility patterns for organisms commonly encountered on ID consult and antimicrobial stewardship services.
+      Disk size mirrors zone-of-inhibition logic — bigger circle, more reliable coverage. Always confirm against your institution's local antibiogram and current CLSI/EUCAST breakpoints before prescribing.
+    </p>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-5 sm:px-8 py-7">
+
+  <!-- ============ CONTROL BAR ============ -->
+  <div class="bg-white rounded-2xl border p-4 sm:p-5 mb-5 flex flex-col gap-4" style="border-color:var(--line);">
+
+    <div class="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+      <!-- search -->
+      <div class="relative w-full lg:max-w-xs">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A948C" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchInput" type="text" placeholder="Search organisms…"
+          class="w-full pl-9 pr-3 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
+          style="border-color:var(--line); --tw-ring-color:#C9D6CC;">
+      </div>
+
+      <!-- class filter -->
+      <div class="flex items-center gap-2 text-sm">
+        <label for="classFilter" class="text-[#5A6560] whitespace-nowrap">Drug class</label>
+        <select id="classFilter" class="border rounded-lg px-3 py-2.5 text-sm outline-none bg-white" style="border-color:var(--line);">
+          <option value="all">All classes</option>
+          <option value="beta-lactam">Beta-lactams</option>
+          <option value="fluoroquinolone">Fluoroquinolones</option>
+          <option value="anti-gram-pos">Anti-Gram-positive (Vanc/Linezolid/Dapto)</option>
+          <option value="other">Other (SXT / Doxy / Metronidazole)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="h-px w-full" style="background:var(--line);"></div>
+
+    <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+      <!-- gram category pills -->
+      <div class="flex flex-wrap gap-2" id="categoryPills">
+        <button class="pill active" data-cat="all">All</button>
+        <button class="pill" data-cat="gram-positive">Gram-positive</button>
+        <button class="pill" data-cat="gram-negative">Gram-negative</button>
+        <button class="pill" data-cat="anaerobe">Anaerobe</button>
+        <button class="pill" data-cat="atypical">Atypical</button>
+      </div>
+
+      <!-- syndrome presets -->
+      <div class="flex flex-wrap gap-2 items-center">
+        <span class="font-mono text-[11px] uppercase tracking-wider text-[#8A948C] mr-1">Syndrome</span>
+        <button class="pill syn-pill" data-syn="CAP">CAP</button>
+        <button class="pill syn-pill" data-syn="Intra-abdominal">Intra-abdominal</button>
+        <button class="pill syn-pill" data-syn="UTI">UTI</button>
+        <button class="pill syn-pill" data-syn="Cellulitis">Cellulitis</button>
+      </div>
+    </div>
+
+    <div id="syndromeBanner" class="hidden text-sm rounded-lg px-4 py-2.5" style="background:var(--amber-bg); color:#7A5A24;"></div>
+  </div>
+
+  <!-- ============ LEGEND ============ -->
+  <div class="bg-white rounded-2xl border p-4 sm:p-5 mb-5 flex flex-wrap items-center gap-x-8 gap-y-3" style="border-color:var(--line);">
+    <span class="font-mono text-[11px] uppercase tracking-wider text-[#8A948C]">How to read</span>
+    <div class="flex items-center gap-2"><span class="disk disk-S">S</span><span class="text-sm text-[#4B564E]">Usually susceptible</span></div>
+    <div class="flex items-center gap-2"><span class="disk disk-I">I</span><span class="text-sm text-[#4B564E]">Variable / intermediate</span></div>
+    <div class="flex items-center gap-2"><span class="disk disk-R"></span><span class="text-sm text-[#4B564E]">Usually resistant</span></div>
+    <div class="flex items-center gap-2"><span class="disk disk-NA"></span><span class="text-sm text-[#4B564E]">Not clinically used</span></div>
+    <span class="text-xs text-[#9AA39C] ml-auto">Educational reference only — verify locally.</span>
+  </div>
+
+  <!-- ============ MATRIX ============ -->
+  <div class="bg-white rounded-2xl border overflow-hidden" style="border-color:var(--line);">
+    <div class="grid-scroll" style="max-height:74vh;">
+      <table id="matrixTable">
+        <thead>
+          <tr id="headRow">
+            <th class="corner" style="min-width:210px; border-bottom:1px solid var(--line);">
+              <div class="px-4 py-3 text-[11px] font-mono uppercase tracking-wider text-[#8A948C]">Organism</div>
+            </th>
+            <!-- antibiotic <th> injected by JS -->
+          </tr>
+        </thead>
+        <tbody id="bodyRows"></tbody>
+      </table>
+    </div>
+    <div class="px-5 py-3 text-xs text-[#9AA39C] border-t" style="border-color:var(--line);" id="countLabel"></div>
+  </div>
+
+  <p class="text-center text-xs text-[#9AA39C] mt-6">Built for ID fellows. Not a substitute for institutional antibiogram data or clinical pharmacist input.</p>
+</main>
+
+<script>
+/* ================= DATA ================= */
+const ANTIBIOTICS = [
+  { name:"Ampicillin", cls:"beta-lactam" },
+  { name:"Amoxicillin-clavulanate", cls:"beta-lactam" },
+  { name:"Piperacillin-tazobactam", cls:"beta-lactam" },
+  { name:"Ceftriaxone", cls:"beta-lactam" },
+  { name:"Cefepime", cls:"beta-lactam" },
+  { name:"Meropenem", cls:"beta-lactam" },
+  { name:"Aztreonam", cls:"beta-lactam" },
+  { name:"Ciprofloxacin", cls:"fluoroquinolone" },
+  { name:"Levofloxacin", cls:"fluoroquinolone" },
+  { name:"TMP-SMX", cls:"other" },
+  { name:"Doxycycline", cls:"other" },
+  { name:"Vancomycin", cls:"anti-gram-pos" },
+  { name:"Linezolid", cls:"anti-gram-pos" },
+  { name:"Daptomycin", cls:"anti-gram-pos" },
+  { name:"Metronidazole", cls:"other" },
+];
+
+// order matches ANTIBIOTICS above
+const ORGANISMS = [
+  { name:"Staphylococcus aureus", sub:"MSSA", cat:"gram-positive", v:["R","S","S","S","S","S","R","S","S","S","S","S","S","S","R"] },
+  { name:"Staphylococcus aureus", sub:"MRSA", cat:"gram-positive", v:["R","R","R","R","R","R","R","R","R","S","S","S","S","S","R"] },
+  { name:"Streptococcus pneumoniae", sub:"", cat:"gram-positive", v:["S","S","S","S","S","S","R","I","S","I","S","S","S","S","R"] },
+  { name:"Streptococcus pyogenes", sub:"GAS", cat:"gram-positive", v:["S","S","S","S","S","S","R","I","S","R","I","S","S","S","R"] },
+  { name:"Streptococcus agalactiae", sub:"GBS", cat:"gram-positive", v:["S","S","S","S","S","S","R","I","S","R","I","S","S","S","R"] },
+  { name:"Enterococcus faecalis", sub:"", cat:"gram-positive", v:["S","S","S","R","R","S","R","I","I","R","I","S","S","S","R"] },
+  { name:"Enterococcus faecium", sub:"", cat:"gram-positive", v:["R","R","R","R","R","R","R","R","R","R","I","I","S","S","R"] },
+  { name:"Escherichia coli", sub:"", cat:"gram-negative", v:["I","S","S","S","S","S","S","I","I","I","I","R","R","R","R"] },
+  { name:"Klebsiella pneumoniae", sub:"", cat:"gram-negative", v:["R","S","S","S","S","S","S","I","S","I","I","R","R","R","R"] },
+  { name:"Proteus mirabilis", sub:"", cat:"gram-negative", v:["S","S","S","S","S","S","S","S","S","S","R","R","R","R","R"] },
+  { name:"Pseudomonas aeruginosa", sub:"", cat:"gram-negative", v:["R","R","S","R","S","S","S","S","I","R","R","R","R","R","R"] },
+  { name:"Acinetobacter baumannii", sub:"", cat:"gram-negative", v:["R","R","I","R","I","I","R","I","I","I","S","R","R","R","R"] },
+  { name:"Stenotrophomonas maltophilia", sub:"", cat:"gram-negative", v:["R","R","R","R","R","R","R","I","S","S","S","R","R","R","R"] },
+  { name:"Serratia marcescens", sub:"", cat:"gram-negative", v:["R","R","S","S","S","S","S","S","S","S","R","R","R","R","R"] },
+  { name:"Enterobacter cloacae", sub:"", cat:"gram-negative", v:["R","R","I","I","S","S","I","S","S","S","S","R","R","R","R"] },
+  { name:"Citrobacter freundii", sub:"", cat:"gram-negative", v:["R","R","I","I","S","S","I","S","S","S","S","R","R","R","R"] },
+  { name:"Haemophilus influenzae", sub:"", cat:"gram-negative", v:["I","S","S","S","S","S","S","S","S","I","S","R","R","R","R"] },
+  { name:"Neisseria meningitidis", sub:"", cat:"gram-negative", v:["S","S","S","S","S","S","S","S","S","I","S","R","R","R","R"] },
+  { name:"Bacteroides fragilis", sub:"", cat:"anaerobe", v:["R","S","S","R","R","S","R","R","R","R","I","R","I","R","S"] },
+  { name:"Clostridioides difficile", sub:"", cat:"anaerobe", v:["R","R","R","R","R","R","R","R","R","R","R","S","NA","NA","S"] },
+  { name:"Mycoplasma pneumoniae", sub:"", cat:"atypical", v:["R","R","R","R","R","R","R","S","S","R","S","R","R","R","R"] },
+  { name:"Legionella pneumophila", sub:"", cat:"atypical", v:["R","R","R","R","R","R","R","S","S","R","S","R","R","R","R"] },
+  { name:"Chlamydophila pneumoniae", sub:"", cat:"atypical", v:["R","R","R","R","R","R","R","I","S","R","S","R","R","R","R"] },
+];
+
+const SYNDROMES = {
+  "CAP": {
+    label:"Community-acquired pneumonia",
+    note:"Typical empiric pathogens: S. pneumoniae, H. influenzae, atypicals (Mycoplasma, Legionella, Chlamydophila), and S. aureus (post-influenza / severe disease).",
+    organisms:["Streptococcus pneumoniae","Haemophilus influenzae","Mycoplasma pneumoniae","Legionella pneumophila","Chlamydophila pneumoniae","Staphylococcus aureus"]
+  },
+  "Intra-abdominal": {
+    label:"Intra-abdominal infection",
+    note:"Typical empiric pathogens: Enterobacterales (E. coli, Klebsiella, Enterobacter), Enterococcus faecalis, and anaerobes including B. fragilis.",
+    organisms:["Escherichia coli","Klebsiella pneumoniae","Enterobacter cloacae","Enterococcus faecalis","Bacteroides fragilis"]
+  },
+  "UTI": {
+    label:"Urinary tract infection",
+    note:"Typical empiric pathogens: E. coli, Klebsiella pneumoniae, Proteus mirabilis, Enterococcus faecalis; consider Pseudomonas in complicated/catheter-associated disease.",
+    organisms:["Escherichia coli","Klebsiella pneumoniae","Proteus mirabilis","Enterococcus faecalis","Pseudomonas aeruginosa"]
+  },
+  "Cellulitis": {
+    label:"Skin & soft tissue infection",
+    note:"Typical empiric pathogens: Streptococcus pyogenes and Staphylococcus aureus, including MRSA in purulent disease.",
+    organisms:["Streptococcus pyogenes","Streptococcus agalactiae","Staphylococcus aureus"]
+  }
+};
+
+/* ================= STATE ================= */
+const state = { search:"", cat:"all", cls:"all", syn:null };
+
+/* ================= RENDER HEAD ================= */
+const headRow = document.getElementById('headRow');
+ANTIBIOTICS.forEach((ab, i)=>{
+  const th = document.createElement('th');
+  th.className = 'col-head';
+  th.dataset.col = i;
+  th.dataset.cls = ab.cls;
+  th.innerHTML = `<span>${ab.name}</span>`;
+  headRow.appendChild(th);
+});
+
+/* ================= RENDER BODY ================= */
+const bodyRows = document.getElementById('bodyRows');
+
+function diskFor(val){
+  if(val === "NA") return `<span class="disk disk-NA"></span>`;
+  return `<span class="disk disk-${val}">${val === 'R' ? '' : val}</span>`;
+}
+
+function buildRows(){
+  bodyRows.innerHTML = "";
+  ORGANISMS.forEach((org, rIdx)=>{
+    const tr = document.createElement('tr');
+    tr.dataset.cat = org.cat;
+    tr.dataset.name = org.name.toLowerCase() + " " + org.sub.toLowerCase();
+
+    const th = document.createElement('th');
+    th.dataset.row = rIdx;
+    th.innerHTML = `<span class="organism-name">${org.name}</span>${org.sub ? `<span class="sub">${org.sub}</span>` : ""}`;
+    tr.appendChild(th);
+
+    org.v.forEach((val, cIdx)=>{
+      const td = document.createElement('td');
+      td.className = 'cell';
+      td.dataset.row = rIdx;
+      td.dataset.col = cIdx;
+      td.dataset.cls = ANTIBIOTICS[cIdx].cls;
+      td.innerHTML = diskFor(val);
+      tr.appendChild(td);
+    });
+
+    bodyRows.appendChild(tr);
+  });
+}
+buildRows();
+
+/* ================= CROSS HIGHLIGHT ================= */
+const colHeads = () => document.querySelectorAll('.col-head');
+const rowHeads = () => document.querySelectorAll('tbody th');
+
+bodyRows.addEventListener('mouseover', (e)=>{
+  const td = e.target.closest('td.cell');
+  if(!td) return;
+  const r = td.dataset.row, c = td.dataset.col;
+  document.querySelectorAll(`[data-col="${c}"]`).forEach(el=>el.classList.add('hl'));
+  document.querySelectorAll(`[data-row="${r}"]`).forEach(el=>el.classList.add('hl'));
+});
+bodyRows.addEventListener('mouseout', (e)=>{
+  const td = e.target.closest('td.cell');
+  if(!td) return;
+  const r = td.dataset.row, c = td.dataset.col;
+  document.querySelectorAll(`[data-col="${c}"]`).forEach(el=>el.classList.remove('hl'));
+  document.querySelectorAll(`[data-row="${r}"]`).forEach(el=>el.classList.remove('hl'));
+});
+
+/* ================= FILTERING ================= */
+const countLabel = document.getElementById('countLabel');
+
+function applyFilters(){
+  const rows = bodyRows.querySelectorAll('tr');
+  let visible = 0;
+  const synData = state.syn ? SYNDROMES[state.syn] : null;
+  const synSet = synData ? new Set(synData.organisms.map(n=>n.toLowerCase())) : null;
+
+  rows.forEach(tr=>{
+    const nameFull = tr.dataset.name;
+    const orgIndex = tr.querySelector('th').dataset.row;
+    const orgName = ORGANISMS[orgIndex].name.toLowerCase();
+    const matchesSearch = state.search === "" || nameFull.includes(state.search);
+    const matchesCat = state.cat === "all" || tr.dataset.cat === state.cat;
+    const matchesSyn = !synSet || synSet.has(orgName);
+
+    const show = matchesSearch && matchesCat && matchesSyn;
+    tr.style.display = show ? "" : "none";
+    if(show) visible++;
+  });
+
+  // column visibility by class
+  colHeads().forEach(th=>{
+    const show = state.cls === "all" || th.dataset.cls === state.cls;
+    th.classList.toggle('dimmed', !show);
+  });
+  document.querySelectorAll('td.cell').forEach(td=>{
+    const show = state.cls === "all" || td.dataset.cls === state.cls;
+    td.classList.toggle('dimmed', !show);
+  });
+
+  countLabel.textContent = `${visible} of ${ORGANISMS.length} organisms shown`;
+}
+applyFilters();
+
+/* ================= CONTROLS ================= */
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  state.search = e.target.value.trim().toLowerCase();
+  applyFilters();
+});
+
+document.getElementById('classFilter').addEventListener('change', (e)=>{
+  state.cls = e.target.value;
+  applyFilters();
+});
+
+document.getElementById('categoryPills').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.pill');
+  if(!btn) return;
+  state.cat = btn.dataset.cat;
+  document.querySelectorAll('#categoryPills .pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+});
+
+const banner = document.getElementById('syndromeBanner');
+document.querySelectorAll('.syn-pill').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.syn;
+    if(state.syn === key){
+      state.syn = null;
+      btn.classList.remove('active');
+      banner.classList.add('hidden');
+    } else {
+      document.querySelectorAll('.syn-pill').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      state.syn = key;
+      const d = SYNDROMES[key];
+      banner.textContent = `${d.label} — ${d.note}`;
+      banner.classList.remove('hidden');
+    }
+    applyFilters();
+  });
+});
+</script>
+</body>
+</html>
