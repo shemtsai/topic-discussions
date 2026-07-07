@@ -16,6 +16,7 @@ Each activity is deployed via **GitHub Pages** and can be accessed using its HTM
 - `CMV.html` → [https://shemtsai.github.io/topic-discussions/CMV](https://shemtsai.github.io/topic-discussions/CMV)
 - `basic_diagnostics.html` → [https://shemtsai.github.io/topic-discussions/basic_diagnostics](https://shemtsai.github.io/topic-discussions/basic_diagnostics)
 - `endemic_mycoses.html` → [https://shemtsai.github.io/topic-discussions/endemic_mycoses](https://shemtsai.github.io/topic-discussions/endemic_mycoses)
+- `spectrum_of_activity.html` → [https://shemtsai.github.io/topic-discussions/spectrum_of_activity](https://shemtsai.github.io/topic-discussions/spectrum_of_activity)
   
 ## How to Use
 
