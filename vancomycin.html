@@ -62,13 +62,29 @@
   DELIBERATE DEPARTURE FROM THE ORIGINAL PROMPT SPEC — PLEASE REVIEW
   a) The brief asked for a deep-seated-infection case "requiring a more aggressive target."
      The 2020 consensus does NOT raise the AUC target for endocarditis or osteomyelitis;
-     the target stays 400-600. Case 11 therefore teaches that the target does not move and
-     that what changes is speed-to-target, duration, and source control. If your institution
-     genuinely targets higher exposure for CNS infection, edit Case 11's teaching text.
+     the target stays 400-600. The endocarditis case therefore teaches that the target does not
+     move, and that what changes is speed-to-target, duration, and source control.
   b) The brief asked for obesity "requiring adjusted body weight dosing." Adjusted body
      weight belongs in the CrCl ESTIMATE, not in the vancomycin dose. The dose uses actual
-     body weight, but at a lower mg/kg than in a non-obese patient. Case 5 teaches that
-     split explicitly because conflating the two is the most common obesity dosing error.
+     body weight, but at a lower mg/kg than in a non-obese patient. The class III obesity case
+     teaches that split explicitly, because conflating the two is the commonest obesity error.
+  c) The ventriculitis case does NOT assert a CNS-specific AUC target, because the 2020
+     consensus does not define one and the data are thin. It teaches the standard target plus
+     the reasoning about poor CSF penetration, and says out loud that aiming at the upper half
+     of the range is common practice rather than a guideline number.
+
+  WHAT THE LEARNER IS ASKED FOR
+  Four entries per case: loading dose, maintenance dose, interval, and when to draw the level.
+  They are NOT asked to choose a monitoring method (Bayesian vs two-level vs trough). That choice
+  is taught in the reference panel and stated in each case's ideal plan, but selecting it added
+  little for a day-one learner compared with the timing decision, which is what actually separates
+  the stable cases from the unstable ones.
+
+  CASE ORDER AND SELECTION
+  CASES is sorted by the level field at load time (stable, so authored order is preserved inside
+  each level) and numbered from that order. Add a case anywhere in the array with the right level
+  and it slots in correctly with no renumbering. Learners can work straight through or pick any
+  case from the "All cases" list; scores persist for the session and a case can be retaken.
 
   SCOPE OF THE EXERCISE
   The learner is NOT asked to calculate creatinine clearance. Cockcroft-Gault is computed and
@@ -294,6 +310,26 @@ td .yours{color:var(--ink-3);font-size:12.5px;display:block;margin-top:2px}
 .diag ul{margin:0;padding-left:18px}
 
 /* ---------- session progress ---------- */
+/* case picker */
+.topbtn{font-size:12px;padding:6px 12px;align-self:center}
+.picker-intro{font-size:14px;color:var(--ink-2);max-width:70ch;margin:0 0 4px}
+.picklist{margin-bottom:4px}
+button.pickrow{
+  display:flex;width:100%;gap:14px;align-items:baseline;text-align:left;
+  background:transparent;color:var(--ink);border:none;border-top:1px solid var(--rule);
+  border-radius:0;padding:11px 6px;font-weight:400;font-size:14px;cursor:pointer
+}
+button.pickrow:hover{background:var(--accent-soft)}
+.pk-n{font-family:var(--mono);font-size:12px;color:var(--ink-3);flex:none;width:22px}
+.pk-main{flex:1;min-width:0}
+.pk-main b{display:block;font-weight:600;letter-spacing:-0.005em}
+.pk-main em{display:block;font-style:normal;font-size:12.5px;color:var(--ink-3);margin-top:1px}
+.pk-score{font-family:var(--mono);font-size:13px;font-weight:600;flex:none;width:34px;text-align:right}
+.pk-score.todo{color:var(--rule-strong);font-weight:400}
+.pk-score.ok{color:var(--in-range)}
+.pk-score.part{color:var(--high)}
+.pk-score.miss{color:var(--danger)}
+
 .spark{display:flex;align-items:flex-end;gap:4px;height:56px;padding:0 2px}
 .spark .b{flex:1;min-width:8px;background:var(--rule-strong);border-radius:1px 1px 0 0;position:relative}
 .spark .b b{position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);font-weight:400}
@@ -310,8 +346,9 @@ td .yours{color:var(--ink-3);font-size:12.5px;display:block;margin-top:2px}
   <div class="top-inner">
     <h1 class="title">Vancomycin Dosing Trainer <span>&nbsp;PGY1 · adult general medicine</span></h1>
     <div class="top-stats">
-      <div class="stat">Case<b id="statCase">1/14</b></div>
+      <div class="stat"><span id="statCaseLabel">Case</span><b id="statCase">1/20</b></div>
       <div class="stat">Session<b id="statScore">—</b></div>
+      <button class="ghost topbtn" id="btnTopList">All cases</button>
     </div>
   </div>
   <div class="trackbar" id="trackbar"></div>
@@ -596,6 +633,7 @@ const CASES = [
 {
   n:1, level:1,
   title:'MRSA bacteremia, normal renal function',
+  teaches:'The six-step sequence on a straightforward patient',
   age:58, sex:'M', tbw:78, heightIn:70, scr:0.9,
   vignette:`<p>A 58-year-old man is admitted with fever and rigors three days after a peripherally
     inserted central catheter was placed for home antibiotics. Two sets of blood cultures grow
@@ -606,7 +644,7 @@ const CASES = [
   loading:{required:true, note:'Bacteremia is a serious MRSA infection, so a loading dose is indicated.'},
   maintenance:{mode:'auc', idealText:'1,000 mg IV q12h (about 13 mg/kg/dose, total daily dose 2,000 mg)'},
   intervals:{full:['12'], partial:['24','8'], note:'q12h is the default interval at this clearance.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['ss','early'],
+  monitoring:{timingFull:['ss','early'],
     idealText:'AUC-guided monitoring. Either a Bayesian estimate from a single level, or a post-distribution peak plus a trough at steady state before the fourth dose. Also trend serum creatinine.'},
   reasoning:`<ol>
     <li>Ideal body weight is 73 kg and he weighs 78 kg, so he is at 107% of ideal &mdash; below the
@@ -627,6 +665,7 @@ const CASES = [
 {
   n:2, level:1,
   title:'MRSA pneumonia in a smaller patient',
+  teaches:'Which weight does which job',
   age:45, sex:'F', tbw:58, heightIn:62, scr:0.8,
   vignette:`<p>A 45-year-old woman with a post-influenza necrotising pneumonia has MRSA growing from
     a tracheal aspirate and one set of blood cultures. She is on 4 L nasal cannula, not intubated,
@@ -636,7 +675,7 @@ const CASES = [
   loading:{required:true, note:'MRSA pneumonia with bacteremia is a serious infection; load.'},
   maintenance:{mode:'auc', idealText:'750 mg IV q12h (about 13 mg/kg/dose, total daily dose 1,500 mg)'},
   intervals:{full:['12'], partial:['24'], note:'q12h at a CrCl in the 70s.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['ss','early'],
+  monitoring:{timingFull:['ss','early'],
     idealText:'AUC-guided levels; recheck if renal function shifts.'},
   reasoning:`<ol>
     <li>Female ideal body weight = 45.5 + 2.3(2) = 50.1 kg. She weighs 58 kg, which is 116% of
@@ -653,6 +692,7 @@ const CASES = [
 {
   n:3, level:2,
   title:'Vertebral osteomyelitis with a borderline creatinine clearance',
+  teaches:'Dosing a patient who falls between two bands',
   age:67, sex:'M', tbw:80, heightIn:69, scr:1.4,
   vignette:`<p>A 67-year-old man presents with six weeks of worsening back pain. MRI shows L3&ndash;L4
     discitis and osteomyelitis; a CT-guided biopsy grows MRSA. He is afebrile and haemodynamically
@@ -663,7 +703,7 @@ const CASES = [
   loading:{required:true, note:'Deep-seated bone infection; a loading dose gets him to target on day one rather than day three.'},
   maintenance:{mode:'auc', idealText:'1,250 mg IV q24h (total daily dose 1,250 mg). 1,000 mg q24h or 500 mg q12h are also inside the target range.'},
   intervals:{full:['24','12'], partial:[], note:'This is exactly the borderline: both q12h and q24h are defensible at a CrCl near 50. What matters is the total daily dose.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['ss','early'],
+  monitoring:{timingFull:['ss','early'],
     idealText:'AUC-guided levels at steady state, then roughly weekly given the planned duration of therapy, with creatinine.'},
   reasoning:`<ol>
     <li>He is at 113% of ideal body weight, so Cockcroft-Gault uses ideal body weight (70.7 kg),
@@ -684,6 +724,7 @@ const CASES = [
 {
   n:4, level:2,
   title:'MRSA bacteremia with moderate chronic kidney disease',
+  teaches:'Stretching the interval rather than shrinking the dose',
   age:72, sex:'F', tbw:62, heightIn:63, scr:1.5,
   vignette:`<p>A 72-year-old woman with stage 3b chronic kidney disease and type 2 diabetes is
     admitted with a diabetic foot ulcer and MRSA bacteremia. She is febrile but not hypotensive.
@@ -693,7 +734,7 @@ const CASES = [
   loading:{required:true, note:'Bacteremia. Renal impairment does not change the loading dose.'},
   maintenance:{mode:'auc', idealText:'750 mg IV q24h (total daily dose 750 mg). 1,000 mg q36h is an equally defensible alternative.'},
   intervals:{full:['24','36'], partial:['48'], note:'Extended interval, not a smaller dose given more often.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['ss','early'],
+  monitoring:{timingFull:['ss','early'],
     idealText:'AUC-guided levels, with creatinine at least every other day while on therapy.'},
   reasoning:`<ol>
     <li>Ideal body weight 52.4 kg, she is at 118% of ideal, so Cockcroft-Gault uses ideal body
@@ -713,6 +754,7 @@ const CASES = [
 {
   n:5, level:2,
   title:'Class III obesity with MRSA bacteremia',
+  teaches:'Why mg/kg falls as weight rises',
   age:52, sex:'M', tbw:148, heightIn:70, scr:1.0,
   vignette:`<p>A 52-year-old man, 148 kg and 5'10" (BMI 47), is admitted with a large gluteal abscess
     and MRSA bacteremia. Interventional radiology has drained the collection. He is febrile,
@@ -722,7 +764,7 @@ const CASES = [
   loading:{required:true, capBinds:true, note:'25 mg/kg of 148 kg is 3,700 mg, above the 3,000 mg cap used here. The cap binds, so give 3,000 mg (about 20 mg/kg).'},
   maintenance:{mode:'auc', idealText:'1,500 mg IV q12h (total daily dose 3,000 mg, about 10 mg/kg per dose). 1,250 mg q12h also lands in range.'},
   intervals:{full:['12'], partial:['8'], note:'q12h; the daily-dose ceiling arrives quickly in this patient.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early','ss'],
+  monitoring:{timingFull:['early','ss'],
     idealText:'AUC-guided levels drawn early &mdash; obesity is exactly where population estimates are least reliable &mdash; plus close creatinine monitoring given the daily dose.'},
   reasoning:`<ol>
     <li>Ideal body weight 73 kg; at 148 kg he is at 203% of ideal, so use <b>adjusted body weight</b>
@@ -742,6 +784,7 @@ const CASES = [
 {
   n:6, level:2,
   title:'An 84-year-old with a "normal" creatinine',
+  teaches:'When the creatinine flatters the kidney',
   age:84, sex:'F', tbw:52, heightIn:62, scr:0.6,
   vignette:`<p>An 84-year-old woman from a skilled nursing facility is admitted with MRSA bacteremia
     from an infected sacral pressure ulcer. She is frail and visibly sarcopenic, ambulates only with
@@ -755,7 +798,7 @@ const CASES = [
   loading:{required:true, note:'Age is not a reason to withhold a loading dose in bacteremia.'},
   maintenance:{mode:'auc', idealText:'1,000 mg IV q24h (or 500 mg q12h). Total daily dose around 1,000 mg.'},
   intervals:{full:['24','12'], partial:['36'], note:'Either works; the daily dose is what matters.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early'], timingPartial:['ss'],
+  monitoring:{timingFull:['early'], timingPartial:['ss'],
     idealText:'An early level &mdash; Bayesian estimation after the first or second dose if available &mdash; because the creatinine clearance estimate itself is the uncertain part. Waiting until steady state wastes the chance to correct sooner.'},
   reasoning:`<ol>
     <li>Her creatinine looks reassuring, but creatinine is produced by muscle. A frail 84-year-old
@@ -778,6 +821,7 @@ const CASES = [
 {
   n:7, level:3,
   title:'Augmented renal clearance after polytrauma',
+  teaches:'Finding the under-dosed patient who looks well',
   age:24, sex:'M', tbw:85, heightIn:72, scr:0.8,
   vignette:`<p>A 24-year-old man is in the surgical ICU on day 6 after a motorcycle collision with
     multiple long-bone fractures and a splenectomy. He develops a ventilator-associated pneumonia
@@ -788,7 +832,7 @@ const CASES = [
   loading:{required:true, note:'Critically ill with MRSA bacteremia and pneumonia.'},
   maintenance:{mode:'auc', idealText:'1,250 mg IV q8h (total daily dose 3,750 mg). 1,000 mg q8h is the conservative end of the acceptable range.'},
   intervals:{full:['8','ci'], partial:['12'], note:'Shorten the interval rather than enlarging single doses. Continuous infusion is a legitimate alternative in augmented clearance.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early'], timingPartial:['ss'],
+  monitoring:{timingFull:['early'], timingPartial:['ss'],
     idealText:'Early AUC-guided levels, and repeat them as he recovers &mdash; augmented clearance recedes, and the regimen that fits today can be too much next week.'},
   reasoning:`<ol>
     <li>Young, previously healthy, post-trauma, no renal disease: the classic augmented renal
@@ -810,6 +854,7 @@ const CASES = [
 {
   n:8, level:3,
   title:'Advanced chronic kidney disease, not yet on dialysis',
+  teaches:'A normal-sized dose, given rarely',
   age:69, sex:'M', tbw:74, heightIn:68, scr:4.2,
   vignette:`<p>A 69-year-old man with stage 4 chronic kidney disease, followed by nephrology and
     not yet started on renal replacement, is admitted with MRSA bacteremia from a dialysis access
@@ -820,7 +865,7 @@ const CASES = [
   loading:{required:true, note:'This is the case where withholding the load is most tempting and most wrong.'},
   maintenance:{mode:'auc', levelGuidedOk:true, idealText:'1,000 mg IV q48h (total daily dose 500 mg/day). Equally correct: give the load, then redose when a level tells you to.'},
   intervals:{full:['48','bylevel'], partial:['72','36'], note:'At this clearance a scheduled interval is an educated guess; a level-driven plan is at least as good.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early','ss'],
+  monitoring:{timingFull:['early','ss'],
     idealText:'A level roughly 24&ndash;48 hours after the loading dose to decide when to redose, then AUC-guided monitoring.'},
   reasoning:`<ol>
     <li>CrCl &asymp; 16 mL/min, stable. Cockcroft-Gault is usable here because his creatinine is not
@@ -844,6 +889,7 @@ const CASES = [
 {
   n:9, level:3,
   title:'End-stage renal disease on intermittent hemodialysis',
+  teaches:'Dosing to a schedule, not to a clock',
   age:58, sex:'F', tbw:68, heightIn:65, scr:7.1,
   crclApplicable:false,
   crclNote:'Creatinine clearance is not a meaningful concept in an anuric dialysis patient.',
@@ -857,7 +903,7 @@ const CASES = [
   maintenance:{mode:'mgkgdose', full:[7.0,15.0], partial:[5.5,18.0],
     idealText:'500&ndash;1,000 mg after each hemodialysis session (roughly 7.5&ndash;10 mg/kg), adjusted by pre-dialysis levels'},
   intervals:{full:['posthd'], partial:[], note:'The dose must be tied to the dialysis calendar, not to a clock interval.'},
-  monitoring:{methodsFull:['auc_bayes'], methodsPartial:['trough_1520','auc_2level'], timingFull:['prehd'],
+  monitoring:{timingFull:['prehd'],
     idealText:'A pre-dialysis level before an upcoming session, used to decide the size of the post-dialysis supplemental dose.'},
   reasoning:`<ol>
     <li>Forget Cockcroft-Gault. In an anuric dialysis patient, the dialysis schedule is the
@@ -883,6 +929,7 @@ const CASES = [
 {
   n:10, level:3,
   title:'Septic shock on continuous renal replacement therapy',
+  teaches:'Anuric is not the same as low clearance',
   age:61, sex:'M', tbw:90, heightIn:71, scr:3.4,
   crclApplicable:false,
   crclNote:'On CRRT the effluent rate is the clearance. A Cockcroft-Gault number here would be both meaningless and misleading.',
@@ -895,7 +942,7 @@ const CASES = [
   maintenance:{mode:'mgkgday', full:[15,20], partial:[11,25],
     idealText:'750&ndash;1,000 mg IV q12h (roughly 15&ndash;20 mg/kg/day). 1,500 mg q24h is an equivalent alternative.'},
   intervals:{full:['12','24','ci'], partial:[], note:'Continuous clearance means a clock interval is appropriate here, unlike intermittent dialysis.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early'], timingPartial:['ss'],
+  monitoring:{timingFull:['early'], timingPartial:['ss'],
     idealText:'A level at around 24 hours. CRRT prescriptions change &mdash; rate adjustments, filter clotting, circuit downtime &mdash; and each change alters clearance.'},
   reasoning:`<ol>
     <li>The instinct to treat an anuric patient as having near-zero clearance is exactly wrong on
@@ -918,6 +965,7 @@ const CASES = [
 {
   n:11, level:3,
   title:'Native-valve MRSA infective endocarditis',
+  teaches:'Severity changes the plan, not the target',
   age:46, sex:'M', tbw:82, heightIn:71, scr:1.0,
   vignette:`<p>A 46-year-old man who injects drugs presents with three weeks of fevers and night
     sweats. Four of four blood culture bottles grow MRSA, and a transthoracic echocardiogram shows
@@ -928,7 +976,7 @@ const CASES = [
   loading:{required:true, note:'Endocarditis with high-grade bacteremia. Getting to target on day one is the point of the load.'},
   maintenance:{mode:'auc', idealText:'1,000&ndash;1,250 mg IV q12h (total daily dose 2,000&ndash;2,500 mg)'},
   intervals:{full:['12'], partial:['8'], note:'Standard q12h at a CrCl near 100.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['ss','early'],
+  monitoring:{timingFull:['ss','early'],
     idealText:'AUC-guided levels, then weekly with creatinine across a six-week course. Also repeat blood cultures until clearance, and expect a transesophageal echocardiogram.'},
   reasoning:`<ol>
     <li>The intuition to be tested here is the assumption that a more severe infection deserves a
@@ -945,12 +993,13 @@ const CASES = [
   pattern:`Severity of infection changes the duration, the source-control plan, and the urgency of hitting target &mdash; it does not raise the target. If your answer to a sicker patient is "aim higher," check whether any guideline actually says so before you write it.`,
   errors:[
     {when:(e,c)=>e.aucEst>c.aucPartialHi, msg:'This regimen aims above an AUC of 600. That is the reflex this case is designed to catch: the target does not rise with the severity of the infection.'},
-    {when:(e,c)=>['trough_1520'].includes(e.method), msg:'Targeting a trough of 15&ndash;20 mg/L for endocarditis is 2009-era practice. The 2020 consensus specifically moved away from it because it over-exposes a large fraction of patients.'}
+    {when:(e,c)=>e.aucEst>0 && e.aucEst>c.aucFullHi-40, msg:'Even inside the acceptable band you aimed at the very top of it. That is the same instinct in a quieter form: the target does not rise with the severity of the infection.'}
   ]
 },
 {
   n:12, level:4,
   title:'A creatinine that will not sit still',
+  teaches:'Why every renal equation needs a steady state',
   age:55, sex:'F', tbw:70, heightIn:66, scr:2.4,
   crclForAuc:20, crclApprox:true,
   aucFull:[330,560], aucPartial:[280,700], // tightened: the displayed CrCl overstates true clearance
@@ -965,7 +1014,7 @@ const CASES = [
   maintenance:{mode:'auc', levelGuidedOk:true,
     idealText:'Hold scheduled maintenance and redose by level. If a scheduled regimen is written, no more than 500 mg q24h with a level in 24 hours.'},
   intervals:{full:['bylevel','24'], partial:['48','36'], note:'A level-driven plan is the better answer while renal function is still moving.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early'], timingPartial:['ss'],
+  monitoring:{timingFull:['early'], timingPartial:['ss'],
     idealText:'A level within about 24 hours of the loading dose, repeated as renal function declares itself. Daily creatinine.'},
   reasoning:`<ol>
     <li><b>Step two of the approach, not step three.</b> Before calculating anything, ask whether
@@ -993,6 +1042,7 @@ const CASES = [
 {
   n:13, level:4,
   title:'Septic shock with anuric acute kidney injury',
+  teaches:'Loading dose versus maintenance dose',
   age:73, sex:'M', tbw:88, heightIn:73, scr:3.1,
   crclApplicable:false,
   crclForAuc:10, crclApprox:true,
@@ -1009,7 +1059,7 @@ const CASES = [
   maintenance:{mode:'auc', levelGuidedOk:true,
     idealText:'Hold scheduled maintenance after the load and redose by level. If a schedule is written, no more than about 1,000 mg q72h.'},
   intervals:{full:['bylevel','72'], partial:['48'], note:'Level-driven redosing is the correct answer in undifferentiated anuric acute kidney injury.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early'],
+  monitoring:{timingFull:['early'],
     idealText:'A level about 24 hours after the loading dose to decide whether and when to redose, and to re-plan the moment renal replacement starts.'},
   reasoning:`<ol>
     <li>The temptation is to reduce or skip the loading dose because he is anuric. That reasoning
@@ -1037,6 +1087,7 @@ const CASES = [
 {
   n:14, level:4,
   title:'Deep-seated infection, chronic kidney disease, and a nephrotoxic partner drug',
+  teaches:'Naming a conflict instead of splitting it',
   age:62, sex:'F', tbw:76, heightIn:64, scr:2.2,
   crclNote:'At 139% of ideal body weight, so adjusted body weight is the input. Her creatinine has been stable, so the estimate is usable.',
   vignette:`<p>A 62-year-old woman with stage 3b/4 chronic kidney disease (baseline creatinine
@@ -1049,7 +1100,7 @@ const CASES = [
   loading:{required:true, note:'Deep-seated central nervous system-adjacent infection. Load.'},
   maintenance:{mode:'auc', idealText:'1,000 mg IV q36h, or 750 mg q24h (total daily dose roughly 650&ndash;750 mg)'},
   intervals:{full:['24','36'], partial:['48'], note:'Extended interval for her clearance, but not so extended that exposure sags in a deep-seated infection.'},
-  monitoring:{methodsFull:['auc_bayes','auc_2level'], timingFull:['early'], timingPartial:['ss'],
+  monitoring:{timingFull:['early'], timingPartial:['ss'],
     idealText:'An early AUC-guided level rather than waiting for steady state, with daily creatinine while she remains on both agents.'},
   reasoning:`<ol>
     <li><b>Name the tension out loud, because it does not resolve into one clean number.</b> A lumbar
@@ -1075,6 +1126,219 @@ const CASES = [
     {when:(e,c)=>e.aucEst>0 && e.aucEst<c.aucFullLo, msg:'You shaded the dose low, presumably out of concern for her kidneys. That leaves an epidural abscess under-treated while the vancomycin plus piperacillin-tazobactam combination continues unchanged &mdash; the risk was not actually reduced, only the efficacy was.'},
     {when:(e,c)=>e.timing==='ss', msg:'With a creatinine already drifting up on two agents, waiting until steady state gives up the early warning you most want here.'}
   ]
+},
+{
+  level:1,
+  title:'Uncomplicated MRSA cellulitis',
+  teaches:'When the serious-infection playbook does not apply',
+  age:38, sex:'M', tbw:82, heightIn:71, scr:1.0,
+  vignette:`<p>A 38-year-old man presents with a 6 cm purulent cellulitis of the forearm after a
+    minor abrasion at work. The abscess has been incised and drained in the emergency department
+    and the wound culture grows MRSA. He is afebrile, has no systemic symptoms, and blood cultures
+    were not drawn because there was no indication for them.</p>
+    <p>He has no comorbidities. Creatinine is 1.0 mg/dL. He is expected to be discharged tomorrow
+    on oral therapy.</p>`,
+  loading:{required:false, note:'A loading dose is aimed at serious infection. In a well-looking, non-bacteremic soft-tissue infection it is optional \u2014 giving one or not are both scored as correct here.'},
+  maintenance:{mode:'auc', idealText:'1,000\u20131,250 mg IV q12h (roughly 12\u201315 mg/kg per dose)'},
+  intervals:{full:['12'], partial:['24','8'], note:'q12h at normal clearance.'},
+  monitoringOptional:true,
+  monitoring:{timingFull:['ss','early'], timingPartial:['weekly','none'],
+    idealText:'AUC-guided levels are recommended for <i>serious</i> MRSA infection. For a short course in an uncomplicated soft-tissue infection, a single steady-state check with creatinine is reasonable and no levels at all is defensible if the course is only a day or two.'},
+  reasoning:`<ol>
+    <li>The arithmetic is the same as any normal-renal-function case: CrCl about 107 mL/min,
+    clearance about 4.6 L/h, target AUC 500 gives roughly 2,300 mg/day, so
+    <b>1,000&ndash;1,250 mg q12h</b>.</li>
+    <li>What is different is everything wrapped around that number. The 2020 consensus builds its
+    loading-dose and AUC-monitoring recommendations around <b>serious</b> MRSA infection. This is
+    not one. Skipping the load is entirely defensible, and a full monitoring workup for a one- or
+    two-day IV course is out of proportion.</li>
+    <li>The bigger stewardship question is whether he needs intravenous vancomycin at all. A drained
+    purulent cellulitis in a well patient is often treated with oral trimethoprim-sulfamethoxazole,
+    doxycycline, or clindamycin. Drainage is the treatment; the antibiotic is adjunctive.</li>
+    <li>Naming that out loud is part of the answer even though this trainer only asks you for a
+    regimen.</li></ol>`,
+  pattern:`Not every MRSA is a serious MRSA infection. Before you reach for the loading dose and the AUC workup, ask which category the patient is actually in \u2014 the guideline's recommendations are written for the serious end, and applying them uniformly means over-treating the mild end and generating levels nobody will act on.`,
+  errors:[
+    {when:(e,c)=>e.aucEst>0 && e.aucEst>c.aucPartialHi, msg:'This is an aggressive regimen for a drained soft-tissue infection in a well patient. The exposure target does not change, but the risk you are prepared to accept to reach it should.'}
+  ]
+},
+{
+  level:2,
+  title:'A cachectic patient and a dose that looks too small',
+  teaches:'Small doses that look wrong and are right',
+  age:76, sex:'F', tbw:41, heightIn:65, scr:0.9,
+  crclNote:'She weighs less than her ideal body weight, so Cockcroft-Gault runs on her actual weight \u2014 the third branch of the weight-selection rule, and the one you will use least often.',
+  vignette:`<p>A 76-year-old woman with advanced COPD and marked cachexia is admitted from home with
+    MRSA bacteremia arising from a chronic lower-leg wound. She weighs 41 kg and is 5'5". She is
+    febrile but not hypotensive.</p>
+    <p>Creatinine is 0.9 mg/dL and has been stable. She is on no nephrotoxins.</p>`,
+  loading:{required:true, note:'Bacteremia. The load is small in absolute terms because she is small, and that is correct.'},
+  maintenance:{mode:'auc', idealText:'750 mg IV q24h (total daily dose 750 mg, about 18 mg/kg/day)'},
+  intervals:{full:['24'], partial:['12','36'], note:'q24h at a clearance in the mid-30s.'},
+  monitoring:{timingFull:['ss','early'],
+    idealText:'AUC-guided levels at steady state, with creatinine. In a patient this size, a small absolute error in dose is a large proportional one, so the level matters more than usual.'},
+  reasoning:`<ol>
+    <li>Her ideal body weight is 57 kg but she weighs 41 kg. Total body weight below ideal body
+    weight is the one situation where Cockcroft-Gault uses <b>actual</b> weight \u2014 using 57 kg
+    would credit her with muscle she does not have. CrCl comes out around 34 mL/min.</li>
+    <li>Loading dose 25 &times; 41 &asymp; <b>1,000 mg</b>.</li>
+    <li>Clearance = 0.689(34) + 3.66 &asymp; 27 mL/min = 1.6 L/h. Target AUC 500 &rarr; about
+    820 mg/day &rarr; <b>750 mg q24h</b>.</li>
+    <li>Seven hundred and fifty milligrams a day for a bacteremia will feel wrong if you have spent
+    a month watching 1 g twice daily get dispensed. It is not wrong. It is 18 mg/kg/day in a 41 kg
+    woman \u2014 proportionally the same exposure as 1,500 mg/day in an 85 kg man.</li></ol>`,
+  pattern:`Dose familiarity is not a safety check. "One gram twice daily" is the regimen for a patient of average size with average kidneys, and reaching for it because the calculated number looks unfamiliar is how small and elderly patients get over-exposed. Convert back to mg/kg whenever a dose surprises you \u2014 it usually explains itself.`,
+  errors:[
+    {when:(e,c)=>e.tdd && e.tdd>=1800, msg:'This is close to a standard adult regimen applied to a 41 kg patient. Converted to mg/kg/day it is roughly double what she needs.'},
+    {when:(e,c)=>e.ld>0 && e.ld/c.tbw > 34, msg:'Your loading dose is well above 30 mg/kg of her actual weight. Rounding a small calculated dose up to a familiar number is the specific risk in patients this size.'}
+  ]
+},
+{
+  level:2,
+  title:'The level comes back high on day three',
+  teaches:'Adjusting a regimen from a reported AUC',
+  age:64, sex:'M', tbw:88, heightIn:70, scr:1.3,
+  vignette:`<p>A 64-year-old man has been on vancomycin 1,250 mg IV q12h for three days for MRSA
+    bacteremia from an infected knee prosthesis. He received an appropriate loading dose on
+    admission. He is improving clinically and repeat blood cultures are negative.</p>
+    <p>A Bayesian AUC estimate from today's levels reports an <b>AUC<sub>24</sub> of 780
+    mg&middot;h/L</b>. His creatinine is 1.3 mg/dL and has been stable since admission. Write his
+    revised regimen.</p>`,
+  loading:{required:false, forbidden:true, note:'He was loaded on admission and is currently above target. A further loading dose would push him higher still.'},
+  maintenance:{mode:'auc', idealText:'750 mg IV q12h, or 1,500 mg q24h (total daily dose 1,500 mg)'},
+  intervals:{full:['12','24'], partial:['36'], note:'The interval can stay as it is; it is the total daily dose that has to come down.'},
+  monitoring:{timingFull:['ss','early'],
+    idealText:'Re-check the AUC after the new regimen reaches steady state, and keep monitoring creatinine \u2014 he has already spent three days above target.'},
+  reasoning:`<ol>
+    <li>At steady state, AUC scales linearly with the total daily dose. That gives you a
+    one-line adjustment:</li>
+    <li><div class="formula">new daily dose = current daily dose &times; (target AUC &divide; measured AUC)</div>
+    Here: 2,500 mg/day &times; (500 &divide; 780) &asymp; 1,600 mg/day, so <b>750 mg q12h</b>.</li>
+    <li>No further loading dose. He is already above target; a load would be adding drug to a
+    patient you are trying to bring down.</li>
+    <li>Worth noticing: the population equation in this trainer would have predicted an AUC near
+    940 for his old regimen, and the measured value was 780. Neither is a mistake. That gap is the
+    entire argument for measuring rather than calculating, and it is why the calculation is a
+    starting point and the level is the answer.</li>
+    <li>He has also now had three days above 600. Follow the creatinine.</li></ol>`,
+  pattern:`Dose adjustment is proportional arithmetic, not a fresh calculation. Multiply the current daily dose by target-over-measured and you are done \u2014 there is no need to re-derive clearance from the creatinine, and doing so throws away the measured information you just paid for.`,
+  errors:[
+    {when:(e,c)=>e.ld>0, msg:'You gave a loading dose to a patient sitting at an AUC of 780. Loading doses fill the volume of distribution at the start of therapy; his is already full.'},
+    {when:(e,c)=>e.tdd && e.tdd>2200, msg:'Your total daily dose is close to the regimen that produced an AUC of 780. Scale it down proportionally: 2,500 &times; (500/780).'},
+    {when:(e,c)=>e.tdd && e.tdd<1000, msg:'You cut the dose further than the arithmetic calls for. Overshooting downward trades one problem for another \u2014 he still has a prosthetic joint infection.'}
+  ]
+},
+{
+  level:3,
+  title:'External ventricular drain-associated ventriculitis',
+  teaches:'Dosing where the drug barely reaches',
+  age:52, sex:'F', tbw:70, heightIn:66, scr:0.8,
+  vignette:`<p>A 52-year-old woman is on day 9 after a craniotomy and external ventricular drain
+    placement for a subarachnoid haemorrhage. She develops fever and declining consciousness;
+    cerebrospinal fluid from the drain shows 400 white cells, low glucose, and Gram-positive cocci
+    that grow MRSA.</p>
+    <p>Neurosurgery is planning to exchange the drain. Creatinine is 0.8 mg/dL and stable.</p>`,
+  loading:{required:true, note:'Central nervous system infection with a foreign body. Reaching target quickly matters more here than almost anywhere.'},
+  maintenance:{mode:'auc', idealText:'1,000 mg IV q12h (total daily dose 2,000 mg), aiming at the upper half of the target range'},
+  intervals:{full:['12'], partial:['8'], note:'q12h at a CrCl near 80.'},
+  monitoring:{timingFull:['ss','early'],
+    idealText:'AUC-guided serum levels as usual. Serum concentrations do not tell you the CSF concentration, so the clinical and CSF response \u2014 repeat CSF cultures and cell counts \u2014 carries as much weight as the level does.'},
+  reasoning:`<ol>
+    <li>The dosing arithmetic is routine: CrCl about 77 mL/min, clearance about 3.4 L/h, so
+    <b>1,000 mg q12h</b> puts the AUC near the upper half of 400&ndash;600. Load
+    25 &times; 70 &asymp; <b>1,750 mg</b>.</li>
+    <li>What is not routine is that vancomycin penetrates the central nervous system poorly and
+    variably \u2014 commonly cited as a small percentage of the serum concentration, higher when the
+    meninges are inflamed, but with wide patient-to-patient spread.</li>
+    <li><b>Be honest about the limits here.</b> The 2020 consensus does not define a separate
+    AUC target for central nervous system infection; the data are not there. Aiming at the upper
+    half of the usual range is a reasonable, widely practised inference, not a guideline
+    recommendation, and you should describe it that way rather than quoting a number as if it
+    were settled.</li>
+    <li>What is well established is the rest of the plan: source control by exchanging or removing
+    the drain, repeat CSF sampling to confirm clearance, and infectious diseases and neurosurgery
+    involvement. Intraventricular vancomycin is used for refractory ventriculitis and is a
+    neurosurgical decision, not a routine addition.</li></ol>`,
+  pattern:`When a drug has to reach a compartment it enters badly, the serum level stops being a complete answer. Dose to the systemic target, then judge the response in the compartment that matters. And when the evidence for a site-specific target does not exist, say so \u2014 inventing a precise number for a question the literature has not answered is how false certainty enters a teaching service.`,
+  errors:[
+    {when:(e,c)=>e.aucEst>0 && e.aucEst<c.aucFullLo, msg:'Sub-target exposure in a central nervous system infection with an indwelling device. Given how little of the serum concentration reaches the cerebrospinal fluid, the systemic target is the floor, not the ceiling.'},
+    {when:(e,c)=>e.aucEst>c.aucPartialHi, msg:'Poor CSF penetration is not a reason to push serum exposure past 600. That trades a nephrotoxicity risk you can measure for a CSF benefit you cannot.'}
+  ]
+},
+{
+  level:3,
+  title:'Obesity and chronic kidney disease together',
+  teaches:'Two corrections that compound',
+  age:58, sex:'M', tbw:132, heightIn:68, scr:2.0,
+  crclNote:'Two adjustments apply at once here: adjusted body weight because he is 193% of ideal, and a creatinine of 2.0. Applying only one of them is the usual error.',
+  vignette:`<p>A 58-year-old man with obesity (132 kg, 5'8") and stage 3b chronic kidney disease is
+    admitted with MRSA bacteremia from an infected surgical site after a hernia repair. He is
+    febrile, normotensive, and on the ward rather than the ICU.</p>
+    <p>Creatinine is 2.0 mg/dL, matching his nephrology clinic values. He takes no nephrotoxins.</p>`,
+  loading:{required:true, capBinds:true, note:'25 mg/kg of 132 kg is 3,300 mg, above the 3,000 mg cap used here, so the cap binds.'},
+  maintenance:{mode:'auc', idealText:'1,250 mg IV q24h (total daily dose 1,250 mg, about 9.5 mg/kg/day)'},
+  intervals:{full:['24'], partial:['12','36'], note:'Extended interval, driven by the kidneys rather than by his size.'},
+  monitoring:{timingFull:['early','ss'],
+    idealText:'AUC-guided levels drawn early. Two population corrections stacked on top of each other compound their errors, so this is a regimen you confirm rather than trust.'},
+  reasoning:`<ol>
+    <li>His obesity pushes the clearance estimate <i>up</i> (adjusted body weight 93.8 kg rather
+    than an ideal body weight of 68.4 kg). His kidney disease pushes it <i>down</i>. Both apply, and
+    they partly cancel: CrCl lands around 53 mL/min.</li>
+    <li>The loading dose runs on actual body weight and hits the cap: <b>3,000 mg</b>.</li>
+    <li>Clearance = 0.689(53) + 3.66 &asymp; 40 mL/min = 2.4 L/h. Target AUC 500 &rarr; about
+    1,215 mg/day &rarr; <b>1,250 mg q24h</b>.</li>
+    <li>Look at the shape of that: a 3,000 mg loading dose followed by 1,250 mg once daily. The
+    ratio between them is far wider than in any case you have done so far, and both halves are
+    correct. In a 132 kg man, 1,250 mg/day is about 9.5 mg/kg/day and it will look far too small.</li>
+    <li>The two failure modes are symmetrical. Correct only for his weight and you write
+    1,500 mg q12h. Correct only for his kidneys and you write a load based on ideal body weight.</li></ol>`,
+  pattern:`When two population corrections apply to the same patient, work them one at a time and in the right order: weight first, because it feeds the clearance estimate, then renal function, then the dose. Applying whichever one is more salient and stopping there is the reliable way to be confidently wrong.`,
+  errors:[
+    {when:(e,c)=>e.tdd && e.tdd>=2400, msg:'This looks like the obesity correction applied without the renal one \u2014 a regimen sized for a 132 kg man with normal kidneys.'},
+    {when:(e,c)=>e.ld>0 && e.ld<2000, msg:'Your loading dose looks as though it was calculated on ideal or adjusted body weight. The clearance estimate uses adjusted body weight; the loading dose still uses actual body weight, capped.'}
+  ]
+},
+{
+  level:4,
+  title:'A creatinine that is falling fast',
+  teaches:'The mirror image of a rising creatinine',
+  age:47, sex:'M', tbw:92, heightIn:72, scr:2.0,
+  crclForAuc:80, crclApprox:true,
+  aucFull:[400,620], aucPartial:[340,700],
+  crclNote:'His creatinine is falling steeply and his urine output is brisk. Cockcroft-Gault assumes a steady state, so a falling creatinine means this figure <i>understates</i> his current clearance.',
+  vignette:`<p>A 47-year-old man was admitted five days ago with rhabdomyolysis after a prolonged
+    down-time, complicated by MRSA bacteremia from an infected pressure injury. His acute kidney
+    injury is resolving: creatinine has moved 4.8 &rarr; 3.2 &rarr; 2.0 mg/dL over three days and
+    urine output is brisk at roughly 150 mL/h.</p>
+    <p>He is afebrile, off vasopressors, and eating. His repeat blood cultures from 48 hours ago
+    are still pending.</p>`,
+  loading:{required:true, note:'He has ongoing bacteremia. If he has not been reliably at target, get him there.'},
+  maintenance:{mode:'auc', idealText:'1,000 mg IV q12h (total daily dose 2,000 mg), planning against a clearance well above what the creatinine suggests'},
+  intervals:{full:['12'], partial:['8','24'], note:'q12h, with a low threshold to shorten further as his kidneys recover.'},
+  monitoring:{timingFull:['early'], timingPartial:['ss'],
+    idealText:'An early level, then repeat as his renal function keeps improving. A regimen that is right today will be too small by the end of the week if his recovery continues.'},
+  reasoning:`<ol>
+    <li>This is the exact mirror of the rising-creatinine case, and it is the more dangerous of the
+    two because nothing about it looks alarming. Cockcroft-Gault assumes production and elimination
+    are balanced. When creatinine is <i>falling</i>, elimination is outrunning production, so the
+    equation <b>understates</b> true clearance.</li>
+    <li>The panel says 50 mL/min. His brisk urine output and a creatinine dropping by more than a
+    third every day say otherwise. Post-acute-tubular-necrosis recovery can even overshoot into
+    augmented clearance.</li>
+    <li>So plan against something closer to 80 mL/min: clearance about 3.5 L/h, target AUC 500
+    &rarr; roughly 1,760 mg/day &rarr; <b>1,000 mg q12h</b>. Load 25 &times; 92 &asymp; 2,250 mg.</li>
+    <li>Then measure, and keep measuring. The direction of travel is the point: his requirement is
+    rising day by day.</li>
+    <li>Why this one matters more than the over-dosing version: under-exposure in MRSA bacteremia
+    means persistent bacteremia, metastatic seeding, and selection for reduced susceptibility. It
+    produces no alarming lab value on the way there. Acute kidney injury at least announces
+    itself.</li></ol>`,
+  pattern:`A moving creatinine misleads in both directions, and the direction tells you which way. Rising creatinine means the equation flatters the kidney and you will over-dose. Falling creatinine means the equation understates it and you will under-dose. Check the trend before you use the number, every time.`,
+  errors:[
+    {when:(e,c)=>e.aucEst>0 && e.aucEst<c.aucFullLo, msg:'You dosed to the creatinine clearance on the panel. With a creatinine falling this fast the equation is describing the patient he was two days ago, and this regimen leaves him under-exposed with bacteremia still on the books.'},
+    {when:(e,c)=>e.timing==='ss', msg:'Steady state is exactly what he does not have. By the fourth dose his clearance will have moved again \u2014 draw early and plan to repeat.'},
+    {when:(e,c)=>['24','36','48'].includes(e.interval), msg:'An extended interval suits a patient whose clearance is low and stable. His is low, improving fast, and heading toward normal.'}
+  ]
 }
 ];
 
@@ -1091,14 +1355,6 @@ const INTERVAL_LABELS = {
   '8':'every 8 hours','12':'every 12 hours','24':'every 24 hours','36':'every 36 hours',
   '48':'every 48 hours','72':'every 72 hours','ci':'continuous infusion',
   'posthd':'after each hemodialysis session','bylevel':'hold and redose by level'
-};
-const METHOD_LABELS = {
-  auc_bayes:'AUC-guided, Bayesian estimate from a single level',
-  auc_2level:'AUC-guided, peak and trough with first-order equations',
-  trough_1520:'Trough only, target 15\u201320 mg/L',
-  trough_1015:'Trough only, target 10\u201315 mg/L',
-  peak_only:'Peak level only',
-  none:'No routine level monitoring'
 };
 const TIMING_LABELS = {
   early:'Early \u2014 within roughly the first 24 hours, before steady state',
@@ -1146,7 +1402,6 @@ function readEntries(c, ctx){
     ld:   num('inLd'),
     md:   num('inMd'),
     interval: document.getElementById('inInterval').value,
-    method:   document.getElementById('inMethod').value,
     timing:   document.getElementById('inTiming').value
   };
   e.tdd = (e.md != null) ? tddFrom(e.md, e.interval) : null;
@@ -1162,7 +1417,10 @@ function readEntries(c, ctx){
 function gradeLoading(c, ctx, e, max){
   const mgkg = e.ld > 0 ? +(e.ld / c.tbw).toFixed(1) : 0;
   let status, note;
-  if (e.ld === 0){
+  if (e.ld > 0 && c.loading.forbidden){
+    status = 'miss';
+    note = c.loading.note;
+  } else if (e.ld === 0){
     status = c.loading.required ? 'miss' : 'ok';
     note = c.loading.required
       ? `A loading dose was indicated here. Target about ${ctx.ldIdeal} mg (${DOSING_ASSUMPTIONS.loadingMgKgTarget} mg/kg of actual body weight, capped at ${DOSING_ASSUMPTIONS.loadingCapMg} mg).`
@@ -1239,19 +1497,16 @@ function gradeInterval(c, ctx, e, max){
     note:`${iv.note} Full credit here: ${iv.full.map(x=>INTERVAL_LABELS[x]).join(', or ')}.`};
 }
 
+/* Graded on WHEN the level is drawn. Which estimation approach to use (Bayesian, two-level,
+   pre-dialysis) is taught in the reference panel and stated in each case's ideal plan, but it is
+   no longer something the learner selects. */
 function gradeMonitoring(c, ctx, e, max){
   const mo = c.monitoring;
-  const halfMax = Math.round(max/2), restMax = max - halfMax;
-  const mStat = mo.methodsFull.includes(e.method) ? 'ok'
-              : (mo.methodsPartial||[]).includes(e.method) ? 'part' : 'miss';
   const tFull = mo.timingFull || ['ss','early'];
-  const tStat = tFull.includes(e.timing) ? 'ok'
-              : (mo.timingPartial||[]).includes(e.timing) ? 'part' : 'miss';
-  const pts = (mStat==='ok'?halfMax:mStat==='part'?Math.round(halfMax/2):0)
-            + (tStat==='ok'?restMax:tStat==='part'?Math.round(restMax/2):0);
-  const status = (mStat==='ok'&&tStat==='ok') ? 'ok' : pts>0 ? 'part' : 'miss';
-  return {status, pts,
-    said:`You chose: ${METHOD_LABELS[e.method]}, drawn ${TIMING_LABELS[e.timing].toLowerCase()}.`,
+  const status = tFull.includes(e.timing) ? 'ok'
+               : (mo.timingPartial||[]).includes(e.timing) ? 'part' : 'miss';
+  return {status, pts: status==='ok' ? max : status==='part' ? Math.round(max*0.5) : 0,
+    said:`You would draw the level ${TIMING_LABELS[e.timing].toLowerCase()}.`,
     note:mo.idealText};
 }
 
@@ -1276,8 +1531,8 @@ function safetyReview(c, ctx, e){
     flags.push(`An interval of ${INTERVAL_LABELS[e.interval]} at an estimated clearance near ${ctx.crclForAuc} mL/min will accumulate over successive doses even if the first dose looks reasonable.`);
   if (e.ld === 0 && c.loading.required)
     flags.push('No loading dose in a serious infection means several days at sub-therapeutic concentrations while maintenance dosing slowly accumulates.');
-  if (e.method === 'none')
-    flags.push('No monitoring plan. Vancomycin has a narrow therapeutic window and appreciable interpatient variability; a regimen without levels is a guess that never gets checked.');
+  if (e.timing === 'none' && !c.monitoringOptional)
+    flags.push('No level scheduled. Vancomycin has a narrow therapeutic window and wide interpatient variability; a regimen for a serious infection that is never checked is a guess left standing.');
   return flags;
 }
 
@@ -1296,11 +1551,22 @@ function gradeCase(c, ctx, e){
 /* ==================================================================================
    SECTION 5 — INTERFACE
    In-memory state only. No localStorage or sessionStorage anywhere in this file.
+
+   Cases are ordered by difficulty at load time (stable sort, so the authored order is kept
+   within each level) and numbered from that order, which means new cases can be added to the
+   array anywhere without renumbering anything by hand.
    ================================================================================== */
 
-const state = { i:0, results:[], submitted:false };
+CASES.sort((a,b) => a.level - b.level);
+CASES.forEach((c,i) => { c.n = i + 1; });
+
+/* results is keyed by case index, not a running list, because the learner can pick cases in
+   any order, skip them, and come back. order records first-attempt sequence so the summary can
+   still say something honest about improvement across the session. */
+const state = { i:0, results:{}, order:[], submitted:false, view:'case' };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const completedCount = () => Object.keys(state.results).length;
 
 function renderPrimer(){
   $('primerContent').innerHTML = PRIMER.map(p => `
@@ -1311,20 +1577,71 @@ function renderPrimer(){
 }
 
 function renderChrome(){
-  $('statCase').textContent = Math.min(state.i + 1, CASES.length) + '/' + CASES.length;
-  const done = state.results.length;
-  if (done === 0) { $('statScore').textContent = '\u2014'; }
+  const done = completedCount();
+  $('statCase').textContent = state.view === 'case' ? (state.i + 1) + '/' + CASES.length
+                                                    : done + '/' + CASES.length;
+  $('statCaseLabel').textContent = state.view === 'case' ? 'Case' : 'Done';
+  if (done === 0) $('statScore').textContent = '\u2014';
   else {
-    const pct = Math.round(state.results.reduce((s,r)=>s+r.total,0) / done);
-    $('statScore').textContent = pct + '%';
+    const vals = Object.values(state.results);
+    $('statScore').textContent = Math.round(vals.reduce((s,r)=>s+r.total,0) / vals.length) + '%';
   }
   $('trackbar').innerHTML = CASES.map((_,k) =>
-    `<i class="${k < state.results.length ? 'done' : k === state.i ? 'now' : ''}"></i>`).join('');
+    `<i class="${state.results[k] ? 'done' : (state.view==='case' && k === state.i) ? 'now' : ''}"></i>`).join('');
 }
 
 function opt(map, list){ return list.map(k=>`<option value="${k}">${map[k]}</option>`).join(''); }
 
+/* ---------------------------------- case picker ---------------------------------- */
+
+function renderPicker(){
+  state.view = 'picker';
+  const groups = [1,2,3,4].map(lv => ({lv, list: CASES.map((c,i)=>({c,i})).filter(x=>x.c.level===lv)}))
+                          .filter(g => g.list.length);
+  const done = completedCount();
+  $('stage').innerHTML = `
+  <section class="card fb">
+    <h2>All cases</h2>
+    <div class="card-body">
+      <p class="picker-intro">Work straight through for the difficulty progression, or jump to whatever
+      you want to drill. Scores are kept for every case you complete, and retaking one replaces its
+      previous score.</p>
+      ${groups.map(g => `
+        <div class="section-h">${LEVELS[g.lv]}</div>
+        <div class="picklist">
+          ${g.list.map(({c,i}) => {
+            const r = state.results[i];
+            return `<button class="pickrow" data-idx="${i}">
+              <span class="pk-n">${String(c.n).padStart(2,'0')}</span>
+              <span class="pk-main"><b>${esc(c.title)}</b><em>${esc(c.teaches || '')}</em></span>
+              <span class="pk-score ${r ? (r.total>=85?'ok':r.total>=55?'part':'miss') : 'todo'}">${r ? r.total : '\u2013'}</span>
+            </button>`;
+          }).join('')}
+        </div>`).join('')}
+      <div class="actions">
+        <button id="btnFirst">${done ? 'Go to case 01' : 'Start at case 01'}</button>
+        ${done ? '<button class="ghost" id="btnSummary">See session summary</button>' : ''}
+        ${done ? '<button class="ghost" id="btnReset">Clear all scores</button>' : ''}
+      </div>
+    </div>
+  </section>`;
+  $('stage').querySelectorAll('.pickrow').forEach(b =>
+    b.addEventListener('click', () => goTo(Number(b.dataset.idx))));
+  $('btnFirst').addEventListener('click', ()=>goTo(0));
+  if ($('btnSummary')) $('btnSummary').addEventListener('click', renderSummary);
+  if ($('btnReset')) $('btnReset').addEventListener('click', ()=>{
+    state.results = {}; state.order = []; renderPicker();
+  });
+  renderChrome();
+  if (window.scrollTo) window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goTo(idx){ state.i = idx; renderCase(); }
+
+/* ------------------------------------ one case ----------------------------------- */
+
 function renderCase(){
+  state.view = 'case';
   const c = CASES[state.i];
   const ctx = buildContext(c);
   state.ctx = ctx;
@@ -1333,6 +1650,7 @@ function renderCase(){
   const showCrcl = c.crclApplicable !== false;
   const isObese  = c.tbw >= 1.25 * ctx.ibwVal;
   const heightFt = Math.floor(c.heightIn/12) + "'" + (c.heightIn % 12) + '"';
+  const prior    = state.results[state.i];
 
   $('stage').innerHTML = `
   <section class="card">
@@ -1366,7 +1684,7 @@ function renderCase(){
   </section>
 
   <section class="card">
-    <h2>Write the regimen</h2>
+    <h2>Write the regimen${prior ? ` \u2014 previous attempt scored ${prior.total}/100` : ''}</h2>
     <div class="card-body">
       <div class="form-grid">
         <div class="field">
@@ -1387,13 +1705,6 @@ function renderCase(){
           </select>
         </div>
         <div class="field">
-          <label for="inMethod">Monitoring method</label>
-          <select id="inMethod">
-            <option value="">Choose a method</option>
-            ${opt(METHOD_LABELS, ['auc_bayes','auc_2level','trough_1520','trough_1015','peak_only','none'])}
-          </select>
-        </div>
-        <div class="field">
           <label for="inTiming">When do you draw the level</label>
           <select id="inTiming">
             <option value="">Choose a time</option>
@@ -1403,6 +1714,7 @@ function renderCase(){
       </div>
       <div class="actions">
         <button id="btnCheck">Check my regimen</button>
+        <button class="ghost" id="btnList">All cases</button>
         <span class="validation" id="valMsg"></span>
       </div>
     </div>
@@ -1410,6 +1722,7 @@ function renderCase(){
   <div id="fbSlot"></div>`;
 
   $('btnCheck').addEventListener('click', onCheck);
+  $('btnList').addEventListener('click', renderPicker);
   renderChrome();
   if (window.scrollTo) window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1418,7 +1731,6 @@ function validate(c, e){
   if (e.ld === null) return 'Enter a loading dose, or 0 if you would not give one.';
   if (e.md === null || e.md <= 0) return 'Enter a maintenance dose greater than 0.';
   if (!e.interval) return 'Choose an interval.';
-  if (!e.method) return 'Choose a monitoring method.';
   if (!e.timing) return 'Choose when the level is drawn.';
   if (e.md > 6000 || e.ld > 6000) return 'That dose is outside any plausible range. Check the value before submitting.';
   return null;
@@ -1434,10 +1746,12 @@ function onCheck(){
 
   state.submitted = true;
   const g = gradeCase(c, ctx, e);
-  state.results.push({ n:c.n, title:c.title, total:g.total, rows:g.rows.map(r=>({name:r.name, pts:r.pts, max:r.max})) });
+  if (!state.results[state.i]) state.order.push(state.i);
+  state.results[state.i] = { n:c.n, title:c.title, total:g.total,
+                             rows:g.rows.map(r=>({name:r.name, pts:r.pts, max:r.max})) };
   $('btnCheck').disabled = true;
   $('btnCheck').textContent = 'Submitted';
-  ['inLd','inMd','inInterval','inMethod','inTiming'].forEach(id=>{ const el=$(id); if(el) el.disabled = true; });
+  ['inLd','inMd','inInterval','inTiming'].forEach(id=>{ const el=$(id); if(el) el.disabled = true; });
   renderFeedback(c, ctx, e, g);
   renderChrome();
 }
@@ -1471,7 +1785,8 @@ function ruler(auc, lo, hi){
 
 function renderFeedback(c, ctx, e, g){
   const showRuler = c.maintenance.mode === 'auc' && e.tdd != null && e.aucEst > 0;
-  const html = `
+  const last = state.i === CASES.length - 1;
+  $('fbSlot').innerHTML = `
   <section class="card fb">
     <h2>Feedback \u2014 case ${String(c.n).padStart(2,'0')}</h2>
     <div class="verdict">
@@ -1505,74 +1820,88 @@ function renderFeedback(c, ctx, e, g){
       <div class="pattern"><h4>The transferable rule</h4>${c.pattern}</div>
 
       <div class="actions">
-        <button id="btnNext">${state.i === CASES.length-1 ? 'See session summary' : 'Next case'}</button>
+        <button id="btnNext">${last ? 'See session summary' : 'Next case'}</button>
+        <button class="ghost" id="btnRetry">Try this case again</button>
+        <button class="ghost" id="btnList2">All cases</button>
       </div>
     </div>
   </section>`;
-  $('fbSlot').innerHTML = html;
   $('btnNext').addEventListener('click', ()=>{
-    state.i++;
-    if (state.i >= CASES.length) renderSummary(); else renderCase();
+    if (last) renderSummary(); else goTo(state.i + 1);
   });
+  $('btnRetry').addEventListener('click', ()=>renderCase());
+  $('btnList2').addEventListener('click', renderPicker);
   const slot = $('fbSlot');
   if (slot.scrollIntoView) slot.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function renderSummary(){
-  const r = state.results;
-  const overall = Math.round(r.reduce((s,x)=>s+x.total,0)/r.length);
-  const firstHalf = r.slice(0, Math.ceil(r.length/2));
-  const secondHalf = r.slice(Math.ceil(r.length/2));
-  const avg = a => Math.round(a.reduce((s,x)=>s+x.total,0)/a.length);
+/* ---------------------------------- session summary ---------------------------------- */
 
-  // Aggregate by component so the learner sees which step of the approach is weak,
-  // rather than only which cases went badly.
+function renderSummary(){
+  state.view = 'summary';
+  const inOrder = state.order.map(i => state.results[i]).filter(Boolean);
+  if (!inOrder.length){ renderPicker(); return; }
+  const overall = Math.round(inOrder.reduce((s,x)=>s+x.total,0)/inOrder.length);
+  const avg = a => Math.round(a.reduce((s,x)=>s+x.total,0)/a.length);
+  const half = Math.ceil(inOrder.length/2);
+  const showTrend = inOrder.length >= 4;
+
+  // Aggregate by component so the learner sees which decision is weak, not only which cases went badly.
   const agg = {};
-  r.forEach(x => x.rows.forEach(row => {
+  inOrder.forEach(x => x.rows.forEach(row => {
     agg[row.name] = agg[row.name] || {pts:0, max:0};
     agg[row.name].pts += row.pts; agg[row.name].max += row.max;
   }));
   const weakest = Object.entries(agg)
     .map(([k,v])=>({k, pct: Math.round(100*v.pts/v.max)}))
     .sort((a,b)=>a.pct-b.pct);
+  const byCase = CASES.map((c,i)=>({c, r:state.results[i]})).filter(x=>x.r);
 
   $('stage').innerHTML = `
   <section class="card fb">
     <h2>Session summary</h2>
     <div class="card-body">
       <div class="summary-grid">
-        <div><div class="big">${overall}<small>/100</small></div><div class="stat" style="margin-top:2px">Overall</div></div>
-        <div><div class="big">${avg(firstHalf)}<small>&nbsp;\u2192&nbsp;${avg(secondHalf)}</small></div><div class="stat" style="margin-top:2px">First half \u2192 second half</div></div>
-        <div><div class="big">${r.length}</div><div class="stat" style="margin-top:2px">Cases completed</div></div>
+        <div><div class="big">${overall}<small>/100</small></div><div class="stat" style="margin-top:2px">Average</div></div>
+        ${showTrend ? `<div><div class="big">${avg(inOrder.slice(0,half))}<small>&nbsp;\u2192&nbsp;${avg(inOrder.slice(half))}</small></div>
+          <div class="stat" style="margin-top:2px">First half \u2192 second half</div></div>` : ''}
+        <div><div class="big">${inOrder.length}<small>/${CASES.length}</small></div><div class="stat" style="margin-top:2px">Cases completed</div></div>
       </div>
 
-      <div class="section-h">Score by case</div>
+      <div class="section-h">Score by case, in case order</div>
       <div class="spark-wrap"><div class="spark">
-        ${r.map(x=>`<div class="b" style="height:${Math.max(4, x.total)}%" title="Case ${x.n}: ${x.total}/100"><b>${x.n}</b></div>`).join('')}
+        ${byCase.map(x=>`<div class="b" style="height:${Math.max(4, x.r.total)}%" title="Case ${x.c.n}: ${x.r.total}/100"><b>${x.c.n}</b></div>`).join('')}
       </div></div>
 
-      <div class="section-h">By step of the approach</div>
+      <div class="section-h">By decision</div>
       <table class="breakdown">
         ${weakest.map(w=>`<tr class="${w.pct>=80?'ok':w.pct>=55?'part':'miss'}">
           <td><span class="mark">${w.pct>=80?'\u2713':w.pct>=55?'\u2248':'\u2715'}</span><b>${w.k}</b></td>
           <td class="pts">${w.pct}%</td></tr>`).join('')}
       </table>
       <div class="pattern" style="margin-top:16px"><h4>Where to concentrate next</h4>
-        The lowest-scoring component above is <b>${weakest[0].k.toLowerCase()}</b>. Re-read that section
-        of the reference panel, then run the cases again \u2014 the scenarios stay the same, so the point is
-        whether the reasoning arrives faster and lands more often, not whether you remember the numbers.
+        The lowest-scoring decision above is <b>${weakest[0].k.toLowerCase()}</b>. Re-read that section
+        of the reference panel, then take those cases again \u2014 the scenarios stay the same, so the
+        point is whether the reasoning arrives faster and lands more often, not whether you remember
+        the numbers.${inOrder.length < CASES.length ? ` ${CASES.length - inOrder.length} case${CASES.length - inOrder.length === 1 ? '' : 's'} still untouched.` : ''}
       </div>
 
-      <div class="actions"><button id="btnRestart">Start a new session</button></div>
+      <div class="actions">
+        <button id="btnList3">All cases</button>
+        <button class="ghost" id="btnRestart">Clear scores and start over</button>
+      </div>
     </div>
   </section>`;
+  $('btnList3').addEventListener('click', renderPicker);
   $('btnRestart').addEventListener('click', ()=>{
-    state.i = 0; state.results = []; state.submitted = false;
+    state.i = 0; state.results = {}; state.order = []; state.submitted = false;
     renderCase();
   });
   renderChrome();
   if (window.scrollTo) window.scrollTo({top:0, behavior:'smooth'});
 }
+
+document.getElementById('btnTopList').addEventListener('click', renderPicker);
 
 renderPrimer();
 renderCase();
