@@ -1,1034 +1,2250 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AMR Blitz — Team Buzzer Quiz</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>ID topic game</title>
+<script>
+  /* Shows script errors on the page (including a typo in the BANK block) instead of failing silently. */
+  window.addEventListener("error", function (ev) {
+    var box = document.getElementById("runtime-error");
+    if (!box) return;
+    box.hidden = false;
+    box.textContent = "The game hit an error: " + ev.message + (ev.lineno ? " (line " + ev.lineno + ")" : "") +
+      ". If you just edited the BANK block, check for a missing comma, bracket, or quotation mark, then reload.";
+  });
+</script>
 <style>
-:root {
-  --black: #080a0f;
-  --dark: #0d1117;
-  --panel: #12181f;
-  --cyan: #00f5d4;
-  --pink: #ff2d78;
-  --yellow: #ffe600;
-  --white: #f0f4f8;
-  --dim: #4a5568;
-  --cyan-glow: 0 0 20px rgba(0,245,212,0.4), 0 0 60px rgba(0,245,212,0.15);
-  --pink-glow: 0 0 20px rgba(255,45,120,0.4), 0 0 60px rgba(255,45,120,0.15);
-  --yellow-glow: 0 0 20px rgba(255,230,0,0.5);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    color-scheme: light dark;
+    --bench: #eef1f5;
+    --slide: #ffffff;
+    --slide-2: #f5f6fa;
+    --ink: #1c2030;
+    --muted: #555b6e;
+    --line: #d5d9e3;
+    --violet: #3b2a6b;
+    --violet-soft: #ece8f6;
+    --on-violet: #ffffff;
+    --pink: #b8285f;
+    --pink-soft: #fbe8f0;
+    --s: #1b6a45;
+    --s-bg: #def0e6;
+    --i: #845600;
+    --i-bg: #f9edcf;
+    --r: #a4301d;
+    --r-bg: #f8e0da;
+    --focus: #b8285f;
+    --radius-lg: 14px;
+    --radius-sm: 8px;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bench: #15121d;
+      --slide: #1f1a2b;
+      --slide-2: #272138;
+      --ink: #ede9f5;
+      --muted: #aba4bd;
+      --line: #3a3350;
+      --violet: #c9b8ff;
+      --violet-soft: #2e2745;
+      --on-violet: #1a1430;
+      --pink: #ff82b4;
+      --pink-soft: #3a1f30;
+      --s: #82dcaa;
+      --s-bg: #173226;
+      --i: #f2c66b;
+      --i-bg: #372c12;
+      --r: #ff9d8a;
+      --r-bg: #3c1e18;
+      --focus: #ff82b4;
+    }
+  }
 
-body {
-  background: var(--black);
-  color: var(--white);
-  font-family: 'Barlow', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(0,245,212,0.03) 59px, rgba(0,245,212,0.03) 60px),
-    repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(0,245,212,0.03) 59px, rgba(0,245,212,0.03) 60px);
-}
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bench);
+    color: var(--ink);
+    font: 400 1rem/1.55 var(--font);
+  }
+  h1, h2, h3, h4, p { margin: 0; }
+  h1, h2, h3, h4 { line-height: 1.2; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  [tabindex="-1"]:focus { outline: none; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .shell { max-width: 46rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
+  @media (min-width: 40rem) { .shell { padding: 2rem 1.5rem 4rem; } }
+  main:focus { outline: none; }
+  .muted { color: var(--muted); }
+  kbd {
+    font: inherit; font-size: .85em; font-weight: 700;
+    padding: .05rem .4rem; border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 5px; background: var(--slide);
+  }
 
-/* ── SCREENS ── */
-.screen { display: none; min-height: 100vh; }
-.screen.active { display: flex; flex-direction: column; }
+  /* Buttons and form controls */
+  .btn {
+    font: inherit; font-weight: 650; line-height: 1.2;
+    border-radius: 999px; padding: .7rem 1.25rem; min-height: 2.75rem;
+    border: 2px solid transparent; cursor: pointer;
+  }
+  .btn.primary { background: var(--violet); color: var(--on-violet); }
+  .btn.primary:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .btn.quiet { background: transparent; color: var(--violet); border-color: var(--line); }
+  .btn.quiet:hover:not(:disabled) { border-color: var(--violet); }
+  .btn.quiet:disabled { color: var(--muted); opacity: .55; cursor: not-allowed; }
+  .btn.small { padding: .35rem .8rem; min-height: 2.25rem; font-size: .9rem; }
+  select, input[type="text"], textarea {
+    font: inherit; color: var(--ink); background: var(--slide);
+    border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: .55rem .7rem; min-height: 2.75rem; max-width: 100%;
+  }
+  label { font-weight: 650; }
 
-/* ── SETUP SCREEN ── */
-#setupScreen {
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  gap: 2rem;
-}
-.logo {
-  text-align: center;
-}
-.logo-main {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(3rem, 8vw, 6rem);
-  letter-spacing: 0.06em;
-  line-height: 0.9;
-  color: var(--cyan);
-  text-shadow: var(--cyan-glow);
-}
-.logo-sub {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-top: 0.5rem;
-}
-.setup-card {
-  background: var(--panel);
-  border: 1px solid rgba(0,245,212,0.15);
-  border-radius: 12px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 560px;
-}
-.setup-title {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-bottom: 1.5rem;
-}
-.team-inputs { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
-.team-row { display: flex; align-items: center; gap: 0.75rem; }
-.team-dot {
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.team-dot.c { background: var(--cyan); box-shadow: var(--cyan-glow); }
-.team-dot.p { background: var(--pink); box-shadow: var(--pink-glow); }
-.team-dot.y { background: var(--yellow); box-shadow: var(--yellow-glow); }
-.team-dot.w { background: #a78bfa; box-shadow: 0 0 20px rgba(167,139,250,0.4); }
+  .alert {
+    background: var(--r-bg); color: var(--ink); border: 1px solid var(--r);
+    border-radius: var(--radius-sm); padding: .8rem 1rem; margin-bottom: 1.25rem;
+  }
+  .alert h2 { font-size: 1rem; color: var(--r); margin-bottom: .4rem; }
+  .alert ul { margin: .25rem 0 .5rem; padding-left: 1.2rem; }
 
-.team-input {
-  flex: 1;
-  background: var(--dark);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 6px;
-  padding: 0.6rem 1rem;
-  color: var(--white);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.team-input:focus { border-color: rgba(0,245,212,0.4); }
-.team-key {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  color: var(--dim);
-  min-width: 60px;
-  text-align: right;
-}
+  /* Start screen */
+  .hero { padding: .5rem 0 1.25rem; border-bottom: 3px solid var(--violet); margin-bottom: 1.5rem; }
+  .hero h1 {
+    font-size: clamp(2.1rem, 8vw, 3.2rem); font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1.02; color: var(--violet);
+  }
+  .hero .sub { font-size: clamp(1.05rem, 3.4vw, 1.3rem); font-weight: 600; margin-top: .5rem; max-width: 34ch; }
+  .hero .source-line { margin-top: .9rem; color: var(--muted); max-width: 60ch; }
+  .section-h { font-size: 1.1rem; font-weight: 750; margin: 0 0 .75rem; }
+  .modes { display: grid; gap: .75rem; grid-template-columns: 1fr; }
+  @media (min-width: 34rem) { .modes { grid-template-columns: 1fr 1fr; } }
+  .mode {
+    text-align: left; font: inherit; color: inherit; background: var(--slide);
+    border: 1px solid var(--line); border-left: 6px solid var(--violet);
+    border-radius: var(--radius-sm); padding: .9rem 1rem; cursor: pointer;
+    display: grid; grid-template-columns: 1fr auto; gap: .25rem .75rem; align-content: start;
+  }
+  .mode[data-mode="pearls"] { border-left-color: var(--pink); }
+  .mode[data-mode="retry"] { border-left-color: var(--r); }
+  .mode:hover:not(:disabled) { border-color: var(--violet); }
+  .mode:disabled { cursor: not-allowed; border-left-color: var(--line); color: var(--muted); }
+  .mode-name { font-weight: 750; font-size: 1.1rem; }
+  .mode-count { font-size: .85rem; color: var(--muted); align-self: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .mode-desc { grid-column: 1 / -1; color: var(--muted); font-size: .93rem; }
+  .settings { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+  .settings .hint { color: var(--muted); font-size: .9rem; flex-basis: 100%; }
+  .how { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--line); display: grid; gap: .75rem; }
+  .how p { max-width: 62ch; }
 
-.settings-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-.setting-group { flex: 1; min-width: 140px; }
-.setting-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-bottom: 0.4rem;
-}
-.setting-select {
-  width: 100%;
-  background: var(--dark);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 6px;
-  padding: 0.55rem 0.8rem;
-  color: var(--white);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.95rem;
-  outline: none;
-  cursor: pointer;
-}
+  /* Antibiogram-style status cells (signature element) */
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; font-size: .88rem; color: var(--muted); list-style: none; padding: 0; margin: 0; }
+  .legend li { display: flex; align-items: center; gap: .4rem; }
+  .cell {
+    width: 1.75rem; height: 1.75rem; display: inline-grid; place-items: center;
+    font-size: .74rem; font-weight: 750; border-radius: 4px;
+    background: var(--slide); border: 1px solid var(--line); color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .cell-s { background: var(--s-bg); color: var(--s); border-color: var(--s); }
+  .cell-i { background: var(--i-bg); color: var(--i); border-color: var(--i); }
+  .cell-r { background: var(--r-bg); color: var(--r); border-color: var(--r); }
+  .cell-current { border: 2px solid var(--pink); color: var(--ink); }
+  .strip { display: flex; flex-wrap: wrap; gap: 3px; margin-top: .6rem; }
+  .strip .cell-newround { margin-left: .55rem; }
 
-.start-btn {
-  width: 100%;
-  background: var(--cyan);
-  color: var(--black);
-  border: none;
-  padding: 1rem;
-  border-radius: 8px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--cyan-glow);
-}
-.start-btn:hover {
-  background: var(--white);
-  box-shadow: 0 0 30px rgba(255,255,255,0.3);
-  transform: translateY(-2px);
-}
+  /* Quiz screen */
+  .topbar { padding-bottom: .75rem; margin-bottom: 1.1rem; border-bottom: 1px solid var(--line); }
+  .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .mode-label { font-weight: 750; color: var(--violet); }
+  .score { font-variant-numeric: tabular-nums; display: flex; gap: .8rem; align-items: baseline; margin-top: .2rem; }
+  .pts { font-weight: 800; font-size: 1.15rem; }
+  .streak { color: var(--pink); font-weight: 700; font-size: .92rem; }
+  .item-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: .75rem; }
+  .qcount { font-size: .95rem; font-weight: 700; color: var(--muted); }
+  .chips { list-style: none; display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; padding: 0; }
+  .chip { font-size: .8rem; padding: .15rem .6rem; border-radius: 999px; background: var(--violet-soft); color: var(--violet); }
+  .stem {
+    font-size: 1.1rem; line-height: 1.62; background: var(--slide);
+    border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1rem 1.15rem;
+  }
+  .stem-case { border-top: 5px solid var(--violet); }
+  .timer { display: flex; align-items: center; gap: .6rem; margin: 0 0 .75rem; }
+  .timer-track { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .timer-fill { height: 100%; background: var(--violet); transform-origin: left center; transition: transform .25s linear; }
+  .timer-low .timer-fill { background: var(--r); }
+  .timer-low .timer-text { color: var(--r); }
+  .timer-text { font-variant-numeric: tabular-nums; font-size: .88rem; font-weight: 700; min-width: 4.5rem; text-align: right; }
 
-/* ── GAME SCREEN ── */
-#gameScreen { flex-direction: column; }
+  .options { display: grid; gap: .6rem; margin-top: 1rem; }
+  .option {
+    display: grid; grid-template-columns: 1.9rem 1fr; gap: .2rem .75rem; align-items: start;
+    text-align: left; font: inherit; color: inherit; background: var(--slide);
+    border: 2px solid var(--line); border-radius: var(--radius-sm);
+    padding: .75rem .9rem; cursor: pointer;
+  }
+  .option:not(.locked):hover { border-color: var(--violet); }
+  .option-key {
+    width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center;
+    border: 1.5px solid var(--line); font-weight: 750; font-size: .9rem; color: var(--muted);
+  }
+  .option-text { align-self: center; }
+  .option.selected { border-color: var(--violet); background: var(--violet-soft); }
+  .option.selected .option-key { background: var(--violet); color: var(--on-violet); border-color: var(--violet); }
+  .option-mark { grid-column: 2; font-weight: 750; font-size: .88rem; }
+  .option-mark:empty { display: none; }
+  .option.locked { cursor: default; }
+  .option.locked:not(.is-correct):not(.is-wrong) { opacity: .72; }
+  .option.is-correct { border-color: var(--s); background: var(--s-bg); }
+  .option.is-correct .option-key { background: var(--s); color: var(--slide); border-color: var(--s); }
+  .option.is-correct .option-mark { color: var(--s); }
+  .option.is-wrong { border-color: var(--r); background: var(--r-bg); }
+  .option.is-wrong .option-key { background: var(--r); color: var(--slide); border-color: var(--r); }
+  .option.is-wrong .option-mark { color: var(--r); }
 
-/* SCOREBAR */
-.scorebar {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  flex-shrink: 0;
-  height: 80px;
-}
-.team-score-panel {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 0 1.5rem;
-  position: relative;
-  transition: all 0.3s;
-}
-.team-score-panel.buzzed {
-  animation: buzzFlash 0.5s ease;
-}
-@keyframes buzzFlash {
-  0%,100% { background: transparent; }
-  50% { background: rgba(0,245,212,0.15); }
-}
-.team-score-panel.buzzed-pink {
-  animation: buzzFlashPink 0.5s ease;
-}
-@keyframes buzzFlashPink {
-  0%,100% { background: transparent; }
-  50% { background: rgba(255,45,120,0.15); }
-}
-.team-name-display {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--dim);
-}
-.team-pts {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2rem;
-  letter-spacing: 0.04em;
-  line-height: 1;
-}
-.buzz-indicator {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  opacity: 0.2;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-.buzz-indicator.active {
-  opacity: 1;
-  animation: pulse 0.6s infinite alternate;
-}
-@keyframes pulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.5); }
-}
+  .instructions { color: var(--muted); margin-top: 1rem; font-size: .95rem; }
+  .match-key { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .4rem; }
+  .match-key li {
+    display: grid; grid-template-columns: 1.6rem 1fr; gap: .5rem; align-items: start;
+    background: var(--slide); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: .55rem .75rem;
+  }
+  .match-letter { font-weight: 800; color: var(--violet); }
+  .match-rows { display: grid; gap: .6rem; margin-top: 1rem; }
+  .match-row {
+    display: grid; gap: .4rem; background: var(--slide);
+    border: 2px solid var(--line); border-radius: var(--radius-sm); padding: .7rem .8rem;
+  }
+  @media (min-width: 40rem) {
+    .match-row { grid-template-columns: 12rem 1fr; align-items: center; }
+    .match-result { grid-column: 2; }
+  }
+  .match-select { width: 100%; }
+  .match-row.is-correct { border-color: var(--s); }
+  .match-row.is-wrong { border-color: var(--r); }
+  .match-result { font-weight: 650; font-size: .9rem; }
+  .match-row.is-correct .match-result { color: var(--s); }
+  .match-row.is-wrong .match-result { color: var(--r); }
+  .match-note { color: var(--r); font-weight: 650; margin-top: .5rem; }
+  .match-note:empty { display: none; }
 
-.scorebar-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0 1.5rem;
-  min-width: 160px;
-  border-left: 1px solid rgba(255,255,255,0.06);
-  border-right: 1px solid rgba(255,255,255,0.06);
-}
-.q-counter {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--dim);
-}
-.q-counter span { color: var(--white); }
+  .order-list { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: .5rem; }
+  .order-row {
+    display: grid; grid-template-columns: 2rem 1fr; gap: .4rem .6rem; align-items: center;
+    background: var(--slide); border: 2px solid var(--line); border-radius: var(--radius-sm); padding: .6rem .75rem;
+  }
+  .order-pos { font-weight: 800; color: var(--violet); text-align: center; }
+  .order-moves { grid-column: 2; display: flex; gap: .4rem; }
+  .order-result { grid-column: 2; font-weight: 650; font-size: .9rem; }
+  .order-result:empty { display: none; }
+  .order-row.is-correct { border-color: var(--s); }
+  .order-row.is-correct .order-result { color: var(--s); }
+  .order-row.is-wrong { border-color: var(--r); }
+  .order-row.is-wrong .order-result { color: var(--r); }
 
-/* TIMER RING */
-.timer-wrap {
-  position: relative;
-  width: 48px; height: 48px;
-}
-.timer-svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
-.timer-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 3; }
-.timer-fill {
-  fill: none;
-  stroke: var(--cyan);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-dasharray: 126;
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset 1s linear, stroke 0.5s;
-}
-.timer-num {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.2rem;
-  letter-spacing: 0;
-  color: var(--cyan);
-  transition: color 0.3s;
-}
+  .feedback {
+    margin-top: 1.25rem; background: var(--slide); border: 1px solid var(--line);
+    border-radius: var(--radius-lg); padding: 1rem 1.1rem; display: grid; gap: 1rem;
+  }
+  .verdict { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem .7rem; padding: .7rem .85rem; border-radius: var(--radius-sm); }
+  .verdict-s { background: var(--s-bg); color: var(--s); }
+  .verdict-i { background: var(--i-bg); color: var(--i); }
+  .verdict-r { background: var(--r-bg); color: var(--r); }
+  .verdict-icon { font-size: 1.45rem; font-weight: 800; line-height: 1; }
+  .verdict-text { font-size: 1.2rem; font-weight: 800; }
+  .verdict-points { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fb-block h4 { font-size: .95rem; margin-bottom: .3rem; }
+  .fb-block p + p { margin-top: .35rem; }
+  .why-not { list-style: none; padding: 0; margin: 0; display: grid; gap: .65rem; }
+  .why-not li { padding-left: .8rem; border-left: 3px solid var(--line); }
+  .why-not li.chosen { border-left-color: var(--r); }
+  .why-not .choice { font-weight: 650; display: block; }
+  .tag {
+    display: inline-block; font-size: .75rem; font-weight: 750; padding: .05rem .5rem;
+    border-radius: 999px; background: var(--r-bg); color: var(--r); margin-left: .35rem; vertical-align: 1px;
+  }
+  .pearl { background: var(--pink-soft); border-radius: var(--radius-sm); padding: .8rem .95rem; border-left: 4px solid var(--pink); }
+  .pearl h4 { color: var(--pink); font-size: .95rem; margin-bottom: .25rem; }
+  .pearl p { font-weight: 650; }
+  .source { display: grid; gap: .35rem; }
+  .badge {
+    justify-self: start; font-size: .86rem; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 6px; padding: .3rem .6rem; background: var(--slide-2);
+  }
+  .badge strong { color: var(--ink); }
+  details > summary { cursor: pointer; color: var(--violet); font-weight: 650; font-size: .9rem; }
+  details.citation p { font-size: .88rem; margin-top: .3rem; }
 
-/* GAME AREA */
-.game-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  gap: 1.5rem;
-  position: relative;
-}
+  .actionbar {
+    position: sticky; bottom: 0; z-index: 4; margin-top: 1.25rem;
+    padding: .75rem 0 calc(.75rem + env(safe-area-inset-bottom));
+    background: var(--bench); border-top: 1px solid var(--line);
+    display: flex; justify-content: flex-end; gap: .5rem;
+  }
+  .actionbar .btn.primary { flex: 1; }
+  @media (min-width: 34rem) { .actionbar .btn.primary { flex: 0 0 auto; min-width: 12rem; } }
 
-.category-badge {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  padding: 0.3rem 1rem;
-  border-radius: 100px;
-  border: 1px solid rgba(0,245,212,0.3);
-  color: var(--cyan);
-  background: rgba(0,245,212,0.06);
-}
-.points-badge {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  color: var(--yellow);
-  text-shadow: var(--yellow-glow);
-}
+  /* Round intro */
+  .round-intro { display: grid; gap: .6rem; padding-top: 1.5rem; }
+  .round-intro h2 { font-size: clamp(1.8rem, 6vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; color: var(--violet); }
+  .round-count { font-weight: 700; color: var(--pink); }
+  .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
 
-.question-card {
-  background: var(--panel);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 2.5rem;
-  max-width: 780px;
-  width: 100%;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.question-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-  opacity: 0.5;
-}
-.question-text {
-  font-size: clamp(1rem, 2.5vw, 1.3rem);
-  font-weight: 400;
-  line-height: 1.65;
-  color: var(--white);
-}
+  /* Rapid Pearls */
+  .deck-progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: .6rem; }
+  .deck-progress span { display: block; height: 100%; background: var(--pink); }
+  .card { margin-top: 1rem; perspective: 1400px; cursor: pointer; }
+  .card-inner { display: grid; transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2, .7, .2, 1); }
+  .card-inner.flipped { transform: rotateY(180deg); }
+  .face {
+    grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    background: var(--slide); border: 1px solid var(--line); border-radius: var(--radius-lg);
+    padding: 1.25rem; display: flex; flex-direction: column; gap: .9rem; min-height: 17rem;
+  }
+  .face-front { border-top: 6px solid var(--violet); transform: rotateY(0deg); }
+  .face-back { border-top: 6px solid var(--pink); transform: rotateY(180deg); }
+  .card-stem { font-size: 1.08rem; line-height: 1.6; }
+  .card-hint { margin-top: auto; color: var(--muted); font-size: .9rem; }
+  .card-label { font-size: .95rem; font-weight: 750; color: var(--muted); }
+  .card-answer { font-weight: 650; }
+  ul.card-answer, ol.card-answer, .card-lefts { margin: 0; padding-left: 1.2rem; }
+  .card-pearl { font-size: 1.25rem; font-weight: 750; line-height: 1.4; color: var(--ink); }
+  .deck-controls { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; align-items: center; }
+  .deck-controls .btn.primary { flex: 1 1 10rem; }
+  @media (prefers-reduced-motion: reduce) {
+    .card-inner, .timer-fill { transition: none; }
+  }
 
-.answer-reveal {
-  display: none;
-  background: rgba(0,245,212,0.05);
-  border: 1px solid rgba(0,245,212,0.2);
-  border-radius: 10px;
-  padding: 1.2rem 1.5rem;
-  max-width: 780px;
-  width: 100%;
-  animation: revealIn 0.3s ease;
-}
-.answer-reveal.visible { display: block; }
-@keyframes revealIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.answer-reveal-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--cyan);
-  margin-bottom: 0.4rem;
-}
-.answer-reveal-text {
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--white);
-  margin-bottom: 0.6rem;
-}
-.explanation-reveal {
-  font-size: 0.82rem;
-  color: rgba(240,244,248,0.55);
-  line-height: 1.55;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding-top: 0.6rem;
-  margin-top: 0.4rem;
-}
-
-/* BUZZ STATUS BAR */
-.buzz-status {
-  text-align: center;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--dim);
-  min-height: 1.2em;
-}
-.buzz-status.active { color: var(--yellow); }
-
-/* CONTROL ROW */
-.control-row {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 780px;
-  width: 100%;
-}
-.ctrl-btn {
-  flex: 1;
-  min-width: 120px;
-  padding: 0.7rem 1rem;
-  border-radius: 8px;
-  border: 1px solid;
-  cursor: pointer;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  transition: all 0.15s;
-}
-.ctrl-btn.reveal-q {
-  background: transparent;
-  border-color: rgba(255,255,255,0.2);
-  color: var(--white);
-}
-.ctrl-btn.reveal-q:hover { background: rgba(255,255,255,0.06); }
-.ctrl-btn.correct {
-  background: rgba(0,245,212,0.08);
-  border-color: rgba(0,245,212,0.35);
-  color: var(--cyan);
-}
-.ctrl-btn.correct:hover { background: rgba(0,245,212,0.18); box-shadow: var(--cyan-glow); }
-.ctrl-btn.incorrect {
-  background: rgba(255,45,120,0.08);
-  border-color: rgba(255,45,120,0.35);
-  color: var(--pink);
-}
-.ctrl-btn.incorrect:hover { background: rgba(255,45,120,0.18); box-shadow: var(--pink-glow); }
-.ctrl-btn.next-q {
-  background: var(--yellow);
-  border-color: var(--yellow);
-  color: var(--black);
-  box-shadow: var(--yellow-glow);
-}
-.ctrl-btn.next-q:hover { background: var(--white); border-color: var(--white); }
-.ctrl-btn.skip-q {
-  background: transparent;
-  border-color: rgba(255,255,255,0.1);
-  color: var(--dim);
-}
-.ctrl-btn.skip-q:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
-.ctrl-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
-
-/* BUZZ BUTTONS (bottom) */
-.buzz-zone {
-  display: flex;
-  gap: 0;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  flex-shrink: 0;
-}
-.buzz-btn {
-  flex: 1;
-  padding: 1.1rem;
-  border: none;
-  cursor: pointer;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.6rem;
-  letter-spacing: 0.1em;
-  transition: all 0.15s;
-  position: relative;
-  overflow: hidden;
-}
-.buzz-btn::after {
-  content: attr(data-key);
-  position: absolute;
-  top: 6px; right: 10px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  opacity: 0.4;
-}
-.buzz-btn:disabled { opacity: 0.3; cursor: default; }
-.buzz-btn:not(:disabled):active { transform: scale(0.97); }
-
-/* LEADERBOARD / END SCREEN */
-#endScreen {
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  gap: 2rem;
-}
-.end-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  letter-spacing: 0.08em;
-  color: var(--yellow);
-  text-shadow: var(--yellow-glow);
-  text-align: center;
-}
-.podium {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: 500px;
-}
-.podium-place {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-.podium-name {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-align: center;
-}
-.podium-pts {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.04em;
-}
-.podium-block {
-  width: 100%;
-  border-radius: 6px 6px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2rem;
-}
-.play-again-btn {
-  background: transparent;
-  border: 2px solid var(--cyan);
-  color: var(--cyan);
-  padding: 0.9rem 3rem;
-  border-radius: 8px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.3rem;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--cyan-glow);
-}
-.play-again-btn:hover { background: var(--cyan); color: var(--black); }
-
-/* TOAST */
-.toast {
-  position: fixed;
-  top: 90px; left: 50%;
-  transform: translateX(-50%) scale(0.9);
-  padding: 0.8rem 2rem;
-  border-radius: 8px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.3rem;
-  letter-spacing: 0.1em;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.25s;
-  z-index: 200;
-  border: 1px solid;
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) scale(1);
-}
-.toast.cyan { background: rgba(0,245,212,0.12); border-color: var(--cyan); color: var(--cyan); box-shadow: var(--cyan-glow); }
-.toast.pink { background: rgba(255,45,120,0.12); border-color: var(--pink); color: var(--pink); box-shadow: var(--pink-glow); }
-.toast.yellow { background: rgba(255,230,0,0.12); border-color: var(--yellow); color: var(--yellow); }
-
-em { font-style: italic; color: rgba(0,245,212,0.8); }
-
-@media (max-width: 500px) {
-  .question-card { padding: 1.5rem; }
-  .scorebar-center { display: none; }
-}
+  /* End screen */
+  .end-hero { display: grid; gap: .4rem; padding: .5rem 0 1rem; }
+  .end-hero h2 { font-size: clamp(2rem, 8vw, 3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; color: var(--violet); }
+  .end-hero .end-stats { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .report {
+    background: var(--slide); border: 1px solid var(--line); border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem; margin-top: .75rem; display: grid; gap: .5rem;
+  }
+  .report h3, .breakdowns h3, .missed h3 { font-size: 1.1rem; font-weight: 750; }
+  .report-row { display: grid; gap: .4rem; padding: .6rem 0; border-top: 1px solid var(--line); }
+  .report-row:first-of-type { border-top: 0; }
+  @media (min-width: 40rem) { .report-row { grid-template-columns: 13rem 1fr; align-items: center; } }
+  .report-domain { font-weight: 650; font-size: .92rem; }
+  .report-cells { display: flex; flex-wrap: wrap; gap: 4px; }
+  .rcell {
+    font: inherit; display: grid; place-items: center; min-width: 3rem; padding: .25rem .35rem;
+    border-radius: 6px; border: 1px solid var(--line); background: var(--slide-2); color: var(--muted);
+  }
+  button.rcell { cursor: pointer; }
+  .rcell-id { font-size: .7rem; font-weight: 600; }
+  .rcell-code { font-weight: 850; font-size: 1.05rem; line-height: 1.1; }
+  .rcell-s { background: var(--s-bg); color: var(--s); border-color: var(--s); }
+  .rcell-i { background: var(--i-bg); color: var(--i); border-color: var(--i); }
+  .rcell-r { background: var(--r-bg); color: var(--r); border-color: var(--r); }
+  .breakdowns { display: grid; gap: 1rem; margin-top: 1.25rem; }
+  .table-wrap {
+    overflow-x: auto; background: var(--slide); border: 1px solid var(--line);
+    border-radius: var(--radius-lg); padding: .75rem 1rem;
+  }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .95rem; }
+  caption { text-align: left; font-weight: 750; font-size: 1.05rem; padding-bottom: .4rem; }
+  th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-size: .85rem; color: var(--muted); font-weight: 650; }
+  .num { text-align: right; white-space: nowrap; }
+  tfoot th, tfoot td { font-weight: 800; border-bottom: 0; border-top: 2px solid var(--ink); }
+  .bar { display: block; height: 4px; background: var(--line); border-radius: 2px; margin-top: .3rem; min-width: 3rem; }
+  .bar span { display: block; height: 100%; background: var(--violet); border-radius: 2px; }
+  .missed { margin-top: 1.5rem; display: grid; gap: .6rem; }
+  .missed-item {
+    background: var(--slide); border: 1px solid var(--line); border-left: 6px solid var(--r);
+    border-radius: var(--radius-sm); padding: .7rem .9rem;
+  }
+  .missed-item.partial { border-left-color: var(--i); }
+  .missed-item > summary { color: var(--ink); font-weight: 600; font-size: .97rem; }
+  .missed-item[open] > summary { margin-bottom: .7rem; }
+  .missed-item > :not(summary) + :not(summary) { margin-top: .55rem; }
+  .missed-id { font-weight: 800; color: var(--violet); margin-right: .35rem; }
+  .missed-item ul, .missed-item ol { margin: 0; padding-left: 1.2rem; }
+  .field { display: grid; gap: .35rem; margin-top: 1.5rem; max-width: 24rem; }
+  .end-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+  .copy-status { margin-top: .6rem; font-weight: 650; }
+  .copy-status:empty { display: none; }
+  .copy-preview { margin-top: .75rem; }
+  .copy-preview textarea { width: 100%; min-height: 14rem; margin-top: .5rem; font: .85rem/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  .copy-scratch { position: fixed; top: -1000px; left: -1000px; opacity: 0; }
 </style>
 </head>
 <body>
-
-<!-- ══════════ SETUP ══════════ -->
-<div class="screen active" id="setupScreen">
-  <div class="logo">
-    <div class="logo-main">AMR BLITZ</div>
-    <div class="logo-sub">Rapid-Fire Team Quiz · AMR Gram-Negative Infections</div>
-  </div>
-  <div class="setup-card">
-    <div class="setup-title">⚡ Team Configuration</div>
-    <div class="team-inputs" id="teamInputs">
-      <div class="team-row">
-        <div class="team-dot c"></div>
-        <input class="team-input" value="Team Alpha" placeholder="Team 1 Name" />
-        <span class="team-key">Press Q</span>
-      </div>
-      <div class="team-row">
-        <div class="team-dot p"></div>
-        <input class="team-input" value="Team Beta" placeholder="Team 2 Name" />
-        <span class="team-key">Press P</span>
-      </div>
-    </div>
-    <div class="settings-row">
-      <div class="setting-group">
-        <div class="setting-label">Timer (seconds)</div>
-        <select class="setting-select" id="timerSetting">
-          <option value="10">10s — Lightning</option>
-          <option value="15" selected>15s — Standard</option>
-          <option value="20">20s — Relaxed</option>
-          <option value="30">30s — Teaching</option>
-          <option value="0">No timer</option>
-        </select>
-      </div>
-      <div class="setting-group">
-        <div class="setting-label">Question Order</div>
-        <select class="setting-select" id="orderSetting">
-          <option value="random">Shuffle</option>
-          <option value="original">Original Order</option>
-          <option value="points-asc">Easy → Hard</option>
-          <option value="points-desc">Hard → Easy</option>
-        </select>
-      </div>
-    </div>
-    <button class="start-btn" onclick="startGame()">START THE BLITZ</button>
-  </div>
+<noscript><p style="padding:1rem">This game needs JavaScript. Turn it on in your browser settings and reload.</p></noscript>
+<div class="shell">
+  <div id="runtime-error" class="alert" role="alert" hidden></div>
+  <main id="app" tabindex="-1"></main>
 </div>
-
-<!-- ══════════ GAME ══════════ -->
-<div class="screen" id="gameScreen">
-  <!-- Scorebar -->
-  <div class="scorebar" id="scorebar"></div>
-
-  <!-- Main area -->
-  <div class="game-area">
-    <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;justify-content:center">
-      <div class="category-badge" id="catBadge">Category</div>
-      <div class="points-badge" id="ptsBadge">+200 pts</div>
-    </div>
-
-    <div class="question-card">
-      <div class="question-text" id="qText">Question loads here...</div>
-    </div>
-
-    <div class="answer-reveal" id="answerReveal">
-      <div class="answer-reveal-label">Answer</div>
-      <div class="answer-reveal-text" id="answerText"></div>
-      <div class="explanation-reveal" id="explanText"></div>
-    </div>
-
-    <div class="buzz-status" id="buzzStatus">— Press buzz button or keyboard to buzz in —</div>
-
-    <div class="control-row" id="controlRow">
-      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
-      <button class="ctrl-btn skip-q" onclick="skipQuestion()">Skip →</button>
-    </div>
-  </div>
-
-  <!-- Buzz zone -->
-  <div class="buzz-zone" id="buzzZone"></div>
-</div>
-
-<!-- ══════════ END ══════════ -->
-<div class="screen" id="endScreen">
-  <div class="end-title">FINAL SCORES</div>
-  <div class="podium" id="podium"></div>
-  <button class="play-again-btn" onclick="goSetup()">↺ Play Again</button>
-</div>
-
-<div class="toast" id="toast"></div>
+<div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-const ALL_QUESTIONS = [
-  { id:1,  cat:"Resistance Mechanisms",      pts:200,  q:"What is the key phenotypic difference that distinguishes AmpC β-lactamases from ESBLs in terms of susceptibility to β-lactamase inhibitors?", a:"AmpC β-lactamases are NOT inhibited by clavulanic acid or tazobactam, whereas ESBLs ARE inhibited by these β-lactamase inhibitors.", exp:"AmpC enzymes also resist cephamycins (e.g., cefoxitin), unlike ESBLs. This phenotypic distinction is clinically important for laboratory differentiation." },
-  { id:2,  cat:"Clinical Trials",            pts:200,  q:"In the MERINO trial comparing piperacillin-tazobactam to meropenem for ESBL-producing Enterobacterales bloodstream infections, which agent had lower 30-day mortality?", a:"Meropenem — 4% mortality vs 12% with piperacillin-tazobactam.", exp:"This landmark trial established carbapenems as preferred therapy for ESBL-E bloodstream infections, even after reanalysis using revised MIC criteria." },
-  { id:3,  cat:"Organism Identification",    pts:200,  q:"Name three Enterobacterales species at MODERATE to HIGH risk for clinically significant AmpC production due to inducible ampC gene expression.", a:"<em>Enterobacter cloacae</em> complex, <em>Klebsiella aerogenes</em>, and <em>Citrobacter freundii</em>", exp:"These organisms can develop resistance to third-generation cephalosporins during therapy through ampC induction, even if initially susceptible." },
-  { id:4,  cat:"Pharmacology",               pts:200,  q:"Why is cefepime generally effective against AmpC-producing Enterobacterales despite resistance to third-generation cephalosporins?", a:"Cefepime is a weak inducer of ampC AND forms stable acyl enzyme complexes that resist hydrolysis by AmpC β-lactamases.", exp:"This dual property makes cefepime a preferred agent for AmpC-producing organisms." },
-  { id:5,  cat:"Antimicrobial Stewardship",  pts:200,  q:"For ESBL-producing <em>E. coli</em> UTIs, name three preferred oral step-down options after clinical improvement (assuming susceptibility).", a:"Trimethoprim-sulfamethoxazole (TMP-SMX), ciprofloxacin, or levofloxacin", exp:"These agents achieve adequate urinary concentrations and allow carbapenem-sparing after hemodynamic stability." },
-  { id:6,  cat:"Resistance Mechanisms",      pts:400,  q:"What are the three mechanisms by which Enterobacterales can exhibit increased AmpC β-lactamase production?", a:"(1) Inducible chromosomal expression, (2) Stable chromosomal derepression, (3) Constitutively expressed ampC genes (plasmid-mediated or chromosomally integrated)", exp:"Understanding these mechanisms helps predict resistance development risk during therapy and guides antibiotic selection." },
-  { id:7,  cat:"Drug Spectrum",              pts:400,  q:"Which third-generation cephalosporins are at risk for inducing AmpC resistance in organisms like <em>Enterobacter cloacae</em>?", a:"Ceftriaxone, cefotaxime, and ceftazidime", exp:"These agents are relatively weak ampC inducers but susceptible to hydrolysis, making them less effective for moderate-risk AmpC organisms." },
-  { id:8,  cat:"Novel BL/BLI Combinations",  pts:400,  q:"Name three newer β-lactam/β-lactamase inhibitor combinations with activity against ESBL-producing Enterobacterales.", a:"Ceftazidime-avibactam, meropenem-vaborbactam, and imipenem-cilastatin-relebactam", exp:"These agents should be reserved for carbapenem-resistant organisms where greater need exists." },
-  { id:9,  cat:"Urinary Tract Infections",   pts:400,  q:"What are the preferred treatment options for uncomplicated cystitis caused by AmpC-producing Enterobacterales?", a:"Nitrofurantoin or TMP-SMX (ciprofloxacin or levofloxacin are alternatives)", exp:"These first-line agents achieve adequate urinary concentrations for uncomplicated cystitis." },
-  { id:10, cat:"Epidemiology",               pts:400,  q:"What is the approximate prevalence of ESBL-producing Enterobacterales in the United States?", a:"11–13%", exp:"ESBL rates vary globally: 5–25% western Europe, >50% southern/eastern Europe, 30–80% Asia, 10–15% Australia/NZ." },
-  { id:11, cat:"Clinical Vignette",          pts:600,  q:"A patient with <em>Enterobacter cloacae</em> bacteremia is started on ceftriaxone based on initial susceptibility. Three days later, repeat cultures show resistance to ceftriaxone. What resistance mechanism is most likely responsible?", a:"Inducible AmpC β-lactamase expression", exp:"<em>E. cloacae</em> can develop resistance to 3rd-gen cephalosporins through ampC induction even after initial susceptibility — sometimes within just a few doses." },
-  { id:12, cat:"Pharmacology/PK-PD",         pts:600,  q:"Why is ceftolozane-tazobactam potentially more effective than piperacillin-tazobactam against ESBL-producing Enterobacterales?", a:"Greater intrinsic stability to ESBL hydrolysis (CTX-M-15), less reliance on tazobactam inhibition, AND a 2:1 ratio providing higher tazobactam concentrations vs pip-tazo's 8:1 ratio.", exp:"These pharmacologic advantages yield MICs several dilutions lower than piperacillin-tazobactam." },
-  { id:13, cat:"Guideline Recommendations",  pts:600,  q:"According to IDSA guidance, what is the preferred antibiotic class for ESBL-producing Enterobacterales bloodstream infections?", a:"Carbapenems (meropenem, imipenem-cilastatin, or ertapenem*). *Ertapenem limited to non-critically ill patients with normal albumin.", exp:"Based on MERINO trial evidence, carbapenems are the gold standard for ESBL-E BSI." },
-  { id:14, cat:"Microbiology Interpretation",pts:600,  q:"An <em>E. coli</em> BSI isolate is resistant to ceftriaxone but susceptible to cefoxitin and piperacillin-tazobactam. ESBL or AmpC producer?", a:"ESBL producer", exp:"ESBLs remain susceptible to cephamycins (cefoxitin) and β-lactamase inhibitors. AmpC producers are resistant to both." },
-  { id:15, cat:"Antimicrobial Stewardship",  pts:600,  q:"True or False: Newer agents like ceftazidime-avibactam should be used as first-line therapy for ALL ESBL-producing Enterobacterales to preserve carbapenems.", a:"FALSE — these agents should be reserved for carbapenem-resistant organisms.", exp:"IDSA guidance specifies reserving novel BL/BLI combinations for CRE, where the clinical need is greater. Carbapenems remain preferred for ESBL-E." },
-  { id:16, cat:"Ertapenem Limitations",      pts:800,  q:"Why is ertapenem NOT recommended for critically ill patients or those with hypoalbuminemia when treating ESBL-E?", a:"Ertapenem is ~95% protein-bound. Hypoalbuminemia increases free fraction → increased clearance → decreased half-life, suboptimal with once-daily dosing.", exp:"Hypoalbuminemia (albumin <2.5 g/dL) associated with ~5× higher odds of 30-day mortality with ertapenem vs meropenem." },
-  { id:17, cat:"MIC Interpretation",         pts:800,  q:"A patient has <em>Enterobacter cloacae</em> bacteremia with a cefepime MIC of 4 μg/mL (susceptible dose-dependent). Should you be concerned?", a:"Yes — cefepime MIC ≥4 μg/mL in AmpC producers may indicate ESBL co-production, associated with treatment failure.", exp:"89% of <em>E. cloacae</em> isolates with cefepime MICs 4–8 μg/mL were ESBL-producing in one study; all 10 patients on cefepime died within 30 days." },
-  { id:18, cat:"Clinical Vignette",          pts:800,  q:"A 65-year-old woman with ESBL-E. coli pyelonephritis is improving on meropenem, now afebrile, hemodynamically stable, tolerating PO. Organism susceptible to ciprofloxacin. What's next?", a:"Transition to oral ciprofloxacin for step-down therapy.", exp:"Oral fluoroquinolones achieve adequate urinary concentrations and allow carbapenem-sparing after clinical improvement." },
-  { id:19, cat:"Resistance Mechanisms",      pts:800,  q:"What is the most common ESBL enzyme family found in <em>E. coli</em> and <em>Klebsiella pneumoniae</em> worldwide?", a:"CTX-M enzymes (particularly CTX-M-15)", exp:"CTX-M-type ESBLs have largely replaced TEM and SHV variants globally, with CTX-M-15 being the most widespread." },
-  { id:20, cat:"Drug Spectrum",              pts:800,  q:"True or False: Cephalosporins with activity against ESBL-producing organisms (e.g., cefepime) also have reliable activity against AmpC-producing organisms.", a:"True (with caveats) — cefepime effective against AmpC producers due to weak induction + stability.", exp:"Caution when cefepime MIC ≥4 μg/mL due to possible ESBL co-production." },
-  { id:21, cat:"Antimicrobial Stewardship",  pts:1000, q:"A patient with <em>Klebsiella pneumoniae</em> ESBL-E bacteremia on empiric meropenem: susceptibilities show susceptibility to pip-tazo (MIC 8). De-escalate?", a:"No — continue meropenem. MERINO trial showed higher mortality with pip-tazo even at susceptible MICs.", exp:"Carbapenems remain preferred for definitive therapy of ESBL-E bloodstream infections regardless of pip-tazo susceptibility." },
-  { id:22, cat:"Pharmacology",               pts:1000, q:"Which carbapenem has the narrowest spectrum and is preferred for ESBL-producing <em>E. coli</em>/<em>Klebsiella</em> in non-critically ill patients?", a:"Ertapenem — lacks activity against <em>Pseudomonas aeruginosa</em> and <em>Acinetobacter</em> species.", exp:"More targeted option with potentially less collateral microbiome damage, limited to non-critically ill patients with normal albumin." },
-  { id:23, cat:"Microbiology Interpretation",pts:1000, q:"An <em>E. coli</em> isolate is resistant to ceftriaxone, ceftazidime, and cefotaxime, but susceptible to cefepime and meropenem. What resistance mechanism is most likely?", a:"ESBL production", exp:"ESBLs confer resistance to 3rd-gen cephalosporins but typically remain susceptible to cefepime (4th-gen) and carbapenems." },
-  { id:24, cat:"Novel BL/BLI Combinations",  pts:1000, q:"Which newer β-lactamase inhibitor is paired with ceftazidime and has activity against both ESBL-E and carbapenem-resistant Enterobacterales?", a:"Avibactam (ceftazidime-avibactam) — inhibits class A (ESBL, KPC), class C (AmpC), and some class D; does NOT inhibit metallo-β-lactamases.", exp:"Non-β-lactam BLI with broad inhibitory spectrum except for MBLs." },
-  { id:25, cat:"Clinical Vignette",          pts:1000, q:"A 45-year-old man with uncomplicated <em>Enterobacter cloacae</em> cystitis (AmpC producer) — susceptible to nitrofurantoin, TMP-SMX, and ciprofloxacin. Preferred outpatient treatment?", a:"Nitrofurantoin or TMP-SMX (ciprofloxacin acceptable but reserve if alternatives available)", exp:"Nitrofurantoin and TMP-SMX are preferred first-line for uncomplicated cystitis in AmpC producers. Fluoroquinolones are alternatives." }
-];
+/* =====================================================================
+   QUESTION BANK - edit content here. The game logic below reads this.
 
-// ── Game state
-let teams = [];
-let questions = [];
-let qIndex = 0;
-let timerDuration = 15;
-let timerInterval = null;
-let timeLeft = 15;
-let buzzedTeam = null;
-let answerRevealed = false;
-let scoringDone = false;
-const TEAM_COLORS = ['#00f5d4','#ff2d78','#ffe600','#a78bfa'];
-const TEAM_BUZZ_KEYS = ['q','p','z','m'];
-
-function startGame() {
-  const inputs = document.querySelectorAll('.team-input');
-  teams = Array.from(inputs).map((inp, i) => ({
-    name: inp.value.trim() || `Team ${i+1}`,
-    score: 0,
-    color: TEAM_COLORS[i],
-    key: TEAM_BUZZ_KEYS[i]
-  }));
-
-  timerDuration = parseInt(document.getElementById('timerSetting').value);
-  const order = document.getElementById('orderSetting').value;
-
-  questions = [...ALL_QUESTIONS];
-  if (order === 'random') questions.sort(() => Math.random()-0.5);
-  else if (order === 'points-asc') questions.sort((a,b) => a.pts - b.pts);
-  else if (order === 'points-desc') questions.sort((a,b) => b.pts - a.pts);
-
-  qIndex = 0;
-  buildScorebBar();
-  buildBuzzZone();
-  showScreen('gameScreen');
-  loadQuestion();
-}
-
-function buildScorebBar() {
-  const bar = document.getElementById('scorebar');
-  bar.innerHTML = '';
-  const half = Math.ceil(teams.length/2);
-  teams.forEach((t, i) => {
-    if (i === half) {
-      const center = document.createElement('div');
-      center.className = 'scorebar-center';
-      center.innerHTML = `
-        <div class="q-counter">Q <span id="qNum">1</span> / ${questions.length}</div>
-        <div class="timer-wrap" id="timerWrap">
-          <svg class="timer-svg" viewBox="0 0 48 48" width="48" height="48">
-            <circle class="timer-track" cx="24" cy="24" r="20"/>
-            <circle class="timer-fill" id="timerArc" cx="24" cy="24" r="20"/>
-          </svg>
-          <div class="timer-num" id="timerNum">—</div>
-        </div>`;
-      bar.appendChild(center);
+   Rules the validator checks on load (invalid items are listed on the
+   start screen and are not loaded):
+   - Only items with "status": "ready" appear in the game. "hold" items
+     stay here for review; change status to "ready" once resolved.
+   - "mcq" / "case_mcq": exactly 4 unique options; "answer_index" is 0-3
+     (0 = first option). "rationale.distractors" lists one explanation
+     per WRONG option, in option order, skipping the correct option.
+   - "match": "pairs": [["left", "right"], ...] with 2-8 unique pairs.
+   - "order": "sequence": ["step 1", "step 2", ...] in the correct order.
+   - "domain" must be one of: Empiric therapy, Definitive therapy,
+     Dosing & PK/PD, Resistance & susceptibility, Monitoring & ADEs,
+     Stewardship, Diagnostics. "bloom": recall | apply | analyze.
+     "difficulty": 1-3.
+   - "source.type": handout | pearl_cited | pearl_uncited.
+     pearl_cited items need "source.citation".
+   Display order of options is shuffled at play time; write them in any order.
+   ===================================================================== */
+const BANK = {
+  "meta": {
+    "topic": "Resistant Enterobacterales: ESBL-E, AmpC-E, and CRE (with ICU and transplant pearls)",
+    "learner_level": "PGY1",
+    "handout_title": "Resistance: ESBL-E, AmpC-E, CRE",
+    "guidelines_referenced": [
+      "IDSA Guidance on the Treatment of Antimicrobial-Resistant Gram-Negative Infections (Tamma PD, et al.; PEARLS cite 2022 and a 2026 update)",
+      "Surviving Sepsis Campaign 2021 (PEARLS only)"
+    ],
+    "version": 1
+  },
+  "items": [
+    {
+      "id": "Q01",
+      "type": "mcq",
+      "domain": "Resistance & susceptibility",
+      "bloom": "recall",
+      "difficulty": 1,
+      "stem": "A microbiology report describes an Enterobacterales isolate as ESBL-producing. Which group of β-lactams do ESBL enzymes reliably inactivate?",
+      "options": [
+        "Penicillins, cephalosporins, and carbapenems",
+        "Cephalosporins and carbapenems, but not aztreonam",
+        "Penicillins, cephalosporins, and aztreonam",
+        "Penicillins and early-generation cephalosporins only"
+      ],
+      "answer_index": 2,
+      "rationale": {
+        "correct": "ESBLs inactivate most penicillins, cephalosporins, and aztreonam, while ESBL-E generally remain susceptible to carbapenems.",
+        "distractors": [
+          "ESBL-E generally remain carbapenem-susceptible, which is why carbapenems are preferred for invasive ESBL-E infections.",
+          "Hydrolyzing carbapenems while sparing aztreonam describes metallo-β-lactamases such as NDM, not ESBLs.",
+          "The extended spectrum includes later-generation cephalosporins such as ceftriaxone, which is why ceftriaxone resistance flags possible ESBL production."
+        ]
+      },
+      "pearl": "ESBLs hydrolyze penicillins, cephalosporins, and aztreonam; carbapenems generally remain active.",
+      "source": {
+        "type": "handout",
+        "locator": "Resistance summary table; ESBL-E section, bullets 1-2",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q02",
+      "type": "case_mcq",
+      "domain": "Diagnostics",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 67-year-old man (78 kg, SCr 1.0 mg/dL, CrCl ~70 mL/min, no known drug allergies) has Klebsiella pneumoniae bacteremia. Your laboratory does not perform molecular β-lactamase testing. The ceftriaxone MIC is 8 µg/mL, and meropenem is susceptible. How should the ceftriaxone result be used?",
+      "options": [
+        "Treat as a presumed ESBL producer when selecting therapy",
+        "Presume inducible AmpC and choose cefepime as definitive therapy",
+        "Presume a carbapenemase and start ceftazidime-avibactam",
+        "Repeat susceptibility testing before adjusting therapy"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "When molecular testing is unavailable, a ceftriaxone MIC ≥4 µg/mL is commonly used as a surrogate for ESBL production, which directs carbapenem-based therapy for invasive infection.",
+        "distractors": [
+          "K. pneumoniae is a common ESBL carrier, not a moderate-risk inducible AmpC organism, and cefepime is avoided for invasive ESBL-E infection.",
+          "Meropenem is susceptible, so there is no basis for carbapenemase-directed therapy.",
+          "The MIC already meets the surrogate threshold; delaying effective therapy for repeat testing is not warranted."
+        ]
+      },
+      "pearl": "No molecular testing? An elevated ceftriaxone MIC is a practical surrogate for ESBL production.",
+      "source": {
+        "type": "handout",
+        "locator": "ESBL-E section, bullet 3",
+        "citation": ""
+      },
+      "status": "hold"
+    },
+    {
+      "id": "Q03",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 58-year-old woman (70 kg, SCr 0.8 mg/dL, CrCl ~80 mL/min, no known drug allergies) is admitted with pyelonephritis. She is hemodynamically stable, and blood cultures are negative. Urine grows ESBL-producing E. coli susceptible to TMP-SMX, ciprofloxacin, ertapenem, and piperacillin-tazobactam; cefepime MIC is 1 µg/mL. After 48 hours of empiric ertapenem she is improving and tolerating oral intake. What is the preferred definitive therapy?",
+      "options": [
+        "Continue ertapenem to complete the course",
+        "Switch to cefepime, since the isolate is susceptible",
+        "Switch to oral TMP-SMX",
+        "Switch to piperacillin-tazobactam"
+      ],
+      "answer_index": 2,
+      "rationale": {
+        "correct": "TMP-SMX (or ciprofloxacin or levofloxacin) is preferred for ESBL-E cUTI and pyelonephritis when susceptible and tolerated, which spares carbapenems.",
+        "distractors": [
+          "Carbapenems are reserved for ESBL-E cUTI when resistance, intolerance, or toxicity precludes TMP-SMX or a fluoroquinolone, and none applies here.",
+          "ESBLs can hydrolyze cefepime, and cefepime failed in an ESBL cUTI trial despite MICs of 1-2 µg/mL.",
+          "Piperacillin-tazobactam is only an alternative for ESBL-E cUTI and offers no advantage over a preferred oral agent in an improving patient."
+        ]
+      },
+      "pearl": "ESBL-E cUTI: TMP-SMX or a fluoroquinolone first; carbapenems only when those are precluded.",
+      "source": {
+        "type": "handout",
+        "locator": "ESBL-E section: Preferred antibiotic for cUTI caused by ESBL-E",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q04",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "A 72-year-old man (65 kg, SCr 1.1 mg/dL, CrCl ~55 mL/min, no known drug allergies) with a chronic indwelling urinary catheter presents with fever and flank pain. BP is 124/70 mmHg, lactate 1.4 mmol/L, and albumin 3.6 g/dL, and he is on a general ward. Urine and 2 of 2 blood cultures grow ESBL-producing K. pneumoniae: TMP-SMX R, levofloxacin R, ertapenem S, piperacillin-tazobactam S, gentamicin S, cefepime MIC 2 µg/mL. Which definitive therapy is best?",
+      "options": [
+        "Piperacillin-tazobactam",
+        "Ertapenem",
+        "Gentamicin",
+        "Cefepime"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Concomitant bacteremia makes this an invasive ESBL-E infection, so a carbapenem is preferred; ertapenem is appropriate because he is not critically ill and his albumin is normal.",
+        "distractors": [
+          "Pip-tazo is an ESBL-E cUTI alternative only for patients who are not critically ill and do not have concomitant bacteremia, and he is bacteremic.",
+          "Aminoglycosides appear only as urinary tract options and are not recommended for ESBL-E bloodstream infection.",
+          "Cefepime is avoided for ESBL-E cUTI and invasive infection even when the isolate tests susceptible, because ESBLs hydrolyze it."
+        ]
+      },
+      "pearl": "Bacteremia changes the rules: pip-tazo loses its cUTI alternative role and a carbapenem becomes preferred.",
+      "source": {
+        "type": "handout",
+        "locator": "ESBL-E section: cUTI options; infections outside the urinary tract; Piperacillin-Tazobactam use in ESBL production",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q05",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 64-year-old man (82 kg, SCr 1.4 mg/dL, CrCl ~55 mL/min, no known drug allergies) is in the ICU with septic shock on norepinephrine after percutaneous drainage of a liver abscess. Blood and abscess cultures grow ESBL-producing E. coli susceptible to ertapenem, meropenem, and piperacillin-tazobactam. Albumin is 1.9 g/dL. Which definitive agent is preferred?",
+      "options": [
+        "Ertapenem",
+        "Ceftriaxone plus metronidazole",
+        "Meropenem",
+        "Piperacillin-tazobactam"
+      ],
+      "answer_index": 2,
+      "rationale": {
+        "correct": "For invasive ESBL-E infection in a critically ill or hypoalbuminemic patient, meropenem or imipenem is the preferred carbapenem.",
+        "distractors": [
+          "Ertapenem is the preferred carbapenem for most invasive ESBL-E infections, but meropenem or imipenem is preferred when the patient is critically ill or hypoalbuminemic.",
+          "ESBLs hydrolyze ceftriaxone, so a standard intra-abdominal regimen will not reliably treat this isolate.",
+          "Pip-tazo should not be used for ESBL-E infections outside the urinary tract; it failed noninferiority in MERINO, and abscesses raise inoculum-effect concerns."
+        ]
+      },
+      "pearl": "Invasive ESBL-E: ertapenem for most; meropenem or imipenem if critically ill or hypoalbuminemic.",
+      "source": {
+        "type": "handout",
+        "locator": "ESBL-E section: infections outside the urinary tract",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q06",
+      "type": "case_mcq",
+      "domain": "Stewardship",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 67-year-old woman (60 kg, SCr 0.9 mg/dL, CrCl ~60 mL/min, no known drug allergies) admitted for a COPD exacerbation develops dysuria and urgency without fever, flank pain, or systemic signs, consistent with uncomplicated cystitis. Empiric cefepime is started. On day 3 her symptoms have resolved, and the urine culture grows ESBL-producing E. coli (cefepime MIC 1 µg/mL). What is the most appropriate next step?",
+      "options": [
+        "Switch to ertapenem, since ESBLs hydrolyze cefepime",
+        "Continue cefepime to complete the course without escalation",
+        "Change cefepime to extended infusion to overcome hydrolysis",
+        "Switch to piperacillin-tazobactam for ESBL activity"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Cefepime can be used as empiric therapy for uUTI that is later found to be ESBL-E if the patient is clinically improving, so no change is needed.",
+        "distractors": [
+          "The rule to avoid cefepime applies to ESBL-E cUTI and invasive infection, not to an improving patient with uncomplicated cystitis.",
+          "Extended infusion does not make cefepime reliable against ESBL-E, and no change is needed because she has already improved.",
+          "Changing therapy in a clinically improving uUTI patient adds antibiotic exposure without benefit."
+        ]
+      },
+      "pearl": "Empiric cefepime for cystitis that turns out ESBL-E? If the patient is improving, no escalation is needed.",
+      "source": {
+        "type": "handout",
+        "locator": "ESBL-E section: Cefepime use in ESBL production",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q07",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "recall",
+      "difficulty": 2,
+      "stem": "In the MERINO trial, adults with ceftriaxone-resistant E. coli or K. pneumoniae bloodstream infection received definitive piperacillin-tazobactam or meropenem. Which statement accurately describes the 30-day mortality result?",
+      "options": [
+        "30-day mortality 12.3% vs 3.7% (pip-tazo vs meropenem); noninferiority not met",
+        "30-day mortality 3.7% vs 12.3% (pip-tazo vs meropenem); pip-tazo superior",
+        "30-day mortality numerically higher with pip-tazo, but within the 5% margin",
+        "30-day mortality similar; pip-tazo inferior only for microbiological relapse"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Mortality was 12.3% with piperacillin-tazobactam vs 3.7% with meropenem, and the difference did not meet the 5% noninferiority margin, so the findings do not support pip-tazo in this setting.",
+        "distractors": [
+          "This reverses the arms; mortality was higher with piperacillin-tazobactam.",
+          "The 8.6-percentage-point difference exceeded the 5% noninferiority margin.",
+          "Pip-tazo failed on 30-day mortality itself, not only on a microbiological endpoint."
+        ]
+      },
+      "pearl": "MERINO: 30-day mortality 12.3% with pip-tazo vs 3.7% with meropenem—avoid pip-tazo for ceftriaxone-resistant E. coli/Klebsiella bacteremia.",
+      "source": {
+        "type": "handout",
+        "locator": "ESBL-E section: Piperacillin-Tazobactam use, MERINO Trial",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q08",
+      "type": "mcq",
+      "domain": "Resistance & susceptibility",
+      "bloom": "recall",
+      "difficulty": 1,
+      "stem": "Which Enterobacterales isolate from a blood culture should prompt concern for clinically significant inducible AmpC production?",
+      "options": [
+        "Klebsiella pneumoniae",
+        "Klebsiella oxytoca",
+        "Klebsiella aerogenes",
+        "Escherichia coli"
+      ],
+      "answer_index": 2,
+      "rationale": {
+        "correct": "Enterobacter cloacae complex, Klebsiella aerogenes, Citrobacter freundii, and potentially Hafnia alvei are at moderate risk for clinically significant inducible AmpC production.",
+        "distractors": [
+          "K. pneumoniae is a common ESBL carrier; plasmid-mediated AmpC can occur, but it is not a moderate-risk inducible AmpC species.",
+          "K. oxytoca is listed among common ESBL carriers, not among moderate-risk inducible AmpC organisms.",
+          "E. coli is a leading ESBL carrier; plasmid-mediated AmpC can occur, but it is not a moderate-risk inducible AmpC species."
+        ]
+      },
+      "pearl": "Moderate-risk inducible AmpC: E. cloacae complex, K. aerogenes, C. freundii, and potentially H. alvei. Not every Klebsiella qualifies.",
+      "source": {
+        "type": "handout",
+        "locator": "AmpC-E section: moderate-risk organisms; Resistance summary table",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q09",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 61-year-old man (90 kg, SCr 1.0 mg/dL, CrCl ~95 mL/min, no known drug allergies) on a medical ward has Enterobacter cloacae complex bacteremia from a peripherally inserted central catheter, which was removed today. He is hemodynamically stable on empiric ceftriaxone. Susceptibilities: ceftriaxone S, cefepime MIC ≤1 µg/mL, piperacillin-tazobactam S, meropenem S, TMP-SMX S. What is the preferred definitive IV therapy?",
+      "options": [
+        "Ceftriaxone (continue)",
+        "Cefepime",
+        "Piperacillin-tazobactam",
+        "Meropenem"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Cefepime is a weak AmpC inducer and relatively stable to AmpC hydrolysis, making it the preferred agent for invasive infection with a moderate-risk AmpC organism.",
+        "distractors": [
+          "Resistance emerges in about 20% of E. cloacae, K. aerogenes, or C. freundii infections after ceftriaxone exposure, so avoid it for invasive infection even if the isolate is initially susceptible.",
+          "Tazobactam provides relatively weak protection against AmpC, and observational data suggest poorer outcomes than with cefepime or carbapenems.",
+          "Meropenem is active and stable, but it adds unnecessary carbapenem exposure when cefepime is the preferred option."
+        ]
+      },
+      "pearl": "Moderate-risk AmpC-E bacteremia: cefepime is your friend; ceftriaxone can fail mid-course even when it tests susceptible.",
+      "source": {
+        "type": "handout",
+        "locator": "AmpC-E section: antibiotic selection and AmpC antibiotic table",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q10",
+      "type": "mcq",
+      "domain": "Stewardship",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "Each patient below was started on empiric ceftriaxone, and cultures later grew a ceftriaxone-susceptible, moderate-risk AmpC organism. In which scenario is continuing ceftriaxone most reasonable?",
+      "options": [
+        "Citrobacter freundii bacteremia; improving after catheter removal",
+        "Enterobacter cloacae intra-abdominal abscess; drainage not yet done",
+        "Citrobacter freundii soft tissue abscess; drained, afebrile, improving",
+        "Klebsiella aerogenes pneumonia; ICU admission, now improving"
+      ],
+      "answer_index": 2,
+      "rationale": {
+        "correct": "Continuing empiric ceftriaxone may be reasonable only for a nonsevere infection with adequate source control in a clinically improving patient.",
+        "distractors": [
+          "Bacteremia is an invasive infection, so ceftriaxone should be avoided even if the patient improves and the isolate is susceptible.",
+          "An undrained abscess lacks adequate source control and is an invasive infection, raising the risk of on-therapy resistance.",
+          "Pneumonia requiring ICU admission is a severe invasive infection, so ceftriaxone should be replaced despite early improvement."
+        ]
+      },
+      "pearl": "Continue ceftriaxone for AmpC-E only if nonsevere, source-controlled, and improving; otherwise switch to cefepime.",
+      "source": {
+        "type": "handout",
+        "locator": "AmpC-E section: Avoid ceftriaxone for invasive infection",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q11",
+      "type": "match",
+      "domain": "Resistance & susceptibility",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "Match each agent to its interaction with AmpC-producing Enterobacterales.",
+      "pairs": [
+        [
+          "Cefazolin",
+          "Hydrolyzed even at basal AmpC expression"
+        ],
+        [
+          "Ceftriaxone",
+          "Resistance emerges in ~20% as AmpC production increases"
+        ],
+        [
+          "Cefepime",
+          "Weak inducer; relatively stable to AmpC hydrolysis"
+        ],
+        [
+          "TMP-SMX",
+          "Non-β-lactam; does not induce AmpC"
+        ]
+      ],
+      "rationale": {
+        "correct": "Cefazolin is hydrolyzed at basal AmpC levels. Ceftriaxone is vulnerable once production increases, with about 20% resistance emergence in E. cloacae, K. aerogenes, or C. freundii infections. Cefepime is a weak inducer and relatively stable. TMP-SMX and fluoroquinolones do not induce AmpC.",
+        "distractors": [
+          "Pairing cefepime with on-therapy resistance confuses it with ceftriaxone; cefepime's stability is why it is preferred.",
+          "Pairing ceftriaxone with basal hydrolysis is incorrect; ceftriaxone often tests susceptible at first, which is exactly what makes it a trap.",
+          "Pairing cefazolin with stability is incorrect; basal AmpC expression is enough to hydrolyze it."
+        ]
+      },
+      "pearl": "Cefazolin fails at baseline, ceftriaxone fails during therapy, cefepime holds up, and TMP-SMX or fluoroquinolones don't induce AmpC.",
+      "source": {
+        "type": "handout",
+        "locator": "AmpC-E section: mechanism bullets and AmpC antibiotic table",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q12",
+      "type": "case_mcq",
+      "domain": "Diagnostics",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 77-year-old woman (55 kg, SCr 1.3 mg/dL, CrCl ~32 mL/min, penicillin allergy: rash) has a Proteus mirabilis cUTI. The report shows imipenem nonsusceptible, with ertapenem and meropenem susceptible. The team asks whether this isolate is a CRE that requires a newer agent. What is the best interpretation?",
+      "options": [
+        "CRE—resistance to any single carbapenem meets the definition",
+        "Not CRE—Proteus has intrinsically elevated imipenem MICs",
+        "CRE—start ceftazidime-avibactam pending carbapenemase testing",
+        "Not CRE—only carbapenemase producers are classified as CRE"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Morganella, Proteus, and Providencia spp. have decreased imipenem susceptibility due to characteristics of their penicillin-binding proteins, so they must be resistant to a carbapenem other than imipenem to be considered CRE.",
+        "distractors": [
+          "Morganella, Proteus, and Providencia are the exception: imipenem nonsusceptibility alone does not make them CRE.",
+          "This isolate is not CRE, and ertapenem and meropenem remain active, so escalation to a newer agent is unnecessary.",
+          "CRE is defined as resistance to at least one carbapenem or production of a carbapenemase, so non-carbapenemase CRE also exists."
+        ]
+      },
+      "pearl": "Proteus, Providencia, Morganella: isolated imipenem nonsusceptibility isn't CRE—check the other carbapenems first.",
+      "source": {
+        "type": "handout",
+        "locator": "CRE section: definition and imipenem exception",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q13",
+      "type": "match",
+      "domain": "Resistance & susceptibility",
+      "bloom": "recall",
+      "difficulty": 2,
+      "stem": "Match each carbapenem-resistance mechanism to its key treatment principle.",
+      "pairs": [
+        [
+          "KPC",
+          "Meropenem-vaborbactam, ceftazidime-avibactam, or imipenem-relebactam"
+        ],
+        [
+          "OXA-48-like",
+          "Ceftazidime-avibactam; vaborbactam and relebactam are unreliable"
+        ],
+        [
+          "NDM (metallo-β-lactamase)",
+          "Avibactam does NOT inhibit it; use aztreonam-avibactam"
+        ],
+        [
+          "Non-carbapenemase CRE",
+          "Look at the actual carbapenem MICs"
+        ]
+      ],
+      "rationale": {
+        "correct": "Vaborbactam, relebactam, and avibactam all inhibit KPC. Vaborbactam and relebactam do not reliably inhibit OXA-48-like enzymes, so ceftazidime-avibactam is preferred. Avibactam does not inhibit NDM, so aztreonam-avibactam is used. Non-carbapenemase CRE management depends on the actual carbapenem MICs.",
+        "distractors": [
+          "KPC and OXA-48-like are both serine carbapenemases, but vaborbactam and relebactam reliably inhibit only KPC.",
+          "NDM is a zinc-dependent metallo-β-lactamase, so ceftazidime-avibactam alone fails because avibactam does not inhibit it.",
+          "Non-carbapenemase CRE may retain meropenem or imipenem susceptibility, so a newer agent is not automatic."
+        ]
+      },
+      "pearl": "Mechanism drives the drug: KPC—all three newer BL/BLIs; OXA-48—ceftazidime-avibactam; NDM—aztreonam-avibactam.",
+      "source": {
+        "type": "handout",
+        "locator": "CRE section: mechanism/preferred agent table",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q14",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "A 66-year-old man (74 kg, SCr 0.9 mg/dL, CrCl ~85 mL/min, no known drug allergies) has K. pneumoniae bacteremia. Ertapenem is resistant and meropenem is susceptible, and rapid PCR detects an OXA-48-like carbapenemase. The lab reports susceptibility to meropenem-vaborbactam, imipenem-relebactam, and ceftazidime-avibactam. Which definitive therapy is preferred?",
+      "options": [
+        "Meropenem-vaborbactam",
+        "Ceftazidime-avibactam",
+        "Imipenem-relebactam",
+        "Extended-infusion meropenem"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Ceftazidime-avibactam is preferred for OXA-48-like producers, because vaborbactam and relebactam do not reliably inhibit OXA-48-like enzymes.",
+        "distractors": [
+          "Vaborbactam has limited inhibition of OXA-48-like enzymes, so avoid meropenem-vaborbactam even when the lab reports susceptibility.",
+          "Relebactam has limited inhibition of OXA-48-like enzymes, so avoid imipenem-relebactam even when the lab reports susceptibility.",
+          "Extended-infusion meropenem is the approach for non-carbapenemase CRE; a detected carbapenemase calls for mechanism-directed therapy."
+        ]
+      },
+      "pearl": "OXA-48: trust the mechanism over the report—ceftazidime-avibactam, not meropenem-vaborbactam or imipenem-relebactam.",
+      "source": {
+        "type": "handout",
+        "locator": "CRE section: mechanism table, OXA-48 row and callout",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q15",
+      "type": "case_mcq",
+      "domain": "Dosing & PK/PD",
+      "bloom": "apply",
+      "difficulty": 3,
+      "stem": "A 53-year-old woman (68 kg, SCr 0.8 mg/dL, CrCl ~90 mL/min, no known drug allergies) has an Enterobacter cloacae complex intra-abdominal infection with adequate drainage. The isolate is ertapenem-resistant but meropenem- and imipenem-susceptible, and carbapenemase testing is negative. Which definitive therapy is preferred?",
+      "options": [
+        "Extended-infusion meropenem",
+        "Meropenem-vaborbactam",
+        "Aztreonam-avibactam",
+        "Ertapenem at an increased dose"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "For non-carbapenemase CRE that is ertapenem-resistant but meropenem- or imipenem-susceptible, extended-infusion meropenem or imipenem is preferred.",
+        "distractors": [
+          "Newer β-lactam/β-lactamase inhibitors are reserved for isolates resistant to all carbapenems, and meropenem remains active here.",
+          "Newer agents are reserved for resistance to all carbapenems, so aztreonam-avibactam is unnecessary while meropenem is active.",
+          "The isolate is ertapenem-resistant; raising the dose does not address the resistance, whereas meropenem and imipenem remain susceptible."
+        ]
+      },
+      "pearl": "Ertapenem-resistant, meropenem-susceptible, non-carbapenemase CRE: extended-infusion meropenem or imipenem; save the newer BL/BLIs.",
+      "source": {
+        "type": "handout",
+        "locator": "CRE section: non-carbapenemase producing CRE bullets and table row",
+        "citation": ""
+      },
+      "status": "hold"
+    },
+    {
+      "id": "Q16",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 3,
+      "stem": "A 49-year-old man (80 kg, SCr 1.0 mg/dL, CrCl ~90 mL/min, no known drug allergies) has E. coli bacteremia from a hepatobiliary source. PCR detects NDM, and ceftazidime-avibactam is reported resistant. Which regimen and rationale are correct?",
+      "options": [
+        "Aztreonam-avibactam: aztreonam resists NDM; avibactam protects it from co-produced serine enzymes",
+        "Ceftazidime-avibactam, higher dose: avibactam inhibits NDM at optimized concentrations",
+        "Meropenem-vaborbactam: vaborbactam inhibits zinc-dependent metallo-β-lactamases",
+        "Imipenem-relebactam: relebactam restores imipenem activity against NDM enzymes"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Avibactam does not inhibit metallo-β-lactamases, but aztreonam is stable to MBLs, and avibactam protects aztreonam from co-produced serine β-lactamases. Aztreonam-avibactam, or ceftazidime-avibactam plus aztreonam, is therefore first-line.",
+        "distractors": [
+          "Avibactam does not inhibit metallo-β-lactamases at any dose, which is why ceftazidime-avibactam fails against NDM.",
+          "Vaborbactam targets serine carbapenemases such as KPC and does not inhibit zinc-dependent NDM.",
+          "Relebactam also lacks activity against metallo-β-lactamases, so imipenem is still hydrolyzed."
+        ]
+      },
+      "pearl": "Avibactam alone can't stop NDM; aztreonam survives NDM but needs avibactam against co-produced serine β-lactamases.",
+      "source": {
+        "type": "pearl_cited",
+        "locator": "PEARLS: Antimicrobial Selection (CRE), NDM item",
+        "citation": "Tamma PD, et al. IDSA Guidance; Macesic N, et al. Lancet. 2025; Tiseo G, et al. Curr Opin Infect Dis. 2025."
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q17",
+      "type": "case_mcq",
+      "domain": "Resistance & susceptibility",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "A 70-year-old woman (62 kg, SCr 1.2 mg/dL, CrCl ~40 mL/min, no known drug allergies) has ceftriaxone-resistant E. coli bacteremia from a urinary source. The isolate tests piperacillin-tazobactam susceptible, and a colleague argues that the MIC proves pip-tazo will work despite MERINO. Which finding from the MERINO post-hoc MIC/genotype analysis best counters this argument?",
+      "options": [
+        "ESBL plus OXA-1 co-harboring raised pip-tazo MICs and carried the highest excess mortality",
+        "Excess mortality occurred only in isolates the lab reported as pip-tazo resistant",
+        "Pip-tazo MICs showed no relationship to the β-lactamase genes detected",
+        "Excess mortality was driven by carbapenemase genes missed on routine testing"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Isolates co-harboring an ESBL plus OXA-1 had elevated pip-tazo MICs and the greatest increase in 30-day mortality. Pip-tazo susceptibility testing is poorly reliable, which supports meropenem as definitive therapy.",
+        "distractors": [
+          "The analysis highlighted poor reliability of pip-tazo susceptibility testing, so a susceptible report does not exclude excess risk.",
+          "OXA-1 co-harboring was specifically linked to elevated pip-tazo MICs.",
+          "The implicated co-harbored enzyme was OXA-1, not a carbapenemase."
+        ]
+      },
+      "pearl": "A susceptible pip-tazo report can mislead: ESBL plus OXA-1 raised MICs and mortality. Use a carbapenem for ESBL bacteremia.",
+      "source": {
+        "type": "pearl_cited",
+        "locator": "PEARLS: Landmark Trials / PK-PD, MERINO post-hoc item",
+        "citation": "Henderson A, et al. Clin Infect Dis. 2021;73(11):e3842-e3850."
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q18",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 76-year-old man (70 kg, SCr 1.6 mg/dL, CrCl ~35 mL/min, no known drug allergies) has Citrobacter freundii bacteremia from biliary obstruction, and a biliary stent has been placed. He is afebrile on day 3 of empiric piperacillin-tazobactam. Susceptibilities: pip-tazo S, cefepime MIC ≤1 µg/mL, meropenem S, ceftriaxone S. What is the best definitive plan?",
+      "options": [
+        "Continue pip-tazo, since he is improving and it tests susceptible",
+        "Switch to cefepime with renal dose adjustment",
+        "Switch to ceftriaxone for simpler once-daily dosing",
+        "Switch to meropenem because pip-tazo is failing"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Tazobactam provides weak protection against AmpC, and pooled data show more microbiological failure with pip-tazo. Cefepime, adjusted for his CrCl, is the preferred definitive agent.",
+        "distractors": [
+          "A meta-analysis found higher microbiological failure (RR ~1.80) with pip-tazo than with cefepime or carbapenems for AmpC bacteremia, despite in vitro activity.",
+          "Ceftriaxone risks emergent resistance (about 20%) in invasive C. freundii infection even when the isolate is initially susceptible.",
+          "He is improving, so pip-tazo is not failing, and a carbapenem is unnecessarily broad when cefepime is appropriate."
+        ]
+      },
+      "pearl": "AmpC-E bacteremia improving on pip-tazo? Improvement doesn't erase higher microbiological failure risk—step to cefepime.",
+      "source": {
+        "type": "pearl_cited",
+        "locator": "PEARLS: Stewardship Decision, pip-tazo for AmpC item",
+        "citation": "Onorato L, et al. Infection. 2025; Tamma PD, et al. IDSA Guidance."
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q19",
+      "type": "mcq",
+      "domain": "Stewardship",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "Two 2025 studies inform cefepime vs carbapenem therapy for AmpC-E. A meta-analysis of 1,099 patients found no significant difference in mortality or relapse. A propensity-weighted cohort of deep-seated infections found lower adjusted odds of clinical failure with carbapenems. Which interpretation best reconciles these findings?",
+      "options": [
+        "Carbapenem benefit may concentrate in deep-seated infection and ICU patients",
+        "The meta-analysis showed cefepime superiority, so disregard the cohort",
+        "The cohort was randomized, so it overrides the pooled meta-analysis",
+        "Both studies together mean cefepime should be avoided in AmpC-E bacteremia"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "In the deep-seated cohort, carbapenems lowered the adjusted odds of clinical failure (aOR 0.44), ICU admission independently increased failure (aOR 2.39), and source control reduced it. That pattern suggests carbapenems may be favored for high-inoculum or critically ill patients.",
+        "distractors": [
+          "The meta-analysis showed no significant difference, with only a nonsignificant trend favoring cefepime.",
+          "The cohort was retrospective and propensity-weighted, not randomized, so residual confounding remains possible.",
+          "The meta-analysis supports cefepime as a carbapenem-sparing option; the cohort signal applies to deep-seated, higher-risk infections."
+        ]
+      },
+      "pearl": "Cefepime fits most AmpC-E infections; consider a carbapenem for deep-seated infection in ICU patients, especially without source control.",
+      "source": {
+        "type": "pearl_cited",
+        "locator": "PEARLS: Clinical Trials / Evidence Appraisal and Clinical Vignette (ICU) items",
+        "citation": "Slain N, et al. Antimicrob Agents Chemother. 2025; Cheo HM, et al. Open Forum Infect Dis. 2025."
+      },
+      "status": "hold"
+    },
+    {
+      "id": "Q20",
+      "type": "case_mcq",
+      "domain": "Monitoring & ADEs",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 57-year-old kidney transplant recipient (72 kg, SCr 1.6 mg/dL, CrCl ~45 mL/min, no known drug allergies) on tacrolimus has carbapenem-susceptible, ESBL-producing E. coli bacteremia. A team member suggests avoiding carbapenems because of added nephrotoxicity and neurotoxicity risk in transplant patients. What do solid organ transplant outcome data for MDR gram-negative infections show?",
+      "options": [
+        "Carbapenem exposure: lower 30-day mortality, no added neuro- or nephrotoxicity",
+        "Carbapenem exposure: more nephrotoxicity, favoring piperacillin-tazobactam",
+        "ESBL and CRE infections: similar 30-day mortality after transplant",
+        "Carbapenem exposure: better survival but significantly more neurotoxicity"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "In a SOT cohort with MDR gram-negative infections, carbapenem exposure was associated with reduced 30-day mortality without increased neurotoxicity or nephrotoxicity.",
+        "distractors": [
+          "Carbapenem exposure was not associated with more nephrotoxicity, and pip-tazo is not used for ESBL-E bloodstream infection.",
+          "Carbapenem-susceptible ESBL infections had lower 30-day mortality than CRE infections.",
+          "Carbapenem exposure was not associated with increased neurotoxicity."
+        ]
+      },
+      "pearl": "Transplant toxicity worries shouldn't block an indicated carbapenem; SOT data showed no association with added neuro- or nephrotoxicity.",
+      "source": {
+        "type": "pearl_cited",
+        "locator": "PEARLS: Transplant / Immunocompromised item",
+        "citation": "Heldman MR, et al. Transpl Infect Dis. 2021."
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q21",
+      "type": "case_mcq",
+      "domain": "Stewardship",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "A 62-year-old woman (85 kg, SCr 1.5 mg/dL, CrCl ~50 mL/min, no known drug allergies) with recent ESBL colonization presented in septic shock from a urinary source and received empiric meropenem plus tobramycin. On day 3 she is improving but still on low-dose norepinephrine, and albumin is 2.2 g/dL. Blood and urine cultures grow ESBL-producing E. coli: meropenem S, ertapenem S, tobramycin S, TMP-SMX R, ciprofloxacin R. What is the best next step?",
+      "options": [
+        "Continue meropenem plus tobramycin through day 7",
+        "Continue meropenem and discontinue tobramycin",
+        "De-escalate to ertapenem monotherapy now",
+        "Continue tobramycin alone to spare carbapenems"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Empiric double gram-negative coverage is most warranted in severely ill patients at high MDR risk. In the targeted phase a single active agent suffices, and meropenem is the right one given her ongoing critical illness and hypoalbuminemia.",
+        "distractors": [
+          "Once susceptibilities return, sustained double gram-negative coverage is rarely needed unless no single agent is proven safe and effective.",
+          "She remains critically ill with hypoalbuminemia, a setting where meropenem or imipenem is the preferred carbapenem.",
+          "Aminoglycosides are urinary tract options, not preferred therapy for ESBL-E bacteremia with septic shock."
+        ]
+      },
+      "pearl": "Double gram-negative coverage is an empiric bridge: drop the second agent once a single active agent is confirmed.",
+      "source": {
+        "type": "pearl_cited",
+        "locator": "PEARLS: Critical Care / Stewardship item",
+        "citation": "Evans L, et al. Surviving Sepsis Campaign 2021. Crit Care Med/Intensive Care Med."
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q22",
+      "type": "case_mcq",
+      "domain": "Monitoring & ADEs",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A 45-year-old man (88 kg, SCr 0.9 mg/dL, CrCl ~110 mL/min, no known drug allergies) with epilepsy controlled on valproic acid has ESBL-producing E. coli bacteremia from a urinary source. He is hemodynamically stable, and a carbapenem is indicated. Which plan best addresses his antiseizure therapy?",
+      "options": [
+        "Start a carbapenem; raise the valproate dose and follow levels",
+        "Start a carbapenem; arrange an alternative antiseizure agent with neurology",
+        "Use piperacillin-tazobactam instead to avoid the interaction",
+        "Use ertapenem, since the interaction is limited to meropenem"
+      ],
+      "answer_index": 1,
+      "rationale": {
+        "correct": "Carbapenems rapidly and markedly lower serum valproate concentrations, raising seizure risk. When a carbapenem is necessary, arrange an alternative antiseizure medication rather than relying on valproate dose escalation.",
+        "distractors": [
+          "Valproate dose increases do not reliably restore therapeutic concentrations during carbapenem therapy.",
+          "Piperacillin-tazobactam is not recommended for ESBL-E infections outside the urinary tract, including bacteremia.",
+          "The valproate interaction is a carbapenem class effect that includes ertapenem."
+        ]
+      },
+      "pearl": "Carbapenem plus valproate means a rapid valproate level drop and seizure risk; arrange an alternative antiseizure agent instead.",
+      "source": {
+        "type": "pearl_uncited",
+        "locator": "Not in handout or PEARLS",
+        "citation": ""
+      },
+      "status": "hold"
     }
-    const panel = document.createElement('div');
-    panel.className = 'team-score-panel';
-    panel.id = `panel-${i}`;
-    panel.innerHTML = `
-      <div class="buzz-indicator" id="buzz-ind-${i}" style="background:${t.color}"></div>
-      <div>
-        <div class="team-name-display" style="color:${t.color}">${t.name}</div>
-        <div class="team-pts" id="score-${i}" style="color:${t.color}">0</div>
-      </div>`;
-    bar.appendChild(panel);
-  });
-  // If even number, add center after last
-  if (teams.length <= 2) {
-    const center = document.createElement('div');
-    center.className = 'scorebar-center';
-    center.innerHTML = `
-      <div class="q-counter">Q <span id="qNum">1</span> / ${questions.length}</div>
-      <div class="timer-wrap">
-        <svg class="timer-svg" viewBox="0 0 48 48" width="48" height="48">
-          <circle class="timer-track" cx="24" cy="24" r="20"/>
-          <circle class="timer-fill" id="timerArc" cx="24" cy="24" r="20"/>
-        </svg>
-        <div class="timer-num" id="timerNum">—</div>
-      </div>`;
-    bar.insertBefore(center, bar.children[1]);
+  ]
+};
+/* ========================= END QUESTION BANK ========================= */
+</script>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------------
+   CONFIGURATION
+   --------------------------------------------------------------------- */
+const CONFIG = {
+  POINTS_CORRECT: 100,        // fully correct answer
+  STREAK_BONUS_STEP: 10,      // +10 for each consecutive correct answer before this one
+  STREAK_BONUS_CAP: 50,       // streak bonus never exceeds +50 on one question
+  PARTIAL_CREDIT: 0.5,        // match/order only: partly correct earns 100 x fraction correct x 0.5, no streak bonus
+  TIMER_CHOICES: [0, 30, 60, 90], // seconds per question; 0 = off (default)
+  TIMER_WARNING_SECONDS: 10
+};
+const TYPES = ["mcq", "case_mcq", "match", "order"];
+const DOMAINS = ["Empiric therapy", "Definitive therapy", "Dosing & PK/PD", "Resistance & susceptibility", "Monitoring & ADEs", "Stewardship", "Diagnostics"];
+/* Order of rounds in Rounds mode: mechanisms and lab interpretation first, then treatment decisions, then monitoring. */
+const ROUND_ORDER = ["Resistance & susceptibility", "Diagnostics", "Empiric therapy", "Definitive therapy", "Dosing & PK/PD", "Stewardship", "Monitoring & ADEs"];
+const BLOOMS = ["recall", "apply", "analyze"];
+const SOURCE_TYPES = ["handout", "pearl_cited", "pearl_uncited"];
+const STATUSES = ["ready", "hold"];
+const TYPE_LABEL = { mcq: "Question", case_mcq: "Case", match: "Match", order: "Order" };
+const MODE_LABEL = { rounds: "Rounds", cases: "Case Rounds", pearls: "Rapid Pearls", retry: "Retry Missed" };
+
+/* ---------------------------------------------------------------------
+   VALIDATION
+   --------------------------------------------------------------------- */
+function isText(v) { return typeof v === "string" && v.trim().length > 0; }
+function isMultipleChoice(item) { return item.type === "mcq" || item.type === "case_mcq"; }
+
+/* Returns a list of problems for one item (empty list = valid). */
+function validateItem(item, seenIds) {
+  const errors = [];
+  if (!item || typeof item !== "object" || Array.isArray(item)) return ["entry is not an item object"];
+  if (!isText(item.id)) errors.push("missing id");
+  else if (seenIds.has(item.id)) errors.push("duplicate id");
+  if (!TYPES.includes(item.type)) errors.push("type must be mcq, case_mcq, match, or order");
+  if (!DOMAINS.includes(item.domain)) errors.push("domain is not one of the listed domains");
+  if (!BLOOMS.includes(item.bloom)) errors.push("bloom must be recall, apply, or analyze");
+  if (!Number.isInteger(item.difficulty) || item.difficulty < 1 || item.difficulty > 3) errors.push("difficulty must be 1, 2, or 3");
+  if (!isText(item.stem)) errors.push("missing stem");
+  if (!isText(item.pearl)) errors.push("missing pearl");
+  if (!STATUSES.includes(item.status)) errors.push("status must be ready or hold");
+
+  const rat = item.rationale;
+  const hasDistractorList = rat && Array.isArray(rat.distractors) && rat.distractors.every(isText);
+  if (!rat || typeof rat !== "object") errors.push("missing rationale");
+  else {
+    if (!isText(rat.correct)) errors.push("missing rationale.correct");
+    if (!hasDistractorList) errors.push("rationale.distractors must be a list of explanations");
   }
-}
 
-function buildBuzzZone() {
-  const zone = document.getElementById('buzzZone');
-  zone.innerHTML = '';
-  teams.forEach((t, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'buzz-btn';
-    btn.id = `buzz-btn-${i}`;
-    btn.dataset.key = t.key.toUpperCase();
-    btn.textContent = `⚡ ${t.name}`;
-    btn.style.background = hexToRgba(t.color, 0.08);
-    btn.style.color = t.color;
-    btn.style.borderTop = `3px solid ${t.color}`;
-    btn.onclick = () => teamBuzz(i);
-    zone.appendChild(btn);
-  });
-}
-
-function hexToRgba(hex, a) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
-
-function loadQuestion() {
-  if (qIndex >= questions.length) { endGame(); return; }
-  const q = questions[qIndex];
-  buzzedTeam = null;
-  answerRevealed = false;
-  scoringDone = false;
-
-  document.getElementById('catBadge').textContent = q.cat;
-  document.getElementById('ptsBadge').textContent = `+${q.pts} pts`;
-  document.getElementById('qText').innerHTML = q.q;
-  document.getElementById('answerText').innerHTML = q.a;
-  document.getElementById('explanText').innerHTML = q.exp;
-  document.getElementById('answerReveal').classList.remove('visible');
-  document.getElementById('buzzStatus').textContent = '— Press buzz button or keyboard to buzz in —';
-  document.getElementById('buzzStatus').classList.remove('active');
-
-  if (document.getElementById('qNum')) document.getElementById('qNum').textContent = qIndex+1;
-
-  setControlRow('waiting');
-  enableBuzzButtons(true);
-  resetBuzzIndicators();
-
-  if (timerDuration > 0) startTimer();
-  else { document.getElementById('timerNum').textContent = '—'; }
-}
-
-function startTimer() {
-  clearInterval(timerInterval);
-  timeLeft = timerDuration;
-  updateTimerDisplay();
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    updateTimerDisplay();
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      onTimeUp();
-    }
-  }, 1000);
-}
-
-function updateTimerDisplay() {
-  const el = document.getElementById('timerNum');
-  const arc = document.getElementById('timerArc');
-  if (!el || !arc) return;
-  el.textContent = timerDuration > 0 ? timeLeft : '—';
-  const pct = timerDuration > 0 ? timeLeft / timerDuration : 1;
-  const circumference = 126;
-  arc.style.strokeDashoffset = circumference * (1 - pct);
-  const color = pct > 0.5 ? '#00f5d4' : pct > 0.25 ? '#ffe600' : '#ff2d78';
-  arc.style.stroke = color;
-  if (el) el.style.color = color;
-}
-
-function onTimeUp() {
-  if (buzzedTeam !== null) return;
-  document.getElementById('buzzStatus').textContent = '⏱ Time\'s up! Reveal answer.';
-  enableBuzzButtons(false);
-  setControlRow('timeup');
-}
-
-function teamBuzz(idx) {
-  if (buzzedTeam !== null || scoringDone) return;
-  clearInterval(timerInterval);
-  buzzedTeam = idx;
-  const t = teams[idx];
-
-  document.getElementById(`buzz-ind-${idx}`).classList.add('active');
-  document.getElementById(`buzz-btn-${idx}`).style.background = hexToRgba(t.color, 0.25);
-  document.getElementById(`buzz-btn-${idx}`).style.boxShadow = `0 0 20px ${hexToRgba(t.color, 0.4)}`;
-
-  document.getElementById('buzzStatus').textContent = `⚡ ${t.name} buzzed in!`;
-  document.getElementById('buzzStatus').classList.add('active');
-  document.getElementById('buzzStatus').style.color = t.color;
-
-  enableBuzzButtons(false);
-  setControlRow('buzzed');
-
-  const panel = document.getElementById(`panel-${idx}`);
-  panel.classList.add(idx === 0 ? 'buzzed' : 'buzzed-pink');
-  setTimeout(() => panel.classList.remove('buzzed','buzzed-pink'), 600);
-
-  showToast(`${t.name} buzzed!`, t.color === '#00f5d4' ? 'cyan' : t.color === '#ff2d78' ? 'pink' : 'yellow');
-}
-
-function revealAnswer() {
-  answerRevealed = true;
-  document.getElementById('answerReveal').classList.add('visible');
-  setControlRow('scoring');
-}
-
-function awardPoints(correct) {
-  if (scoringDone) return;
-  scoringDone = true;
-  clearInterval(timerInterval);
-
-  const q = questions[qIndex];
-  const target = buzzedTeam !== null ? buzzedTeam : null;
-
-  if (target !== null) {
-    if (correct) {
-      teams[target].score += q.pts;
-      updateScoreDisplay(target);
-      showToast(`+${q.pts}`, 'cyan');
-    } else {
-      teams[target].score -= Math.round(q.pts/2);
-      updateScoreDisplay(target);
-      showToast(`-${Math.round(q.pts/2)}`, 'pink');
-    }
+  const src = item.source;
+  if (!src || typeof src !== "object") errors.push("missing source");
+  else {
+    if (!SOURCE_TYPES.includes(src.type)) errors.push("source.type must be handout, pearl_cited, or pearl_uncited");
+    if (!isText(src.locator)) errors.push("missing source.locator");
+    if (src.type === "pearl_cited" && !isText(src.citation)) errors.push("pearl_cited items need source.citation");
   }
 
-  if (!answerRevealed) revealAnswer();
-  setControlRow('next');
-}
-
-function skipQuestion() {
-  clearInterval(timerInterval);
-  scoringDone = true;
-  if (!answerRevealed) revealAnswer();
-  setControlRow('next');
-}
-
-function nextQuestion() {
-  qIndex++;
-  loadQuestion();
-}
-
-function setControlRow(state) {
-  const row = document.getElementById('controlRow');
-  if (state === 'waiting') {
-    row.innerHTML = `
-      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
-      <button class="ctrl-btn skip-q" onclick="skipQuestion()">Skip →</button>`;
-  } else if (state === 'buzzed') {
-    row.innerHTML = `
-      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
-      <button class="ctrl-btn correct" onclick="awardPoints(true)">✓ Correct</button>
-      <button class="ctrl-btn incorrect" onclick="awardPoints(false)">✗ Wrong</button>`;
-  } else if (state === 'timeup') {
-    row.innerHTML = `
-      <button class="ctrl-btn reveal-q" onclick="revealAnswer()">👁 Reveal Answer</button>
-      <button class="ctrl-btn skip-q" onclick="skipQuestion()">Skip →</button>`;
-  } else if (state === 'scoring') {
-    if (buzzedTeam !== null) {
-      row.innerHTML = `
-        <button class="ctrl-btn correct" onclick="awardPoints(true)">✓ Correct</button>
-        <button class="ctrl-btn incorrect" onclick="awardPoints(false)">✗ Wrong</button>`;
-    } else {
-      row.innerHTML = `<button class="ctrl-btn next-q" onclick="nextQuestion()">Next Question →</button>`;
-    }
-  } else if (state === 'next') {
-    const isLast = qIndex >= questions.length - 1;
-    row.innerHTML = `<button class="ctrl-btn next-q" onclick="${isLast ? 'endGame()' : 'nextQuestion()'}">${isLast ? '🏆 See Final Scores' : 'Next Question →'}</button>`;
+  if (isMultipleChoice(item)) {
+    const opts = item.options;
+    if (!Array.isArray(opts) || opts.length !== 4 || !opts.every(isText)) errors.push("options must be 4 non-empty choices");
+    else if (new Set(opts.map(o => o.trim())).size !== 4) errors.push("options must all be different");
+    if (!Number.isInteger(item.answer_index) || item.answer_index < 0 || item.answer_index > 3) errors.push("answer_index must be 0, 1, 2, or 3");
+    if (hasDistractorList && rat.distractors.length !== 3) errors.push("rationale.distractors needs 3 entries (one per wrong option)");
   }
-}
-
-function updateScoreDisplay(idx) {
-  const el = document.getElementById(`score-${idx}`);
-  if (el) el.textContent = teams[idx].score.toLocaleString();
-}
-
-function enableBuzzButtons(enabled) {
-  teams.forEach((_, i) => {
-    const btn = document.getElementById(`buzz-btn-${i}`);
-    if (btn) btn.disabled = !enabled;
-  });
-}
-
-function resetBuzzIndicators() {
-  teams.forEach((t, i) => {
-    const ind = document.getElementById(`buzz-ind-${i}`);
-    if (ind) ind.classList.remove('active');
-    const btn = document.getElementById(`buzz-btn-${i}`);
-    if (btn) {
-      btn.style.background = hexToRgba(t.color, 0.08);
-      btn.style.boxShadow = '';
+  if (item.type === "match") {
+    const pairs = item.pairs;
+    const wellFormed = Array.isArray(pairs) && pairs.length >= 2 && pairs.length <= 8 &&
+      pairs.every(p => Array.isArray(p) && p.length === 2 && p.every(isText));
+    if (!wellFormed) errors.push("pairs must be 2-8 [left, right] text pairs");
+    else {
+      if (new Set(pairs.map(p => p[0].trim())).size !== pairs.length) errors.push("left sides of pairs must all be different");
+      if (new Set(pairs.map(p => p[1].trim())).size !== pairs.length) errors.push("right sides of pairs must all be different");
     }
-    document.getElementById('buzzStatus').style.color = '';
-  });
-}
-
-function endGame() {
-  clearInterval(timerInterval);
-  const sorted = [...teams].sort((a,b) => b.score - a.score);
-  buildPodium(sorted);
-  showScreen('endScreen');
-}
-
-function buildPodium(sorted) {
-  const podium = document.getElementById('podium');
-  podium.innerHTML = '';
-  const heights = [120, 80, 60, 50];
-  const medals = ['🥇','🥈','🥉','4️⃣'];
-  sorted.forEach((t, i) => {
-    const place = document.createElement('div');
-    place.className = 'podium-place';
-    place.innerHTML = `
-      <div class="podium-name" style="color:${t.color}">${t.name}</div>
-      <div class="podium-pts" style="color:${t.color}">${t.score.toLocaleString()} pts</div>
-      <div class="podium-block" style="height:${heights[i]||40}px;background:${hexToRgba(t.color,0.15)};border:1px solid ${hexToRgba(t.color,0.4)}">${medals[i]||''}</div>`;
-    podium.appendChild(place);
-  });
-}
-
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast show ${type}`;
-  setTimeout(() => t.className = 'toast', 2000);
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function goSetup() {
-  showScreen('setupScreen');
-}
-
-// Keyboard handlers
-document.addEventListener('keydown', (e) => {
-  if (document.getElementById('gameScreen').classList.contains('active')) {
-    const key = e.key.toLowerCase();
-    teams.forEach((t, i) => {
-      if (key === t.key) teamBuzz(i);
-    });
   }
+  if (item.type === "order") {
+    const seq = item.sequence;
+    if (!Array.isArray(seq) || seq.length < 2 || seq.length > 10 || !seq.every(isText)) errors.push("sequence must be 2-10 steps");
+    else if (new Set(seq.map(s => s.trim())).size !== seq.length) errors.push("sequence steps must all be different");
+  }
+  return errors;
+}
+
+/* Splits the bank into ready / hold / invalid. Invalid items never load. */
+function validateBank(bank) {
+  const report = { meta: {}, ready: [], hold: [], invalid: [], fatal: null };
+  if (!bank || typeof bank !== "object" || !Array.isArray(bank.items)) {
+    report.fatal = "The BANK block is missing or has no items list, so no questions could load.";
+    return report;
+  }
+  report.meta = bank.meta && typeof bank.meta === "object" ? bank.meta : {};
+  const seen = new Set();
+  bank.items.forEach((item, n) => {
+    const errors = validateItem(item, seen);
+    const hasId = item && isText(item.id);
+    const label = hasId ? item.id : `Item ${n + 1} (no id)`;
+    if (hasId) seen.add(item.id);
+    if (errors.length) report.invalid.push({ id: label, status: item && item.status, errors });
+    else if (item.status === "ready") report.ready.push(item);
+    else report.hold.push(item);
+  });
+  return report;
+}
+
+/* ---------------------------------------------------------------------
+   UTILITIES
+   --------------------------------------------------------------------- */
+function range(n) { return Array.from({ length: n }, (_, i) => i); }
+
+/* Fisher-Yates shuffle; returns a new array. */
+function shuffle(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Option shuffling never edits item.options. It builds `order`, where
+   order[displayPosition] = original option index. Scoring maps the chosen
+   display position back through `order` and compares it to answer_index,
+   so shuffling cannot change which option is correct. */
+function shuffleOptions(item) {
+  const order = shuffle(range(item.options.length));
+  return { order, correctPos: order.indexOf(item.answer_index) };
+}
+
+/* rationale.distractors explains the wrong options in original order,
+   skipping the correct option, so indexes after the answer shift down by one. */
+function distractorRationale(item, originalIndex) {
+  if (originalIndex === item.answer_index) return "";
+  const k = originalIndex < item.answer_index ? originalIndex : originalIndex - 1;
+  return item.rationale.distractors[k] || "";
+}
+
+/* Order items start scrambled; this avoids showing them already solved. */
+function scrambledOrder(n) {
+  if (n < 2) return range(n);
+  let a = shuffle(range(n));
+  for (let tries = 0; tries < 20 && a.every((v, i) => v === i); tries++) a = shuffle(range(n));
+  if (a.every((v, i) => v === i)) [a[0], a[1]] = [a[1], a[0]];
+  return a;
+}
+
+function letter(i) { return String.fromCharCode(65 + i); }
+function fmt(n) { return Number(n).toLocaleString("en-US"); }
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function plural(n, word) { return `${n} ${word}${n === 1 ? "" : "s"}`; }
+function pctOf(b) { return b.attempted ? Math.round((100 * b.correct) / b.attempted) : 0; }
+function truncate(s, max) { return s.length > max ? s.slice(0, max - 1).trimEnd() + "…" : s; }
+
+/* Splits "Main topic: detail" into a headline and subtitle. */
+function splitTopic(topic) {
+  const t = isText(topic) ? topic : "ID topic discussion";
+  const at = t.indexOf(": ");
+  return at > 0 ? { main: t.slice(0, at), sub: t.slice(at + 2) } : { main: t, sub: "" };
+}
+
+/* Shortens a citation string to first-author surname + year for the badge,
+   using only what is in the citation (no years are added). Segments without
+   an author (e.g. "73(11):e3842") are skipped. The full citation stays available. */
+function shortCitation(citation) {
+  if (!isText(citation)) return "";
+  const out = [];
+  for (const part of citation.split(";").map(s => s.trim()).filter(Boolean)) {
+    const author = part.match(/^([A-Z][A-Za-z'\u2019-]+)\s+[A-Z]{1,3}\b/);
+    if (!author) continue;
+    const year = part.match(/\b(19|20)\d{2}\b/);
+    out.push(`${author[1]}${/et al/i.test(part) ? " et al." : ""}${year ? " " + year[0] : ""}`);
+  }
+  return out.length ? out.join("; ") : citation;
+}
+
+function sourceText(item) {
+  const s = item.source;
+  if (s.type === "handout") return `Handout: ${s.locator}`;
+  if (s.type === "pearl_cited") return `Cited: ${s.citation}`;
+  return `Uncited pearl: ${s.locator}`;
+}
+
+/* Small DOM builder. Text is always set with textContent, never innerHTML. */
+function el(tag, props, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props || {})) {
+    if (value === null || value === undefined || value === false) continue;
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (key.startsWith("on") && typeof value === "function") node.addEventListener(key.slice(2).toLowerCase(), value);
+    else node.setAttribute(key, value === true ? "" : String(value));
+  }
+  for (const child of children.flat(Infinity)) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+
+/* ---------------------------------------------------------------------
+   STATE (memory only; nothing is saved to the browser)
+   --------------------------------------------------------------------- */
+const $app = document.getElementById("app");
+const $live = document.getElementById("live");
+const session = { report: null, missed: new Set(), timerSeconds: 0, learnerName: "" };
+let run = null;       // active scored session (Rounds, Case Rounds, Retry Missed)
+let deck = null;      // active Rapid Pearls deck
+let keyHandler = null;
+const timer = { interval: null, deadline: 0, warned: false };
+
+function announce(message) {
+  $live.textContent = "";
+  setTimeout(() => { $live.textContent = message; }, 40);
+}
+
+function setScreen(node, handler, focusTarget) {
+  clearTimer();
+  $app.replaceChildren(node);
+  keyHandler = handler || null;
+  try { window.scrollTo(0, 0); } catch (_) { /* not available in some embedded viewers */ }
+  (focusTarget || $app).focus({ preventScroll: true });
+}
+
+/* Global keyboard routing: typing in form fields is never intercepted. */
+document.addEventListener("keydown", (e) => {
+  if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tag = e.target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  if (keyHandler) keyHandler(e);
 });
+
+/* ---------------------------------------------------------------------
+   SCORING (pure functions)
+   --------------------------------------------------------------------- */
+function scoreMcq(item, order, selectedPos) {
+  const chosenIndex = selectedPos === null ? null : order[selectedPos];
+  const correct = chosenIndex === item.answer_index;
+  return {
+    correct, fraction: correct ? 1 : 0, chosenIndex,
+    response: chosenIndex === null ? "No answer" : item.options[chosenIndex],
+    correctAnswer: item.options[item.answer_index]
+  };
+}
+
+/* selections[leftIndex] = chosen right-side index (original pair indexes). A row is correct when they match. */
+function scoreMatch(item, selections) {
+  const n = item.pairs.length;
+  const rowCorrect = range(n).map(i => selections !== null && selections[i] === i);
+  const k = rowCorrect.filter(Boolean).length;
+  return {
+    correct: k === n, fraction: k / n, rowCorrect,
+    response: selections === null ? "No answer" : `${k} of ${n} pairs correct`,
+    correctAnswer: item.pairs.map(p => `${p[0]}: ${p[1]}`).join("; ")
+  };
+}
+
+/* arrangement[position] = original sequence index. A position is correct when they match. */
+function scoreOrder(item, arrangement) {
+  const n = item.sequence.length;
+  const posCorrect = range(n).map(i => arrangement !== null && arrangement[i] === i);
+  const k = posCorrect.filter(Boolean).length;
+  return {
+    correct: k === n, fraction: k / n, posCorrect,
+    response: arrangement === null ? "No answer" : `${k} of ${n} steps in the right place`,
+    correctAnswer: item.sequence.map((s, i) => `${i + 1}. ${s}`).join(" ")
+  };
+}
+
+function pointsFor(outcome, streakBefore) {
+  if (outcome.correct) {
+    return CONFIG.POINTS_CORRECT + Math.min(CONFIG.STREAK_BONUS_STEP * streakBefore, CONFIG.STREAK_BONUS_CAP);
+  }
+  return Math.round(CONFIG.POINTS_CORRECT * outcome.fraction * CONFIG.PARTIAL_CREDIT);
+}
+
+/* S = fully correct, I = partly correct (match/order), R = missed. */
+function resultCode(res) { return res.correct ? "S" : res.fraction > 0 ? "I" : "R"; }
+function statusWord(res) {
+  if (res.correct) return "correct";
+  if (res.timedOut) return "missed, time ran out";
+  return res.fraction > 0 ? "partly correct" : "missed";
+}
+
+/* Each result is counted exactly once in the total, once in its domain, and
+   once in its Bloom level, so both breakdowns always sum to the total. */
+function tally(results) {
+  const blank = () => ({ attempted: 0, correct: 0, points: 0 });
+  const total = blank(), byDomain = {}, byBloom = {};
+  for (const r of results) {
+    if (!byDomain[r.domain]) byDomain[r.domain] = blank();
+    if (!byBloom[r.bloom]) byBloom[r.bloom] = blank();
+    for (const bucket of [total, byDomain[r.domain], byBloom[r.bloom]]) {
+      bucket.attempted += 1;
+      if (r.correct) bucket.correct += 1;
+      bucket.points += r.points;
+    }
+  }
+  return { total, byDomain, byBloom };
+}
+
+function talliesConsistent(t) {
+  const sum = (group, key) => Object.values(group).reduce((s, b) => s + b[key], 0);
+  return ["attempted", "correct", "points"].every(k => sum(t.byDomain, k) === t.total[k] && sum(t.byBloom, k) === t.total[k]);
+}
+
+/* ---------------------------------------------------------------------
+   START SCREEN
+   --------------------------------------------------------------------- */
+function currentMissedIds() {
+  return session.report.ready.filter(i => session.missed.has(i.id)).map(i => i.id);
+}
+
+function statusCell(code) {
+  return el("span", { class: `cell cell-${code.toLowerCase()}`, "aria-hidden": "true", text: code });
+}
+
+function legend() {
+  return el("ul", { class: "legend", "aria-label": "Report key" },
+    el("li", {}, statusCell("S"), "Correct"),
+    el("li", {}, statusCell("I"), "Partly correct (match and order)"),
+    el("li", {}, statusCell("R"), "Missed"));
+}
+
+function renderStart() {
+  run = null;
+  deck = null;
+  const rep = session.report;
+  const meta = rep.meta;
+  const topic = splitTopic(meta.topic);
+
+  if (rep.fatal) {
+    setScreen(el("section", { class: "alert", role: "alert" }, el("h2", { text: "No questions loaded" }), el("p", { text: rep.fatal })));
+    return;
+  }
+
+  const ready = rep.ready;
+  const caseCount = ready.filter(i => i.type === "case_mcq").length;
+  const roundCount = ROUND_ORDER.filter(d => ready.some(i => i.domain === d)).length;
+  const missedCount = currentMissedIds().length;
+
+  const hero = el("header", { class: "hero" },
+    el("h1", { text: topic.main }),
+    topic.sub ? el("p", { class: "sub", text: topic.sub }) : null,
+    el("p", { class: "source-line" },
+      `Built from the handout “${meta.handout_title || "topic discussion"}” for ${meta.learner_level || "resident"} learners. `,
+      `${plural(ready.length, "question")} ready, ${rep.hold.length} held for preceptor review (bank version ${meta.version ?? "not set"}).`));
+
+  const errors = rep.invalid.length ? el("section", { class: "alert", role: "alert", "aria-labelledby": "invalid-h" },
+    el("h2", { id: "invalid-h", text: `${plural(rep.invalid.length, "item")} failed validation and ${rep.invalid.length === 1 ? "was" : "were"} not loaded` }),
+    el("ul", {}, rep.invalid.map(x => el("li", {}, el("strong", { text: x.id }), ` (status: ${x.status || "none"}): ${x.errors.join("; ")}.`))),
+    el("p", { text: "Fix these in the BANK block at the top of the file, save, and reload." })) : null;
+
+  const modeDefs = [
+    { mode: "rounds", name: "Rounds", count: plural(roundCount, "round"), desc: `All ${ready.length} questions, grouped by domain.`, off: ready.length === 0 },
+    { mode: "cases", name: "Case Rounds", count: plural(caseCount, "case"), desc: "Patient cases only.", off: caseCount === 0 },
+    { mode: "pearls", name: "Rapid Pearls", count: plural(ready.length, "card"), desc: "Flip cards with the answer and pearl on the back. Not scored.", off: ready.length === 0 },
+    { mode: "retry", name: "Retry Missed", count: `${missedCount} missed`, desc: missedCount ? "Replay the questions you missed this session." : "Unlocks after you miss a question in any mode.", off: missedCount === 0 }
+  ];
+  const modes = el("div", { class: "modes" }, modeDefs.map(m =>
+    el("button", { type: "button", class: "mode", "data-mode": m.mode, disabled: m.off, onclick: () => chooseMode(m.mode) },
+      el("span", { class: "mode-name", text: m.name }),
+      el("span", { class: "mode-count", text: m.count }),
+      el("span", { class: "mode-desc", text: m.desc }))));
+
+  const timerSelect = el("select", { id: "timer-select", onchange: (e) => { session.timerSeconds = Number(e.target.value); } },
+    CONFIG.TIMER_CHOICES.map(s => el("option", { value: String(s), selected: s === session.timerSeconds, text: s ? `${s} seconds per question` : "Off" })));
+
+  const node = el("div", { class: "screen start" },
+    hero,
+    errors,
+    ready.length === 0 ? el("p", { class: "alert", text: "No items are marked ready. Change an item's status to \"ready\" in the BANK block to play." }) : null,
+    el("section", { "aria-labelledby": "modes-h" },
+      el("h2", { id: "modes-h", class: "section-h", text: "Choose a mode" }),
+      modes),
+    el("div", { class: "settings" },
+      el("label", { for: "timer-select", text: "Question timer" }),
+      timerSelect,
+      el("p", { class: "hint", text: "When time runs out, the question counts as missed and the explanation appears." })),
+    el("section", { class: "how", "aria-labelledby": "how-h" },
+      el("h2", { id: "how-h", class: "section-h", text: "How scoring works" }),
+      el("p", { text: `A correct answer earns ${CONFIG.POINTS_CORRECT} points, plus ${CONFIG.STREAK_BONUS_STEP} for each correct answer already in your streak (up to +${CONFIG.STREAK_BONUS_CAP}). Partly correct match and order questions earn partial points. Your answers build a report that reads like a susceptibility panel.` }),
+      legend(),
+      el("p", { class: "muted" }, "Keyboard: ", el("kbd", { text: "1" }), "–", el("kbd", { text: "4" }), " picks a choice, ", el("kbd", { text: "Enter" }), " checks your answer and moves on.")));
+
+  setScreen(node, null, node.querySelector("h1"));
+}
+
+function chooseMode(mode) {
+  if (mode === "pearls") startPearls();
+  else if (mode === "retry") startRun("retry", currentMissedIds());
+  else startRun(mode);
+}
+
+/* ---------------------------------------------------------------------
+   SCORED SESSIONS
+   --------------------------------------------------------------------- */
+function startRun(mode, ids) {
+  const pool = session.report.ready;
+  let items;
+  if (mode === "cases") items = pool.filter(i => i.type === "case_mcq");
+  else if (mode === "retry") items = pool.filter(i => (ids || []).includes(i.id));
+  else items = pool.slice();
+  if (!items.length) { renderStart(); return; }
+  run = {
+    mode, retryIds: mode === "retry" ? items.map(i => i.id) : null,
+    queue: buildQueue(mode, items), index: 0, results: [],
+    points: 0, streak: 0, bestStreak: 0,
+    timerSeconds: session.timerSeconds, startedAt: new Date(), endedEarly: false, current: null
+  };
+  showStep();
+}
+
+/* Rounds mode groups items by domain (ROUND_ORDER) and shuffles within each
+   round. Case Rounds and Retry Missed play as one shuffled round. */
+function buildQueue(mode, items) {
+  const groups = mode === "rounds"
+    ? ROUND_ORDER.map(d => ({ label: d, items: shuffle(items.filter(i => i.domain === d)) })).filter(g => g.items.length)
+    : [{ label: MODE_LABEL[mode], items: shuffle(items) }];
+  const queue = [];
+  groups.forEach((g, gi) => g.items.forEach((item, pos) => queue.push({
+    item, round: gi, roundCount: groups.length, roundLabel: g.label, roundSize: g.items.length,
+    introShown: mode !== "rounds" || pos > 0
+  })));
+  return queue;
+}
+
+function showStep() {
+  if (run.index >= run.queue.length) { finishRun(false); return; }
+  const entry = run.queue[run.index];
+  if (entry.introShown) renderItem(entry);
+  else renderRoundIntro(entry);
+}
+
+function advance() {
+  if (!run || !run.current || !run.current.answered) return;
+  run.index += 1;
+  showStep();
+}
+
+function finishRun(endedEarly) {
+  clearTimer();
+  const finished = run;
+  finished.endedEarly = endedEarly;
+  finished.current = null;
+  renderEnd(finished);
+}
+
+function progressStrip(r) {
+  const byIndex = new Map(r.results.map(x => [x.queueIndex, x]));
+  return el("div", { class: "strip", "aria-hidden": "true" }, r.queue.map((entry, i) => {
+    const res = byIndex.get(i);
+    let cls = "cell";
+    if (res) cls += ` cell-${resultCode(res).toLowerCase()}`;
+    else if (i === r.index) cls += " cell-current";
+    if (i > 0 && entry.round !== r.queue[i - 1].round) cls += " cell-newround";
+    return el("span", { class: cls, title: `${entry.item.id}${res ? ": " + statusWord(res) : ""}`, text: res ? resultCode(res) : String(i + 1) });
+  }));
+}
+
+function quizTopBar() {
+  const endBtn = el("button", { type: "button", class: "btn quiet small" }, "End session");
+  let armed = false, resetTimer = null;
+  /* Two-step confirm so a stray tap doesn't end the session. */
+  endBtn.addEventListener("click", () => {
+    if (!run.results.length) { renderStart(); return; }
+    if (!armed) {
+      armed = true;
+      endBtn.textContent = "Tap again to end";
+      resetTimer = setTimeout(() => { armed = false; endBtn.textContent = "End session"; }, 3000);
+      return;
+    }
+    clearTimeout(resetTimer);
+    finishRun(true);
+  });
+  const answered = run.results.length;
+  const correct = run.results.filter(x => x.correct).length;
+  return el("header", { class: "topbar", id: "topbar" },
+    el("div", { class: "topbar-row" },
+      el("p", { class: "mode-label", text: MODE_LABEL[run.mode] }),
+      endBtn),
+    el("p", { class: "score", "aria-hidden": "true" },
+      el("span", {}, el("span", { class: "pts", text: fmt(run.points) }), " pts"),
+      el("span", { class: "streak", text: `Streak ${run.streak}` })),
+    progressStrip(run),
+    el("p", { class: "sr-only", text: `${answered} of ${run.queue.length} answered, ${correct} correct, ${fmt(run.points)} points, streak ${run.streak}.` }));
+}
+
+function renderRoundIntro(entry) {
+  const begin = () => { entry.introShown = true; renderItem(entry); };
+  const node = el("section", { class: "screen" },
+    quizTopBar(),
+    el("div", { class: "round-intro" },
+      el("p", { class: "round-count", text: `Round ${entry.round + 1} of ${entry.roundCount}` }),
+      el("h2", { id: "round-h", tabindex: "-1", text: entry.roundLabel }),
+      el("p", { text: `${plural(entry.roundSize, "question")} in this round.` }),
+      el("div", { class: "actions" }, el("button", { type: "button", class: "btn primary", onclick: begin }, `Start round ${entry.round + 1}`))));
+  setScreen(node, (e) => {
+    if (e.key === "Enter" && !e.target.closest("button, a, summary")) { e.preventDefault(); begin(); }
+  }, node.querySelector("#round-h"));
+}
+
+/* ---------------------------------------------------------------------
+   ITEM RENDERING
+   --------------------------------------------------------------------- */
+function renderItem(entry) {
+  const item = entry.item;
+  const c = run.current = { entry, item, answered: false, selection: null, result: null };
+  if (isMultipleChoice(item)) Object.assign(c, shuffleOptions(item));
+  if (item.type === "match") {
+    c.leftOrder = shuffle(range(item.pairs.length));
+    c.rightOrder = shuffle(range(item.pairs.length));
+    c.matchSelections = item.pairs.map(() => null);
+  }
+  if (item.type === "order") c.arrangement = scrambledOrder(item.sequence.length);
+
+  const body = isMultipleChoice(item) ? renderMcqBody(c) : item.type === "match" ? renderMatchBody(c) : renderOrderBody(c);
+  const primary = el("button", { type: "button", class: "btn primary", id: "primary", onclick: primaryAction }, "Check answer");
+
+  const node = el("section", { class: "screen quiz" },
+    quizTopBar(),
+    el("div", { class: "item-head" },
+      el("h2", { class: "qcount", text: `Question ${run.index + 1} of ${run.queue.length}` }),
+      el("ul", { class: "chips" },
+        el("li", { class: "chip", text: item.domain }),
+        el("li", { class: "chip", text: TYPE_LABEL[item.type] }),
+        el("li", { class: "chip", text: cap(item.bloom) }),
+        el("li", { class: "chip" },
+          el("span", { "aria-hidden": "true", text: "●".repeat(item.difficulty) + "○".repeat(3 - item.difficulty) }),
+          el("span", { class: "sr-only", text: `Difficulty ${item.difficulty} of 3` })))),
+    run.timerSeconds ? el("div", { class: "timer", id: "timer" },
+      el("div", { class: "timer-track", "aria-hidden": "true" }, el("div", { class: "timer-fill" })),
+      el("span", { class: "timer-text" })) : null,
+    el("p", { class: `stem${item.type === "case_mcq" ? " stem-case" : ""}`, id: "stem", tabindex: "-1", text: item.stem }),
+    body,
+    el("section", { class: "feedback", id: "feedback", hidden: true, "aria-label": "Answer feedback" }),
+    el("div", { class: "actionbar" }, primary));
+
+  setScreen(node, itemKeyHandler, node.querySelector("#stem"));
+  updatePrimary();
+  startTimer();
+}
+
+function renderMcqBody(c) {
+  c.optionButtons = c.order.map((orig, pos) => el("button", {
+    type: "button", class: "option", "aria-pressed": "false", "data-option-pos": String(pos),
+    onclick: () => selectOption(pos, false)
+  },
+    el("span", { class: "option-key", "aria-hidden": "true", text: String(pos + 1) }),
+    el("span", { class: "option-text" }, el("span", { class: "sr-only", text: `Choice ${pos + 1}: ` }), c.item.options[orig]),
+    el("span", { class: "option-mark" })));
+  return el("div", { class: "options", role: "group", "aria-label": "Answer choices" }, c.optionButtons);
+}
+
+function selectOption(pos, moveFocus) {
+  const c = run && run.current;
+  if (!c || c.answered) return;
+  c.selection = pos;
+  c.optionButtons.forEach((b, i) => {
+    b.setAttribute("aria-pressed", String(i === pos));
+    b.classList.toggle("selected", i === pos);
+  });
+  if (moveFocus) c.optionButtons[pos].focus();
+  updatePrimary();
+}
+
+function renderMatchBody(c) {
+  const item = c.item;
+  c.matchRows = [];
+  c.matchSelects = [];
+  const key = el("ol", { class: "match-key", "aria-label": "Descriptions" }, c.rightOrder.map((orig, pos) =>
+    el("li", {}, el("span", { class: "match-letter", text: letter(pos) }), el("span", { text: item.pairs[orig][1] }))));
+  const rows = el("div", { class: "match-rows" }, c.leftOrder.map((li) => {
+    const id = `match-${li}`;
+    const select = el("select", {
+      id, class: "match-select",
+      onchange: (e) => { c.matchSelections[li] = e.target.value === "" ? null : Number(e.target.value); onMatchChange(); }
+    },
+      el("option", { value: "", text: "Choose a description" }),
+      c.rightOrder.map((orig, pos) => el("option", { value: String(orig), text: `${letter(pos)}. ${item.pairs[orig][1]}` })));
+    const row = el("div", { class: "match-row", "data-left": String(li) },
+      el("label", { for: id, text: item.pairs[li][0] }), select, el("p", { class: "match-result", hidden: true }));
+    c.matchSelects[li] = select;
+    c.matchRows[li] = row;
+    return row;
+  }));
+  c.matchNote = el("p", { class: "match-note", "aria-live": "polite" });
+  return el("div", { class: "match" },
+    el("p", { class: "instructions", text: "Choose the description that matches each item. Each description is used once." }),
+    key, rows, c.matchNote);
+}
+
+function matchHasDuplicates(c) {
+  const chosen = c.matchSelections.filter(v => v !== null);
+  return new Set(chosen).size !== chosen.length;
+}
+
+function onMatchChange() {
+  const c = run.current;
+  c.matchNote.textContent = matchHasDuplicates(c) ? "Each description can only be used once. Change the duplicate before checking." : "";
+  updatePrimary();
+}
+
+function renderOrderBody(c) {
+  c.orderList = el("ol", { class: "order-list", "aria-label": "Steps in your order" });
+  drawOrderList(c, null);
+  return el("div", { class: "order" },
+    el("p", { class: "instructions", text: "Put the steps in order with the Up and Down buttons." }),
+    c.orderList);
+}
+
+function drawOrderList(c, focusKey) {
+  const item = c.item;
+  const n = c.arrangement.length;
+  const result = c.result;
+  c.orderList.replaceChildren(...c.arrangement.map((orig, pos) => {
+    const text = item.sequence[orig];
+    let cls = "order-row", resultText = "";
+    if (result) {
+      const ok = result.outcome.posCorrect[pos];
+      cls += ok ? " is-correct" : " is-wrong";
+      resultText = ok ? "✓ Right place" : `✗ Belongs at step ${orig + 1}`;
+    }
+    return el("li", { class: cls },
+      el("span", { class: "order-pos", text: String(pos + 1) }),
+      el("span", { class: "order-text", text }),
+      el("span", { class: "order-result", text: resultText }),
+      result ? null : el("span", { class: "order-moves" },
+        el("button", { type: "button", class: "btn quiet small", "data-move": `${orig}:up`, "aria-label": `Move “${text}” up`, disabled: pos === 0, onclick: () => moveStep(pos, -1, `${orig}:up`) }, "Up"),
+        el("button", { type: "button", class: "btn quiet small", "data-move": `${orig}:down`, "aria-label": `Move “${text}” down`, disabled: pos === n - 1, onclick: () => moveStep(pos, 1, `${orig}:down`) }, "Down")));
+  }));
+  if (focusKey) {
+    /* Keep focus on the moved step; if its button is now disabled (top/bottom), use the other direction. */
+    let btn = c.orderList.querySelector(`[data-move="${focusKey}"]`);
+    if (!btn || btn.disabled) {
+      const [orig, dir] = focusKey.split(":");
+      btn = c.orderList.querySelector(`[data-move="${orig}:${dir === "up" ? "down" : "up"}"]`);
+    }
+    if (btn) btn.focus();
+  }
+}
+
+function moveStep(pos, delta, focusKey) {
+  const c = run.current;
+  if (!c || c.answered) return;
+  const target = pos + delta;
+  if (target < 0 || target >= c.arrangement.length) return;
+  [c.arrangement[pos], c.arrangement[target]] = [c.arrangement[target], c.arrangement[pos]];
+  drawOrderList(c, focusKey);
+  announce(`Moved to step ${target + 1}.`);
+}
+
+function canSubmit(c) {
+  if (isMultipleChoice(c.item)) return c.selection !== null;
+  if (c.item.type === "match") return c.matchSelections.every(v => v !== null) && !matchHasDuplicates(c);
+  return true;
+}
+
+function updatePrimary() {
+  const c = run && run.current;
+  const btn = document.getElementById("primary");
+  if (!c || !btn) return;
+  if (c.answered) {
+    btn.disabled = false;
+    btn.textContent = run.index + 1 >= run.queue.length ? "See results" : "Next question";
+  } else {
+    btn.disabled = !canSubmit(c);
+    btn.textContent = "Check answer";
+  }
+}
+
+function primaryAction() {
+  const c = run && run.current;
+  if (!c) return;
+  if (c.answered) advance();
+  else if (canSubmit(c)) submitAnswer(false);
+}
+
+function itemKeyHandler(e) {
+  const c = run && run.current;
+  if (!c) return;
+  if (/^[1-9]$/.test(e.key)) {
+    if (isMultipleChoice(c.item) && !c.answered) {
+      const pos = Number(e.key) - 1;
+      if (pos < c.order.length) { e.preventDefault(); selectOption(pos, true); }
+    }
+    return;
+  }
+  if (e.key !== "Enter") return;
+  const option = e.target.closest("[data-option-pos]");
+  if (option) {
+    /* Enter on a choice selects it; Enter on the already-selected choice checks the answer. */
+    e.preventDefault();
+    const pos = Number(option.dataset.optionPos);
+    if (c.answered || c.selection === pos) primaryAction();
+    else selectOption(pos, false);
+    return;
+  }
+  if (e.target.closest("button, a, summary")) return; // let buttons and links activate normally
+  e.preventDefault();
+  primaryAction();
+}
+
+/* ---------------------------------------------------------------------
+   ANSWERING AND FEEDBACK
+   --------------------------------------------------------------------- */
+function submitAnswer(timedOut) {
+  const c = run && run.current;
+  if (!c || c.answered) return;
+  if (!timedOut && !canSubmit(c)) return;
+  clearTimer();
+  const item = c.item;
+  /* A timeout scores as "no answer", even if a choice was highlighted but not checked. */
+  const outcome = isMultipleChoice(item) ? scoreMcq(item, c.order, timedOut ? null : c.selection)
+    : item.type === "match" ? scoreMatch(item, timedOut ? null : c.matchSelections)
+    : scoreOrder(item, timedOut ? null : c.arrangement);
+
+  const streakBefore = run.streak;
+  const points = pointsFor(outcome, streakBefore);
+  run.streak = outcome.correct ? streakBefore + 1 : 0;
+  run.bestStreak = Math.max(run.bestStreak, run.streak);
+  run.points += points;
+
+  const result = {
+    queueIndex: run.index, item, id: item.id, domain: item.domain, bloom: item.bloom, type: item.type,
+    correct: outcome.correct, fraction: outcome.fraction, points,
+    bonus: outcome.correct ? points - CONFIG.POINTS_CORRECT : 0, timedOut: !!timedOut, outcome
+  };
+  run.results.push(result);
+  if (outcome.correct) session.missed.delete(item.id);
+  else session.missed.add(item.id);
+
+  c.answered = true;
+  c.result = result;
+  showFeedback(c);
+}
+
+function showFeedback(c) {
+  const item = c.item;
+  const res = c.result;
+  const out = res.outcome;
+
+  if (isMultipleChoice(item)) {
+    c.optionButtons.forEach((b, pos) => {
+      b.classList.add("locked");
+      b.setAttribute("aria-disabled", "true");
+      const mark = b.querySelector(".option-mark");
+      if (pos === c.correctPos) { b.classList.add("is-correct"); mark.textContent = "✓ Correct answer"; }
+      else if (pos === c.selection && !res.timedOut) { b.classList.add("is-wrong"); mark.textContent = "✗ Your answer"; }
+    });
+  } else if (item.type === "match") {
+    item.pairs.forEach((pair, li) => {
+      const row = c.matchRows[li];
+      const ok = out.rowCorrect[li];
+      c.matchSelects[li].disabled = true;
+      row.classList.add(ok ? "is-correct" : "is-wrong");
+      const note = row.querySelector(".match-result");
+      note.hidden = false;
+      note.textContent = ok ? "✓ Correct" : `✗ Correct match: ${pair[1]}`;
+    });
+    c.matchNote.textContent = "";
+  } else {
+    drawOrderList(c, null);
+  }
+
+  const code = resultCode(res);
+  const verdictText = res.timedOut ? "Time's up" : res.correct ? "Correct" : res.fraction > 0 ? "Partly correct" : "Incorrect";
+  const icon = res.correct ? "✓" : res.fraction > 0 ? "◐" : "✗";
+  const pointsText = res.bonus ? `+${res.points} pts (includes +${res.bonus} streak bonus)` : `+${res.points} pts`;
+  const verdict = el("div", { class: `verdict verdict-${code.toLowerCase()}`, id: "verdict", tabindex: "-1" },
+    el("span", { class: "verdict-icon", "aria-hidden": "true", text: icon }),
+    el("h3", { class: "verdict-text", text: verdictText }),
+    el("span", { class: "verdict-points", text: pointsText }));
+
+  const blocks = [verdict];
+  if (isMultipleChoice(item)) {
+    if (!res.correct) {
+      blocks.push(el("div", { class: "fb-block" }, el("h4", { text: "Correct answer" }), el("p", { text: `Choice ${c.correctPos + 1}: ${out.correctAnswer}` })));
+    }
+    blocks.push(el("div", { class: "fb-block" }, el("h4", { text: "Why it's right" }), el("p", { text: item.rationale.correct })));
+    const others = c.order.map((orig, pos) => ({ orig, pos })).filter(o => o.pos !== c.correctPos);
+    blocks.push(el("div", { class: "fb-block" },
+      el("h4", { text: "Why the other choices are wrong" }),
+      el("ul", { class: "why-not" }, others.map(o => {
+        const chosen = o.pos === c.selection && !res.timedOut;
+        return el("li", { class: chosen ? "chosen" : "" },
+          el("span", { class: "choice" }, `Choice ${o.pos + 1}: ${item.options[o.orig]}`, chosen ? el("span", { class: "tag", text: "Your answer" }) : null),
+          distractorRationale(item, o.orig));
+      }))));
+  } else {
+    blocks.push(el("div", { class: "fb-block" }, el("h4", { text: "Why it's right" }), el("p", { text: item.rationale.correct })));
+    if (item.rationale.distractors.length) {
+      blocks.push(el("div", { class: "fb-block" },
+        el("h4", { text: "Common mix-ups" }),
+        el("ul", { class: "why-not" }, item.rationale.distractors.map(d => el("li", { text: d })))));
+    }
+  }
+  blocks.push(el("aside", { class: "pearl", "aria-label": "Pearl" }, el("h4", { text: "Pearl" }), el("p", { text: item.pearl })));
+  blocks.push(sourceBadge(item));
+
+  const fb = document.getElementById("feedback");
+  fb.replaceChildren(...blocks);
+  fb.hidden = false;
+  document.getElementById("topbar").replaceWith(quizTopBar());
+  updatePrimary();
+  verdict.focus();
+  announce(`${verdictText}. ${pointsText}.`);
+}
+
+function sourceBadge(item) {
+  const s = item.source;
+  if (s.type === "handout") {
+    return el("div", { class: "source" }, el("p", { class: "badge" }, el("strong", { text: "Handout: " }), s.locator));
+  }
+  if (s.type === "pearl_cited") {
+    return el("div", { class: "source" },
+      el("p", { class: "badge" }, el("strong", { text: "Cited: " }), shortCitation(s.citation)),
+      el("details", { class: "citation" }, el("summary", { text: "Full citation" }), el("p", { text: s.citation }), el("p", { class: "muted", text: s.locator })));
+  }
+  return el("div", { class: "source" }, el("p", { class: "badge" }, el("strong", { text: "Uncited pearl: " }), s.locator));
+}
+
+/* ---------------------------------------------------------------------
+   TIMER (optional, off by default)
+   --------------------------------------------------------------------- */
+function startTimer() {
+  clearTimer();
+  if (!run || !run.timerSeconds) return;
+  const box = document.getElementById("timer");
+  const fill = box && box.querySelector(".timer-fill");
+  const text = box && box.querySelector(".timer-text");
+  const totalMs = run.timerSeconds * 1000;
+  timer.deadline = Date.now() + totalMs;
+  timer.warned = false;
+  const tick = () => {
+    const left = Math.max(0, timer.deadline - Date.now());
+    const secs = Math.ceil(left / 1000);
+    if (fill) fill.style.transform = `scaleX(${left / totalMs})`;
+    if (text) text.textContent = `${secs}s left`;
+    if (!timer.warned && left > 0 && secs <= CONFIG.TIMER_WARNING_SECONDS) {
+      timer.warned = true;
+      if (box) box.classList.add("timer-low");
+      announce(`${CONFIG.TIMER_WARNING_SECONDS} seconds left.`);
+    }
+    if (left <= 0) { clearTimer(); submitAnswer(true); }
+  };
+  tick();
+  timer.interval = setInterval(tick, 250);
+}
+
+function clearTimer() {
+  if (timer.interval) clearInterval(timer.interval);
+  timer.interval = null;
+}
+
+/* ---------------------------------------------------------------------
+   END SCREEN
+   --------------------------------------------------------------------- */
+function reportGrid(r) {
+  const byIndex = new Map(r.results.map(x => [x.queueIndex, x]));
+  const rows = ROUND_ORDER.map(domain => {
+    const entries = r.queue.map((entry, i) => ({ entry, i })).filter(x => x.entry.item.domain === domain)
+      .sort((a, b) => a.entry.item.id.localeCompare(b.entry.item.id));
+    if (!entries.length) return null;
+    return el("div", { class: "report-row" },
+      el("p", { class: "report-domain", text: domain }),
+      el("div", { class: "report-cells" }, entries.map(({ entry, i }) => {
+        const res = byIndex.get(i);
+        const code = res ? resultCode(res) : "–";
+        const inner = [el("span", { class: "rcell-id", text: entry.item.id }), el("span", { class: "rcell-code", text: code })];
+        const label = `${entry.item.id}: ${res ? statusWord(res) : "not answered"}`;
+        if (res && !res.correct) {
+          return el("button", { type: "button", class: `rcell rcell-${code.toLowerCase()}`, "aria-label": `${label}. Show explanation.`, onclick: () => openMissed(entry.item.id) }, inner);
+        }
+        return el("span", { class: `rcell${res ? " rcell-" + code.toLowerCase() : ""}`, role: "img", "aria-label": label }, inner);
+      })));
+  }).filter(Boolean);
+  return el("section", { class: "report", "aria-labelledby": "report-h" },
+    el("h3", { id: "report-h", text: "Susceptibility report" }), rows, legend());
+}
+
+function openMissed(id) {
+  const d = document.getElementById(`missed-${id}`);
+  if (!d) return;
+  d.open = true;
+  d.querySelector("summary").focus();
+}
+
+function breakdownTable(caption, firstCol, keys, group, total, labelFn) {
+  const row = (label, b, isTotal) => el("tr", {},
+    el("th", { scope: "row", text: label }),
+    el("td", { class: "num", text: `${b.correct}/${b.attempted}` }),
+    el("td", { class: "num" }, `${pctOf(b)}%`, isTotal ? null : el("span", { class: "bar", "aria-hidden": "true" }, el("span", { style: `width:${pctOf(b)}%` }))),
+    el("td", { class: "num", text: fmt(b.points) }));
+  return el("div", { class: "table-wrap" },
+    el("table", {},
+      el("caption", { text: caption }),
+      el("thead", {}, el("tr", {},
+        el("th", { scope: "col", text: firstCol }),
+        el("th", { scope: "col", class: "num", text: "Correct" }),
+        el("th", { scope: "col", class: "num", text: "Score" }),
+        el("th", { scope: "col", class: "num", text: "Points" }))),
+      el("tbody", {}, keys.filter(k => group[k]).map(k => row(labelFn(k), group[k], false))),
+      el("tfoot", {}, row("Total", total, true))));
+}
+
+function missedCard(res) {
+  const item = res.item;
+  const out = res.outcome;
+  const parts = [el("p", { text: item.stem })];
+  const yourAnswer = res.timedOut ? "No answer (time ran out)" : out.response;
+  if (isMultipleChoice(item)) {
+    parts.push(el("p", {}, el("strong", { text: "Your answer: " }), yourAnswer));
+    parts.push(el("p", {}, el("strong", { text: "Correct answer: " }), out.correctAnswer));
+    parts.push(el("p", {}, el("strong", { text: "Why it's right: " }), item.rationale.correct));
+    if (out.chosenIndex !== null) parts.push(el("p", {}, el("strong", { text: "Why your answer is wrong: " }), distractorRationale(item, out.chosenIndex)));
+  } else if (item.type === "match") {
+    parts.push(el("p", {}, el("strong", { text: "Your result: " }), yourAnswer));
+    parts.push(el("p", {}, el("strong", { text: "Correct matches:" })));
+    parts.push(el("ul", {}, item.pairs.map((p, i) => el("li", {}, `${out.rowCorrect[i] ? "✓" : "✗"} ${p[0]}: ${p[1]}`))));
+    parts.push(el("p", {}, el("strong", { text: "Why: " }), item.rationale.correct));
+  } else {
+    parts.push(el("p", {}, el("strong", { text: "Your result: " }), yourAnswer));
+    parts.push(el("p", {}, el("strong", { text: "Correct order:" })));
+    parts.push(el("ol", {}, item.sequence.map(s => el("li", { text: s }))));
+    parts.push(el("p", {}, el("strong", { text: "Why: " }), item.rationale.correct));
+  }
+  parts.push(el("p", {}, el("strong", { text: "Pearl: " }), item.pearl));
+  parts.push(sourceBadge(item));
+  return el("details", { class: `missed-item${res.fraction > 0 ? " partial" : ""}`, id: `missed-${item.id}` },
+    el("summary", {}, el("span", { class: "missed-id", text: item.id }), `${item.domain}: ${truncate(item.stem, 90)}`),
+    parts);
+}
+
+function buildResultsText(r, t) {
+  const meta = session.report.meta;
+  const missed = r.results.filter(x => !x.correct);
+  const when = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+  const lines = [
+    `ID topic game results: ${meta.topic || "topic discussion"}`,
+    session.learnerName.trim() ? `Learner: ${session.learnerName.trim()}` : null,
+    `Handout: ${meta.handout_title || "not set"} (question bank v${meta.version ?? "?"})`,
+    `Mode: ${MODE_LABEL[r.mode]} | Timer: ${r.timerSeconds ? r.timerSeconds + " s" : "off"} | ${when}`,
+    `Score: ${fmt(t.total.points)} points | ${t.total.correct}/${t.total.attempted} correct (${pctOf(t.total)}%) | Best streak: ${r.bestStreak}`,
+    r.endedEarly ? `Ended early after ${t.total.attempted} of ${r.queue.length} questions.` : null,
+    "",
+    "By domain:",
+    ...ROUND_ORDER.filter(d => t.byDomain[d]).map(d => `- ${d}: ${t.byDomain[d].correct}/${t.byDomain[d].attempted} correct, ${fmt(t.byDomain[d].points)} pts`),
+    "",
+    "By Bloom level:",
+    ...BLOOMS.filter(b => t.byBloom[b]).map(b => `- ${cap(b)}: ${t.byBloom[b].correct}/${t.byBloom[b].attempted} correct, ${fmt(t.byBloom[b].points)} pts`),
+    "",
+    missed.length ? `Missed (${missed.length}):` : "Missed: none",
+    ...missed.map(m => {
+      const answer = m.timedOut ? "no answer (time ran out)" : isMultipleChoice(m.item) ? `"${m.outcome.response}"` : m.outcome.response;
+      const correct = isMultipleChoice(m.item) ? ` | Correct: "${m.outcome.correctAnswer}"` : "";
+      return `- ${m.id} (${m.domain}, ${m.bloom}): ${answer}${correct} | Pearl: ${m.item.pearl}`;
+    })
+  ];
+  return lines.filter(l => l !== null).join("\n");
+}
+
+async function copyResults(text, status, preview) {
+  let ok = false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    }
+  } catch (_) { ok = false; }
+  if (!ok) {
+    /* Fallback for browsers that block the clipboard API on local files. */
+    const scratch = el("textarea", { class: "copy-scratch", readonly: true, "aria-hidden": "true", tabindex: "-1" });
+    scratch.value = text;
+    document.body.append(scratch);
+    scratch.select();
+    try { ok = typeof document.execCommand === "function" && document.execCommand("copy"); } catch (_) { ok = false; }
+    scratch.remove();
+  }
+  if (ok) {
+    status.textContent = "Results copied. Paste them into a message to your preceptor.";
+  } else {
+    status.textContent = "This browser blocked copying. The results text is shown below; select it and copy.";
+    preview.open = true;
+    const area = preview.querySelector("textarea");
+    area.value = text;
+    area.focus();
+    area.select();
+  }
+}
+
+function renderEnd(r) {
+  const t = tally(r.results);
+  const missed = r.results.filter(x => !x.correct);
+  const retryIds = missed.map(x => x.id);
+
+  const status = el("p", { class: "copy-status", role: "status" });
+  const previewArea = el("textarea", { readonly: true, "aria-label": "Results text" });
+  const preview = el("details", { class: "copy-preview" }, el("summary", { text: "Show results text" }), previewArea);
+  preview.addEventListener("toggle", () => { if (preview.open) previewArea.value = buildResultsText(r, t); });
+  const nameInput = el("input", { type: "text", id: "learner-name", autocomplete: "name", value: session.learnerName,
+    oninput: (e) => { session.learnerName = e.target.value; if (preview.open) previewArea.value = buildResultsText(r, t); } });
+
+  const node = el("section", { class: "screen end" },
+    el("header", { class: "end-hero" },
+      el("p", { class: "mode-label", text: r.endedEarly ? `${MODE_LABEL[r.mode]}, ended early` : `${MODE_LABEL[r.mode]} complete` }),
+      el("h2", { id: "end-h", tabindex: "-1", text: `${t.total.correct} of ${t.total.attempted} correct` }),
+      el("p", { class: "end-stats", text: `${fmt(t.total.points)} points. ${pctOf(t.total)}% correct. Best streak ${r.bestStreak}.${r.endedEarly ? ` You answered ${t.total.attempted} of ${r.queue.length} questions.` : ""}` })),
+    reportGrid(r),
+    talliesConsistent(t) ? null : el("p", { class: "alert", role: "alert", text: "Score breakdown totals don't match the overall score. Please report this to your preceptor." }),
+    el("section", { class: "breakdowns", "aria-label": "Score breakdown" },
+      breakdownTable("By domain", "Domain", ROUND_ORDER, t.byDomain, t.total, d => d),
+      breakdownTable("By Bloom level", "Bloom level", BLOOMS, t.byBloom, t.total, cap)),
+    el("section", { class: "missed", "aria-labelledby": "missed-h" },
+      el("h3", { id: "missed-h", text: missed.length ? `Missed (${missed.length})` : "Nothing missed" }),
+      missed.length ? missed.map(missedCard) : el("p", { text: "Every question you answered was fully correct." })),
+    el("div", { class: "field" },
+      el("label", { for: "learner-name", text: "Your name for the copied results (optional)" }),
+      nameInput),
+    el("div", { class: "end-actions" },
+      el("button", { type: "button", class: "btn primary", id: "retry-missed", disabled: retryIds.length === 0, onclick: () => startRun("retry", retryIds) },
+        retryIds.length ? `Retry missed (${retryIds.length})` : "Retry missed"),
+      el("button", { type: "button", class: "btn quiet", id: "copy-results", onclick: () => copyResults(buildResultsText(r, t), status, preview) }, "Copy results"),
+      el("button", { type: "button", class: "btn quiet", onclick: () => startRun(r.mode, r.retryIds) }, `Play ${MODE_LABEL[r.mode]} again`),
+      el("button", { type: "button", class: "btn quiet", onclick: renderStart }, "Back to menu")),
+    status,
+    preview);
+
+  run = null;
+  setScreen(node, null, node.querySelector("#end-h"));
+}
+
+/* ---------------------------------------------------------------------
+   RAPID PEARLS (flip cards, not scored)
+   --------------------------------------------------------------------- */
+function startPearls() {
+  deck = { cards: shuffle(session.report.ready), index: 0, flipped: false };
+  renderPearlCard();
+}
+
+function answerNode(item) {
+  if (isMultipleChoice(item)) return el("p", { class: "card-answer", text: item.options[item.answer_index] });
+  if (item.type === "match") return el("ul", { class: "card-answer" }, item.pairs.map(p => el("li", { text: `${p[0]}: ${p[1]}` })));
+  return el("ol", { class: "card-answer" }, item.sequence.map(s => el("li", { text: s })));
+}
+
+function answerText(item) {
+  if (isMultipleChoice(item)) return item.options[item.answer_index];
+  if (item.type === "match") return item.pairs.map(p => `${p[0]}: ${p[1]}`).join("; ");
+  return item.sequence.join(", then ");
+}
+
+function renderPearlCard() {
+  const d = deck;
+  if (d.index >= d.cards.length) { renderDeckDone(); return; }
+  const item = d.cards[d.index];
+  const last = d.index === d.cards.length - 1;
+
+  const front = el("div", { class: "face face-front" },
+    el("ul", { class: "chips" }, el("li", { class: "chip", text: item.domain }), el("li", { class: "chip", text: TYPE_LABEL[item.type] })),
+    el("p", { class: "card-stem", text: item.stem }),
+    item.type === "match" ? el("ul", { class: "card-lefts" }, item.pairs.map(p => el("li", { text: p[0] }))) : null,
+    el("p", { class: "card-hint", text: "Recall your answer, then show the back." }));
+  const back = el("div", { class: "face face-back", tabindex: "-1" },
+    el("h3", { class: "card-label", text: "Answer" }), answerNode(item),
+    el("h3", { class: "card-label", text: "Pearl" }), el("p", { class: "card-pearl", text: item.pearl }),
+    sourceBadge(item));
+  const inner = el("div", { class: "card-inner" }, front, back);
+
+  const flipBtn = el("button", { type: "button", class: "btn primary", id: "flip", "aria-pressed": "false" }, "Show answer");
+  const applyFlip = () => {
+    inner.classList.toggle("flipped", d.flipped);
+    front.toggleAttribute("inert", d.flipped);
+    back.toggleAttribute("inert", !d.flipped);
+    front.setAttribute("aria-hidden", String(d.flipped));
+    back.setAttribute("aria-hidden", String(!d.flipped));
+    flipBtn.textContent = d.flipped ? "Show question" : "Show answer";
+    flipBtn.setAttribute("aria-pressed", String(d.flipped));
+  };
+  const flip = () => {
+    d.flipped = !d.flipped;
+    applyFlip();
+    announce(d.flipped ? `Answer: ${answerText(item)}. Pearl: ${item.pearl}` : "Question side.");
+  };
+  const go = (delta) => { d.index += delta; d.flipped = false; renderPearlCard(); };
+  flipBtn.addEventListener("click", flip);
+
+  const card = el("div", { class: "card" }, inner);
+  card.addEventListener("click", (e) => { if (!e.target.closest("a, button, summary, details")) flip(); });
+
+  const node = el("section", { class: "screen pearls" },
+    el("header", { class: "topbar" },
+      el("div", { class: "topbar-row" },
+        el("p", { class: "mode-label", text: "Rapid Pearls" }),
+        el("button", { type: "button", class: "btn quiet small", onclick: renderStart }, "Back to menu")),
+      el("p", { class: "score", text: `Card ${d.index + 1} of ${d.cards.length}` }),
+      el("div", { class: "deck-progress", "aria-hidden": "true" }, el("span", { style: `width:${((d.index + 1) / d.cards.length) * 100}%` }))),
+    el("h2", { class: "sr-only", id: "card-h", tabindex: "-1", text: `Card ${d.index + 1} of ${d.cards.length}, ${item.domain}` }),
+    card,
+    el("div", { class: "deck-controls" },
+      el("button", { type: "button", class: "btn quiet", disabled: d.index === 0, onclick: () => go(-1) }, "Previous"),
+      flipBtn,
+      el("button", { type: "button", class: "btn quiet", id: "next-card", onclick: () => go(1) }, last ? "Finish deck" : "Next card")),
+    el("p", { class: "muted", style: "margin-top:.75rem;font-size:.9rem" },
+      el("kbd", { text: "Enter" }), " or ", el("kbd", { text: "Space" }), " flips the card. ",
+      el("kbd", { text: "←" }), " ", el("kbd", { text: "→" }), " move between cards."));
+
+  applyFlip();
+  setScreen(node, (e) => {
+    if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+    else if (e.key === "ArrowLeft" && d.index > 0) { e.preventDefault(); go(-1); }
+    else if ((e.key === "Enter" || e.key === " ") && !e.target.closest("button, a, summary")) { e.preventDefault(); flip(); }
+  }, node.querySelector("#card-h"));
+}
+
+function renderDeckDone() {
+  const node = el("section", { class: "screen" },
+    el("div", { class: "round-intro" },
+      el("p", { class: "round-count", text: "Rapid Pearls" }),
+      el("h2", { id: "deck-h", tabindex: "-1", text: "Deck reviewed" }),
+      el("p", { text: `You went through all ${plural(deck.cards.length, "pearl")}. Test yourself on them next.` }),
+      el("div", { class: "actions" },
+        el("button", { type: "button", class: "btn primary", onclick: () => startRun("rounds") }, "Start Rounds"),
+        el("button", { type: "button", class: "btn quiet", onclick: startPearls }, "Shuffle and review again"),
+        el("button", { type: "button", class: "btn quiet", onclick: renderStart }, "Back to menu"))));
+  setScreen(node, null, node.querySelector("#deck-h"));
+}
+
+/* ---------------------------------------------------------------------
+   START
+   --------------------------------------------------------------------- */
+function init() {
+  session.report = validateBank(typeof BANK === "undefined" ? null : BANK);
+  const topic = splitTopic(session.report.meta.topic);
+  document.title = `${topic.main} | ID topic game`;
+  renderStart();
+}
+init();
 </script>
 </body>
 </html>
