@@ -240,7 +240,7 @@ svg.spinning .rim-light:nth-of-type(odd){animation-delay:.25s}
 @media(min-width:700px){.letters{grid-template-columns:repeat(13,1fr)}}
 .letters button{min-height:3.6rem;font-size:1.6rem;font-weight:900;padding:0;border-width:2.5px;border-radius:12px;position:relative}
 .letters button.vowel{border-style:dashed;background:var(--surface-2)}
-.letters button.vowel::after{content:"−100";position:absolute;bottom:.15rem;left:0;right:0;font-size:.55rem;font-weight:800;color:var(--muted)}
+.letters button.buy::after{content:"−100";position:absolute;bottom:.15rem;left:0;right:0;font-size:.55rem;font-weight:800;color:var(--muted)}
 .letter-result{font-size:clamp(2rem,4vw,3.6rem);font-weight:900;margin:.3rem 0 .6rem}
 .solve-input{font-size:clamp(1.4rem,2.2vw,2.4rem) !important;text-transform:uppercase;letter-spacing:.08em;font-weight:800;min-height:4rem !important}
 
@@ -300,6 +300,7 @@ summary{cursor:pointer;font-weight:750;font-size:1.05rem}
     <dt><kbd>A</kbd>–<kbd>E</kbd> then <kbd>1</kbd>–<kbd>5</kbd></dt><dd>Match questions: pick an item, then its match</dd>
     <dt><kbd>A</kbd>–<kbd>Z</kbd></dt><dd>Call a letter (letter screen)</dd>
     <dt><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd></dt><dd>Rapid Pearls: move and flip</dd>
+    <dt>Reveal answer</dt><dd>Footer button: shows the phrase and pearl, ends the puzzle (no bonus)</dd>
     <dt><kbd>Esc</kbd></dt><dd>Close this panel</dd>
   </dl>
 </div>
@@ -330,7 +331,7 @@ summary{cursor:pointer;font-weight:750;font-size:1.05rem}
         <div class="rules">
           <div class="rule"><b>1 · Spin</b><span>Higher-point wedges ask harder questions: <i class="wedge-dot" style="background:#15803d"></i>green = easy, <i class="wedge-dot" style="background:#2563c9"></i>blue = medium, <i class="wedge-dot" style="background:#b4237a"></i>magenta = hard. The dots on each wedge show it too.</span></div>
           <div class="rule"><b>2 · Answer</b><span>Talk it over as a team, then lock in.</span></div>
-          <div class="rule"><b>3 · Call a letter</b><span>Correct = bank the wedge + call a letter. Consonants +50 each. Vowels cost 100.</span></div>
+          <div class="rule"><b>3 · Letters</b><span>Any correct answer (steals too) earns a free consonant: +50 per tile. Then buy more letters, vowels or consonants, for 100 each.</span></div>
           <div class="rule"><b>4 · Steal</b><span>Miss, and the other team can steal for half.</span></div>
           <div class="rule"><b>5 · Solve</b><span>Solve on your turn for +500. Both teams bank that puzzle's points.</span></div>
           <div class="rule"><b>Special wedges</b><span><i class="wedge-dot" style="background:#111"></i>Bankrupt · <i class="wedge-dot" style="background:#f2f2f2"></i>Lose a turn · <i class="wedge-dot" style="background:#ffd23f"></i>Steal / Double · <i class="wedge-dot" style="background:#14a3b8"></i>Free spin</span></div>
@@ -377,7 +378,7 @@ summary{cursor:pointer;font-weight:750;font-size:1.05rem}
     </div>
     <div class="game-foot">
       <span id="q-left"></span>
-      <button id="btn-end" class="btn-ghost" type="button">End game</button>
+      <span class="row"><button id="btn-reveal" class="btn-ghost" type="button">Reveal answer</button><button id="btn-end" class="btn-ghost" type="button">End game</button></span>
     </div>
   </section>
 
@@ -1469,7 +1470,7 @@ function wedgeTier(w) {
 
 /* Point rules in one place. */
 const RULES = {
-  consonantPerLetter: 50, vowelCost: 100, solveBonus: 500,
+  consonantPerLetter: 50, buyCost: 100, solveBonus: 500,
   stealWedgeMax: 300, stealWedgeFloor: 100, doubleFloor: 200,
   stealFraction: 0.5, stealOnSpecial: 150
 };
@@ -1837,6 +1838,10 @@ function wire() {
   $("#btn-pearls").addEventListener("click", startPearls);
   $("#btn-spin").addEventListener("click", spin);
   $("#btn-solve").addEventListener("click", () => openSolve(state.active));
+  $("#btn-reveal").addEventListener("click", () => {
+    if (state.spinning || !state.puzzle || state.view === "solve-done") return;
+    if (confirm("Reveal the answer? This ends the current puzzle with no solve bonus. Both teams bank their puzzle points.")) solvePuzzle(null, "Answer revealed");
+  });
   $("#btn-end").addEventListener("click", () => { if (confirm("End the game now? Current puzzle points will be banked.")) endGame("Game ended by host."); });
   $("#btn-retry").addEventListener("click", () => startReview(missedItems()));
   $("#btn-copy").addEventListener("click", copyResults);
@@ -2096,7 +2101,7 @@ function finishQuestion(correct, skippedSteal) {
   const ownerIdx = q.team, stealIdx = 1 - q.team, owner = state.teams[ownerIdx], stealer = state.teams[stealIdx];
   let headline = "", letterPhase = false;
   if (correct && q.attempt === 0) {
-    if (q.ctx.kind === "value") { owner.round += q.ctx.value; letterPhase = true; popScore(ownerIdx, `+${fmt(q.ctx.value)}`, true); headline = `Correct! ${owner.name} +${fmt(q.ctx.value)}`; }
+    if (q.ctx.kind === "value") { owner.round += q.ctx.value; popScore(ownerIdx, `+${fmt(q.ctx.value)}`, true); headline = `Correct! ${owner.name} +${fmt(q.ctx.value)}`; }
     else if (q.ctx.kind === "steal") {
       const amt = Math.min(RULES.stealWedgeMax, stealer.round);
       if (amt > 0) { stealer.round -= amt; owner.round += amt; popScore(ownerIdx, `+${fmt(amt)}`, true); popScore(stealIdx, `−${fmt(amt)}`, false); headline = `Correct! ${owner.name} steals ${fmt(amt)} from ${stealer.name}`; }
@@ -2114,14 +2119,17 @@ function finishQuestion(correct, skippedSteal) {
     Sound.wrong();
     headline = q.attempt === 1 ? "Steal missed. No points this time." : skippedSteal ? "No steal. Here's the answer." : "Not quite.";
   }
+  // Whoever answered correctly (including a steal, STEAL or DOUBLE wedge) gets the letter phase.
+  letterPhase = correct;
+  const letterTeam = q.attempt === 0 ? ownerIdx : stealIdx;
   renderScores();
   const v = $("#view-question");
   q.ctl.markFeedback(q.picks);
   $("#q-actions").remove();
   const fb = renderFeedback(q.item, correct, headline);
   v.append(fb);
-  const cont = el("button", { class: "btn-primary btn-xl", type: "button" }, letterPhase ? `${owner.name}: call a letter →` : "Next turn →");
-  cont.addEventListener("click", () => (letterPhase ? showLetters(q.team) : passTurn(headline)));
+  const cont = el("button", { class: "btn-primary btn-xl", type: "button" }, letterPhase ? `${state.teams[letterTeam].name}: pick letters →` : "Next turn →");
+  cont.addEventListener("click", () => (letterPhase ? startLetters(letterTeam) : passTurn(headline)));
   v.append(el("div", { class: "actions", style: "margin-top:1rem" }, cont));
   setPrimary(cont);
   scrollIntoViewSafe(fb);
@@ -2137,7 +2145,7 @@ function passTurn(msg, wedge) {
 /* =====================================================================
    PUZZLE BOARD
    ===================================================================== */
-function nextPuzzle() { state.puzzle = state.puzzleQueue.shift(); state.guessed = new Set(); state.flipLetter = null; renderBoard(); }
+function nextPuzzle() { const r = $("#btn-reveal"); if (r) r.disabled = false; state.puzzle = state.puzzleQueue.shift(); state.guessed = new Set(); state.flipLetter = null; renderBoard(); }
 function renderBoard(revealAll) {
   const p = state.puzzle;
   $("#puzzle-cat").textContent = p.category;
@@ -2161,62 +2169,67 @@ function renderBoard(revealAll) {
 }
 function puzzleComplete() { return [...new Set(normalizePhrase(state.puzzle.phrase))].every((c) => state.guessed.has(c)); }
 
+/* Letter phase after a correct answer: one FREE consonant (+50 per tile),
+   then the team may BUY any letters (vowels or consonants) for
+   RULES.buyCost each from this puzzle's points, as many as they can afford.
+   state.lp = { team, free (free picks left), log (messages this phase) }. */
+function startLetters(teamIdx) {
+  state.lp = { team: teamIdx, free: 1, log: [] };
+  showLetters(teamIdx);
+}
 function showLetters(teamIdx) {
+  if (!state.lp || state.lp.team !== teamIdx) state.lp = { team: teamIdx, free: 0, log: [] };
   setView("letters");
-  const t = state.teams[teamIdx], v = $("#view-letters");
+  const t = state.teams[teamIdx], lp = state.lp, v = $("#view-letters");
   v.innerHTML = "";
-  v.append(el("div", { class: "qhead" }, el("span", { class: "who", "data-team": String(teamIdx) }, `${t.name}: call a letter`),
-    el("span", { class: "muted", style: "font-weight:700" }, `Consonants +${RULES.consonantPerLetter} each · Vowels cost ${RULES.vowelCost}`)));
+  const mode = lp.free > 0
+    ? `Free pick: choose a consonant (+${RULES.consonantPerLetter} per tile), or buy a vowel for ${RULES.buyCost}.`
+    : `Buy more letters for ${RULES.buyCost} each (you have ${fmt(t.round)}), solve, or end your turn.`;
+  v.append(el("div", { class: "qhead" }, el("span", { class: "who", "data-team": String(teamIdx) }, `${t.name}: ${lp.free > 0 ? "free consonant" : "buy letters"}`),
+    el("span", { class: "chip" }, `This puzzle: ${fmt(t.round)} pts`)),
+    lp.log.length ? el("p", { class: "letter-result", role: "status" }, lp.log[lp.log.length - 1]) : null,
+    el("p", { style: "font-size:1.15rem;font-weight:650" }, mode));
   const grid = el("div", { class: "letters", role: "group", "aria-label": "Letters" });
-  let any = false;
   for (let c = 65; c <= 90; c++) {
     const L = String.fromCharCode(c), vowel = VOWELS.has(L);
-    const off = state.guessed.has(L) || (vowel && t.round < RULES.vowelCost);
-    if (!off) any = true;
-    const b = el("button", { type: "button", class: vowel ? "vowel" : "", disabled: off, "aria-label": `${L}${vowel ? `, vowel, costs ${RULES.vowelCost}` : ""}${state.guessed.has(L) ? ", already called" : ""}` }, L);
+    const isFree = !vowel && lp.free > 0;
+    const off = state.guessed.has(L) || (!isFree && t.round < RULES.buyCost);
+    const b = el("button", { type: "button", class: (vowel ? "vowel" : "") + (isFree ? "" : " buy"), disabled: off,
+      "aria-label": `${L}${isFree ? ", free" : `, costs ${RULES.buyCost}`}${state.guessed.has(L) ? ", already called" : ""}` }, L);
     b.addEventListener("click", () => guessLetter(teamIdx, L));
     grid.append(b);
   }
   v.append(grid);
-  const solve = el("button", { type: "button", class: "btn-lg" }, "Solve instead");
+  const solve = el("button", { type: "button", class: "btn-primary btn-lg" }, "Solve the puzzle");
   solve.addEventListener("click", () => openSolve(teamIdx));
-  const skip = el("button", { type: "button", class: "btn-ghost btn-lg" }, "Skip letter, end turn");
-  skip.addEventListener("click", () => passTurn(`${t.name} passes.`));
-  v.append(el("div", { class: "actions" }, solve, skip, !any ? el("span", { class: "muted" }, "No letters available. Solve or end the turn.") : null));
+  const end = el("button", { type: "button", class: "btn-lg" }, lp.free > 0 ? "Skip letters, end turn" : "Done, end turn");
+  end.addEventListener("click", () => { state.lp = null; passTurn(lp.log.length ? `${t.name}: ${lp.log.join(" ")}` : `${t.name} ends turn.`); });
+  v.append(el("div", { class: "actions" }, solve, end));
   state.letterTeam = teamIdx;
   setPrimary(null);
   const first = grid.querySelector("button:not([disabled])");
-  if (first) first.focus();
+  if (first) first.focus(); else end.focus();
   scrollIntoViewSafe(v);
 }
 
 function guessLetter(teamIdx, L) {
-  if (state.view !== "letters" || state.guessed.has(L)) return;
+  const lp = state.lp;
+  if (state.view !== "letters" || !lp || state.guessed.has(L)) return;
   const t = state.teams[teamIdx], vowel = VOWELS.has(L);
-  if (vowel && t.round < RULES.vowelCost) return;
+  const isFree = !vowel && lp.free > 0;
+  if (!isFree && t.round < RULES.buyCost) return;
   const count = [...normalizePhrase(state.puzzle.phrase)].filter((c) => c === L).length;
   state.guessed.add(L);
   state.flipLetter = count ? L : null;
+  const hits = count ? `${count} ${L}${count > 1 ? "'s" : ""}!` : `No ${L}.`;
   let msg;
-  if (vowel) { t.round -= RULES.vowelCost; popScore(teamIdx, `−${RULES.vowelCost}`, false); msg = count ? `${count} ${L}${count > 1 ? "'s" : ""}!` : `No ${L}.`; }
-  else { const pts = count * RULES.consonantPerLetter; t.round += pts; if (pts) popScore(teamIdx, `+${pts}`, true); msg = count ? `${count} ${L}${count > 1 ? "'s" : ""}! +${pts}` : `No ${L}.`; }
+  if (isFree) { lp.free--; const pts = count * RULES.consonantPerLetter; t.round += pts; if (pts) popScore(teamIdx, `+${pts}`, true); msg = pts ? `${hits} +${pts}` : hits; }
+  else { t.round -= RULES.buyCost; popScore(teamIdx, `−${RULES.buyCost}`, false); msg = `${hits} (bought, −${RULES.buyCost})`; }
   if (!count) Sound.wrong();
+  lp.log.push(msg);
   renderBoard(); renderScores(); announce(msg);
-  if (puzzleComplete()) return solvePuzzle(teamIdx, `${msg} That completes the puzzle!`);
-  setView("letters");
-  const v = $("#view-letters");
-  v.innerHTML = "";
-  const solve = el("button", { class: "btn-primary btn-xl", type: "button" }, "Solve the puzzle");
-  const end = el("button", { class: "btn-lg", type: "button" }, "End turn");
-  solve.addEventListener("click", () => openSolve(teamIdx));
-  end.addEventListener("click", () => passTurn(`${t.name}: ${msg}`));
-  v.append(el("div", { class: "qhead" }, el("span", { class: "who", "data-team": String(teamIdx) }, t.name)),
-    el("p", { class: "letter-result", role: "status" }, msg),
-    el("p", { style: "font-size:1.2rem;font-weight:650" }, "Solve now, or end your turn?"),
-    el("div", { class: "actions" }, solve, end));
-  state.view = "letters-done";
-  setPrimary(end);
-  end.focus();
+  if (puzzleComplete()) { state.lp = null; return solvePuzzle(teamIdx, `${msg} That completes the puzzle!`); }
+  showLetters(teamIdx);
 }
 
 function openSolve(teamIdx) {
@@ -2241,7 +2254,6 @@ function openSolve(teamIdx) {
   const from = state.prevView;
   cancel.addEventListener("click", () => {
     if (from === "letters") showLetters(teamIdx);
-    else if (from === "letters-done") passTurn(`${t.name} ends turn.`);
     else showWheel(`${t.name}, your spin.`);
   });
   setPrimary(submit);
@@ -2249,21 +2261,25 @@ function openSolve(teamIdx) {
 }
 
 /* Solver gets the bonus; both teams bank their puzzle points. */
+/* Ends the current puzzle. teamIdx = the solving team (gets the bonus), or
+   null when the host reveals the answer (no bonus). Either way, both teams
+   bank this puzzle's points and the phrase's pearl is shown. */
 function solvePuzzle(teamIdx, msg) {
-  const t = state.teams[teamIdx];
-  t.round += RULES.solveBonus;
-  popScore(teamIdx, `+${RULES.solveBonus}`, true);
+  const revealed = teamIdx === null;
+  const t = revealed ? null : state.teams[teamIdx];
+  stopTimer(); state.q = null; state.lp = null;
+  if (!revealed) { t.round += RULES.solveBonus; popScore(teamIdx, `+${RULES.solveBonus}`, true); }
   state.teams.forEach((x) => { x.total += x.round; x.round = 0; });
   state.puzzlesSolved++;
-  renderBoard("flip"); renderScores(); Sound.fanfare();
+  renderBoard("flip"); renderScores(); if (revealed) Sound.ding(); else Sound.fanfare();
   setView("solve");
   const v = $("#view-solve");
   v.innerHTML = "";
   const done = state.puzzlesSolved >= state.settings.puzzles || state.puzzleQueue.length === 0;
   const noQs = state.pool.every((it) => state.used.has(it.id));
-  v.append(el("p", { class: "letter-result", role: "status" }, el("span", { "aria-hidden": "true" }, "★ "), msg),
+  v.append(el("p", { class: "letter-result", role: "status" }, el("span", { "aria-hidden": "true" }, revealed ? "" : "★ "), msg),
     el("p", { style: "font-size:1.6rem;font-weight:850;letter-spacing:.04em" }, state.puzzle.phrase),
-    el("p", { style: "font-size:1.15rem" }, `${t.name} +${RULES.solveBonus} bonus. Puzzle points are banked for both teams.`),
+    el("p", { style: "font-size:1.15rem" }, revealed ? "Revealed by the host, so no solve bonus. Puzzle points are banked for both teams." : `${t.name} +${RULES.solveBonus} bonus. Puzzle points are banked for both teams.`),
     // Every solved phrase is a teachable pearl: show the teaching point and its source.
     el("div", { class: "pearl" }, el("span", { class: "pl" }, `Pearl · ${state.puzzle.category}`), state.puzzle.pearl),
     el("span", { class: "badge" }, `Handout: ${state.puzzle.source}`));
@@ -2271,10 +2287,12 @@ function solvePuzzle(teamIdx, msg) {
   btn.addEventListener("click", () => {
     if (done || noQs) return endGame(noQs && !done ? "Question bank exhausted." : "");
     nextPuzzle();
-    state.active = 1 - teamIdx;
+    state.active = revealed ? 1 - state.active : 1 - teamIdx;
     showWheel(`New puzzle! ${state.teams[state.active].name} spins first.`);
   });
   v.append(el("div", { class: "actions" }, btn));
+  state.view = "solve-done"; // puzzle is finished; Reveal is disabled until the next puzzle
+  $("#btn-reveal").disabled = true;
   setPrimary(btn); btn.focus();
   announce(msg);
 }
@@ -2288,7 +2306,7 @@ function setView(name) {
   document.body.dataset.view = name === "question" ? "question" : name === "solve" ? "solve" : "game";
   $("#view-wheel").hidden = name !== "wheel";
   $("#view-question").hidden = name !== "question";
-  $("#view-letters").hidden = !(name === "letters" || name === "letters-done");
+  $("#view-letters").hidden = name !== "letters";
   $("#view-solve").hidden = name !== "solve";
   renderScores();
 }
