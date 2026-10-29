@@ -1,0 +1,2544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAB Wheel</title>
+<style>
+/* =====================================================================
+   THEME TOKENS. Light by default; dark follows the OS unless the host
+   picks a theme with the Theme button (data-theme on <html>).
+   ===================================================================== */
+:root{
+  --scale:1;
+  --bg:#f3efe6; --bg-2:#e9e3d6; --surface:#ffffff; --surface-2:#f6f3ec; --ink:#14161c; --muted:#4f5665;
+  --line:#d8d1c3; --accent:#1d4ed8; --accent-ink:#ffffff; --gold:#f2b705; --gold-ink:#1a1400;
+  --ok:#137a3a; --ok-bg:#e1f4e7; --bad:#b4231a; --bad-bg:#fbe3e0;
+  --teamA:#1d5fd6; --teamA-bg:#e6eeff; --teamB:#b8420b; --teamB-bg:#fff0e6;
+  --board:#0f3b33; --board-2:#0b2d27; --tile:#1f7a65; --tile-ink:#ffffff; --tile-hidden:#f7f5ee; --tile-edge:#c9c2b0;
+  --shadow:0 1px 2px rgba(20,22,28,.06),0 8px 24px rgba(20,22,28,.08);
+  --focus:#f59e0b; --radius:18px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0e1c; --bg-2:#11152a; --surface:#161a31; --surface-2:#1e2340; --ink:#eef1fa; --muted:#aab2c8;
+    --line:#2c3356; --accent:#7ea6ff; --accent-ink:#0a1124; --gold:#ffcd3c; --gold-ink:#1a1400;
+    --ok:#62d98f; --ok-bg:#12301f; --bad:#ff8b82; --bad-bg:#3a1714;
+    --teamA:#7db3ff; --teamA-bg:#16264a; --teamB:#ffa66b; --teamB-bg:#3a2214;
+    --board:#0a2a24; --board-2:#071f1a; --tile:#23947a; --tile-ink:#ffffff; --tile-hidden:#eef2ea; --tile-edge:#0c3a31;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b0e1c; --bg-2:#11152a; --surface:#161a31; --surface-2:#1e2340; --ink:#eef1fa; --muted:#aab2c8;
+  --line:#2c3356; --accent:#7ea6ff; --accent-ink:#0a1124; --gold:#ffcd3c; --gold-ink:#1a1400;
+  --ok:#62d98f; --ok-bg:#12301f; --bad:#ff8b82; --bad-bg:#3a1714;
+  --teamA:#7db3ff; --teamA-bg:#16264a; --teamB:#ffa66b; --teamB-bg:#3a2214;
+  --board:#0a2a24; --board-2:#071f1a; --tile:#23947a; --tile-ink:#ffffff; --tile-hidden:#eef2ea; --tile-edge:#0c3a31;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+}
+
+/* Fluid root size: ~15px on phones, ~20px on a 1920px projector; A-/A+ scales it. */
+html{font-size:calc(var(--scale) * clamp(15px, 0.55vw + 9.5px, 22px))}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:radial-gradient(1200px 600px at 50% -10%, var(--bg-2), var(--bg));background-color:var(--bg);color:var(--ink);
+  font:400 1rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;min-height:100vh;-webkit-text-size-adjust:100%}
+h1,h2,h3{margin:0 0 .4em;line-height:1.15;letter-spacing:-.01em}
+p{margin:0 0 .7em}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;min-height:2.75rem;padding:.55em 1.05em;font-weight:650;transition:transform .08s ease, box-shadow .15s ease, background .15s ease}
+button:hover:not(:disabled){box-shadow:var(--shadow)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{cursor:not-allowed;opacity:.45}
+:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+.btn-ghost{background:transparent}
+.btn-xl{font-size:1.45rem;padding:.6em 1.4em;min-height:3.6rem;border-radius:16px;font-weight:800;letter-spacing:.01em}
+.btn-lg{font-size:1.12rem;min-height:3.1rem;padding:.55em 1.2em;border-radius:14px}
+input[type=text]{width:100%;min-height:3rem;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);padding:.45em .8em;font-size:1.1rem}
+select{min-height:3rem;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);padding:.4em .7em;font-size:1.05rem;width:100%}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.2rem 1.3rem}
+.row{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:.35em;border:1px solid var(--line);border-radius:999px;padding:.18em .75em;font-size:.88rem;font-weight:650;background:var(--surface-2);white-space:nowrap}
+
+/* ---------- Top bar ---------- */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;padding:.7rem 1.2rem;max-width:1800px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:850;font-size:1.25rem;letter-spacing:-.01em}
+.brand-mark{width:1.6rem;height:1.6rem;border-radius:50%;background:conic-gradient(#d9362f 0 45deg,#f2b705 0 90deg,#1f8a4c 0 135deg,#2563c9 0 180deg,#7e3fb8 0 225deg,#d9600f 0 270deg,#14a3b8 0 315deg,#c42a6e 0);box-shadow:0 0 0 3px var(--surface),0 0 0 4.5px var(--line)}
+.brand-sub{font-weight:600;color:var(--muted);font-size:.9rem}
+.hostbar{display:flex;gap:.4rem;flex-wrap:wrap}
+.hostbar button{min-height:2.4rem;padding:.3em .75em;font-size:.88rem;background:var(--surface-2)}
+.keys-pop{position:fixed;right:1rem;top:4rem;z-index:50;width:min(26rem,92vw)}
+.keys-pop dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem .9rem;margin:0}
+.keys-pop dt{font-weight:800}
+kbd{display:inline-block;min-width:1.6em;text-align:center;border:1px solid var(--line);border-bottom-width:3px;border-radius:7px;padding:.05em .4em;background:var(--surface-2);font:700 .9em/1.3 ui-monospace,Consolas,monospace}
+
+main{max-width:1800px;margin:0 auto;padding:0 1.2rem 1.5rem}
+.error-banner{background:var(--bad-bg);color:var(--bad);border:2px solid var(--bad);border-radius:14px;padding:.8rem 1rem;margin:0 auto 1rem;max-width:1800px}
+.error-banner ul{margin:.3em 0 0 1.2em;padding:0}
+
+/* ---------- Start screen ---------- */
+.hero{display:grid;gap:1.2rem;align-items:stretch}
+@media(min-width:960px){.hero{grid-template-columns:1.15fr 1fr}}
+.hero-title{font-size:clamp(2.4rem,5vw,4.2rem);font-weight:900;letter-spacing:-.03em;line-height:1}
+.hero-title span{background:linear-gradient(90deg,var(--teamA),var(--accent) 40%,var(--teamB));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-sub{font-size:1.15rem;color:var(--muted);margin:.6rem 0 1rem}
+.stat-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.1rem}
+.stat{border:1px solid var(--line);background:var(--surface-2);border-radius:14px;padding:.5rem .9rem}
+.stat b{display:block;font-size:1.5rem;line-height:1.1}
+.form-grid{display:grid;gap:.9rem;grid-template-columns:1fr 1fr}
+.form-grid .full{grid-column:1/-1}
+.field{display:grid;gap:.3rem}
+.field label{font-weight:750;font-size:.95rem}
+.team-field input{border-width:2px}
+.team-field.a input{border-color:var(--teamA)}
+.team-field.b input{border-color:var(--teamB)}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface-2)}
+.seg button{flex:1;border:0;border-radius:0;min-height:2.9rem;background:transparent;font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.rules{display:grid;gap:.65rem;grid-template-columns:1fr 1fr}
+.rule{border:1px solid var(--line);border-radius:14px;padding:.65rem .8rem;background:var(--surface-2)}
+.rule b{display:block;font-size:1.02rem}
+.rule span{font-size:.9rem;color:var(--muted)}
+.wedge-dot{display:inline-block;width:.85em;height:.85em;border-radius:3px;vertical-align:-.08em;margin-right:.35em;border:1px solid rgba(0,0,0,.25)}
+
+/* ---------- Arena: teams + board ---------- */
+.arena{display:grid;gap:1rem;grid-template-columns:1fr 1fr;margin-bottom:1rem}
+.arena .board{grid-column:1/-1;order:3}
+@media(min-width:1000px){.arena{grid-template-columns:minmax(12rem,1fr) minmax(0,3.2fr) minmax(12rem,1fr)}.arena .board{grid-column:auto;order:0}}
+.team{position:relative;border-radius:var(--radius);padding:.9rem 1rem;background:var(--surface);border:2.5px solid var(--line);box-shadow:var(--shadow);transition:border-color .2s, box-shadow .2s, transform .2s}
+.team[data-team="0"]{--tc:var(--teamA);--tcb:var(--teamA-bg)}
+.team[data-team="1"]{--tc:var(--teamB);--tcb:var(--teamB-bg)}
+.team.active{border-color:var(--tc);background:linear-gradient(180deg,var(--tcb),var(--surface) 70%);box-shadow:0 0 0 5px color-mix(in srgb,var(--tc) 28%,transparent),var(--shadow);transform:translateY(-2px)}
+.team .tname{font-weight:850;font-size:1.3rem;color:var(--tc);overflow-wrap:anywhere;line-height:1.1}
+.upnow{display:inline-block;visibility:hidden;margin-top:.35rem;font-size:.78rem;font-weight:900;letter-spacing:.09em;background:var(--tc);color:var(--surface);border-radius:999px;padding:.12em .65em}
+.team.active .upnow{visibility:visible}
+.team .score{font-size:2.6rem;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;margin-top:.5rem}
+.team .score-label{font-size:.78rem;font-weight:800;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.team .banked{margin-top:.45rem;font-variant-numeric:tabular-nums;font-weight:700}
+.pop{position:absolute;right:1rem;top:.6rem;font-weight:900;font-size:1.6rem;pointer-events:none;animation:pop 1.3s ease-out forwards}
+.pop.good{color:var(--ok)} .pop.bad{color:var(--bad)}
+@keyframes pop{0%{opacity:0;transform:translateY(10px) scale(.8)}15%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-40px) scale(1)}}
+
+.board{background:linear-gradient(180deg,var(--board),var(--board-2));border-radius:var(--radius);padding:.9rem 1rem 1rem;box-shadow:inset 0 0 0 3px rgba(255,255,255,.06),var(--shadow);display:flex;flex-direction:column;justify-content:center;min-width:0}
+.board .cat{color:#fff;text-align:center;font-weight:850;letter-spacing:.14em;text-transform:uppercase;font-size:.95rem;margin-bottom:.6rem}
+.board .cat span{background:rgba(255,255,255,.12);border-radius:999px;padding:.2em .9em}
+.words{display:flex;flex-wrap:wrap;justify-content:center;gap:.55rem 1.3rem}
+.word{display:flex;gap:.22rem}
+.tile{--tw:clamp(1.05rem,2.35vw,2.9rem);width:var(--tw);height:calc(var(--tw) * 1.3);display:grid;place-items:center;border-radius:.35rem;background:var(--tile);color:var(--tile-ink);font-weight:900;font-size:calc(var(--tw) * .62);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.tile.hidden{background:var(--tile-hidden);color:transparent;box-shadow:inset 0 -3px 0 var(--tile-edge)}
+.tile.flip{animation:flip .55s ease both}
+@keyframes flip{0%{transform:rotateX(90deg);background:var(--gold)}60%{background:var(--gold);color:var(--gold-ink)}100%{transform:rotateX(0)}}
+.used-letters{color:#d6ebe4;text-align:center;font-size:.9rem;margin-top:.6rem;min-height:1.4em;letter-spacing:.18em;font-weight:700}
+body[data-view="question"] .tile, body[data-view="solve-q"] .tile{--tw:clamp(.9rem,1.6vw,2rem)}
+body[data-view="question"] .team .score{font-size:2rem}
+
+/* ---------- Wheel view ---------- */
+.stage{min-width:0}
+.wheel-view{display:grid;gap:1.2rem;align-items:center}
+@media(min-width:1000px){.wheel-view{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}}
+.wheel-box{position:relative;width:min(100%,62vh,640px);aspect-ratio:1;margin:0 auto}
+.wheel-box svg{width:100%;height:100%;display:block;filter:drop-shadow(0 14px 28px rgba(0,0,0,.25))}
+#pointer{transform-origin:0px -212px;transform-box:view-box}
+#pointer.tick{animation:tick .12s ease}
+@keyframes tick{50%{transform:rotate(-14deg)}}
+.rim-light{fill:#fff6cf}
+svg.spinning .rim-light{animation:blink .5s steps(2) infinite}
+svg.spinning .rim-light:nth-of-type(odd){animation-delay:.25s}
+@keyframes blink{50%{fill:#f2b705}}
+.wheel-side{display:grid;gap:1rem;justify-items:center;text-align:center}
+@media(min-width:1000px){.wheel-side{justify-items:start;text-align:left}}
+.turn-callout{font-size:clamp(1.8rem,3.2vw,3rem);font-weight:900;line-height:1.05;letter-spacing:-.02em}
+.turn-callout .tn{color:var(--tc)}
+.message{font-size:1.35rem;font-weight:650;min-height:1.6em;margin:0}
+.landed{display:inline-flex;align-items:center;gap:.5rem;font-size:1.25rem;font-weight:850;border-radius:14px;padding:.35em .9em;border:2px solid rgba(0,0,0,.15)}
+.side-actions{display:flex;flex-wrap:wrap;gap:.8rem}
+.legend{display:flex;flex-wrap:wrap;gap:.45rem .9rem;font-size:.88rem;color:var(--muted)}
+
+/* ---------- Question / panels ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.3rem 1.5rem}
+.qhead{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.who{display:inline-flex;align-items:center;gap:.5rem;font-weight:900;font-size:1.3rem;border-radius:999px;padding:.25em .9em;background:var(--tcb);color:var(--tc);border:2px solid var(--tc)}
+.who[data-team="0"]{--tc:var(--teamA);--tcb:var(--teamA-bg)} .who[data-team="1"]{--tc:var(--teamB);--tcb:var(--teamB-bg)}
+.prize{font-weight:800;font-size:1.1rem}
+.stars{letter-spacing:.12em;color:var(--gold)}
+.stem{font-size:clamp(1.2rem,1.55vw,2.05rem);line-height:1.4;font-weight:550;white-space:pre-line;margin-bottom:1rem;max-width:72ch}
+.options{display:grid;gap:.8rem;margin:0 0 1rem}
+@media(min-width:1000px){.options{grid-template-columns:1fr 1fr}}
+.opt{display:flex;gap:.85rem;align-items:center;text-align:left;width:100%;padding:.85em 1em;min-height:4.2rem;font-size:clamp(1.05rem,1.3vw,1.65rem);font-weight:650;border-width:2.5px;border-radius:16px;background:var(--surface-2);position:relative}
+.keycap{flex:0 0 auto;width:2.1em;height:2.1em;border-radius:10px;display:grid;place-items:center;background:var(--surface);border:2px solid var(--line);font-weight:900;font-size:.85em}
+.opt.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 25%,transparent)}
+.opt.selected .keycap{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.opt:disabled,.m-card:disabled{opacity:.82;cursor:default}
+.opt.eliminated{opacity:.55}
+.opt.eliminated .opt-text{text-decoration:line-through}
+.opt.is-answer{border-color:var(--ok);background:var(--ok-bg);opacity:1}
+.opt.is-answer .keycap{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.is-wrong{border-color:var(--bad);background:var(--bad-bg);opacity:1}
+.opt.is-wrong .keycap{background:var(--bad);border-color:var(--bad);color:#fff}
+.mark{margin-left:auto;font-weight:900;white-space:nowrap;font-size:.8em;padding-left:.5rem}
+.mark.ok{color:var(--ok)} .mark.bad{color:var(--bad)}
+
+/* Match: tap-to-pair cards, everything visible at once */
+.match{display:grid;gap:1rem;margin-bottom:1rem}
+@media(min-width:1000px){.match{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+.match-col{display:grid;gap:.6rem;align-content:start}
+.col-head{font-weight:850;font-size:.85rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.m-card{display:flex;gap:.75rem;align-items:center;text-align:left;width:100%;padding:.7em .9em;min-height:3.6rem;font-size:clamp(1rem,1.18vw,1.45rem);font-weight:650;border-width:2.5px;border-radius:14px;background:var(--surface-2)}
+.m-card .m-text{flex:1}
+.letter-chip{flex:0 0 auto;width:2em;height:2em;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#fff;background:var(--pc,#64748b);font-size:.9em}
+.m-slot{flex:0 0 auto;min-width:2.4em;text-align:center;font-weight:900;border-radius:10px;padding:.2em .45em;border:2px dashed var(--line);color:var(--muted);font-size:.9em}
+.m-card.active{border-color:var(--pc);box-shadow:0 0 0 4px color-mix(in srgb,var(--pc) 30%,transparent)}
+.m-card.filled .m-slot{border-style:solid;border-color:var(--pc);color:var(--ink)}
+.m-right.taken{border-color:var(--pc)}
+.m-right .m-slot .letter-chip{width:1.8em;height:1.8em}
+.m-card.is-answer{border-color:var(--ok);background:var(--ok-bg)}
+.m-card.is-wrong{border-color:var(--bad);background:var(--bad-bg)}
+
+/* Order */
+.order-list{list-style:none;padding:0;margin:0 0 1rem;display:grid;gap:.6rem}
+.order-list li{display:flex;gap:.8rem;align-items:center;border:2.5px solid var(--line);border-radius:14px;padding:.55rem .7rem;background:var(--surface-2);font-size:clamp(1.02rem,1.22vw,1.5rem);font-weight:650;transition:transform .2s}
+.order-list .pos{flex:0 0 auto;width:2em;height:2em;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:900}
+.order-list .txt{flex:1}
+.order-list button{min-width:3rem;min-height:3rem;font-size:1.1rem;padding:0}
+.order-list li.moved{animation:nudge .35s ease}
+@keyframes nudge{40%{transform:scale(1.02);border-color:var(--accent)}}
+.order-list li.is-answer{border-color:var(--ok);background:var(--ok-bg)}
+.order-list li.is-wrong{border-color:var(--bad);background:var(--bad-bg)}
+
+.actions{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin-top:.5rem}
+.timer-ring{position:relative;width:3.2rem;height:3.2rem}
+.timer-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer-ring .trk{stroke:var(--line)} .timer-ring .bar{stroke:var(--accent);transition:stroke-dashoffset 1s linear}
+.timer-ring.low .bar{stroke:var(--bad)}
+.timer-ring span{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-variant-numeric:tabular-nums}
+
+.steal-banner{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;border-radius:16px;padding:1rem 1.2rem;border:3px solid var(--bad);background:var(--bad-bg);margin-top:.4rem}
+.steal-banner .big{font-size:1.6rem;font-weight:900;color:var(--bad)}
+.verdict-banner{display:flex;align-items:center;gap:.8rem;font-size:clamp(1.5rem,2.4vw,2.6rem);font-weight:900;border-radius:16px;padding:.5em .8em;margin:.2rem 0 1rem}
+.verdict-banner.ok{background:var(--ok-bg);color:var(--ok);border:3px solid var(--ok)}
+.verdict-banner.bad{background:var(--bad-bg);color:var(--bad);border:3px solid var(--bad)}
+.verdict-banner .vi{font-size:1.2em}
+.fb-grid{display:grid;gap:1rem}
+@media(min-width:1000px){.fb-grid{grid-template-columns:1.1fr 1fr}}
+.fb-block h3{font-size:.85rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+.fb-block p,.fb-block li{font-size:clamp(1rem,1.12vw,1.4rem)}
+.fb-block ul,.fb-block ol{margin:0;padding-left:1.2em}
+.fb-block li{margin-bottom:.35em}
+.pearl{border-radius:14px;padding:.8rem 1rem;background:color-mix(in srgb,var(--gold) 18%,var(--surface));border:2px solid var(--gold);font-size:clamp(1.05rem,1.25vw,1.55rem);font-weight:700;margin:1rem 0 .6rem}
+.pearl .pl{font-weight:900;letter-spacing:.08em;font-size:.75em;text-transform:uppercase;display:block;margin-bottom:.15rem}
+.badge{display:inline-block;font-size:.85rem;font-weight:700;border-radius:8px;padding:.2em .7em;border:1.5px solid var(--line);background:var(--surface-2)}
+.badge.unverified{border-style:dashed}
+
+/* Letters */
+.letters{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;margin:1rem 0}
+@media(min-width:700px){.letters{grid-template-columns:repeat(13,1fr)}}
+.letters button{min-height:3.6rem;font-size:1.6rem;font-weight:900;padding:0;border-width:2.5px;border-radius:12px;position:relative}
+.letters button.vowel{border-style:dashed;background:var(--surface-2)}
+.letters button.vowel::after{content:"−100";position:absolute;bottom:.15rem;left:0;right:0;font-size:.55rem;font-weight:800;color:var(--muted)}
+.letter-result{font-size:clamp(2rem,4vw,3.6rem);font-weight:900;margin:.3rem 0 .6rem}
+.solve-input{font-size:clamp(1.4rem,2.2vw,2.4rem) !important;text-transform:uppercase;letter-spacing:.08em;font-weight:800;min-height:4rem !important}
+
+.game-foot{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:1.2rem;color:var(--muted);font-weight:650}
+
+/* End */
+.winner-card{text-align:center;padding:2rem 1.5rem}
+.winner{font-size:clamp(2.2rem,4.5vw,4rem);font-weight:900;letter-spacing:-.02em;line-height:1.05}
+.finals{display:flex;justify-content:center;gap:1.2rem;flex-wrap:wrap;margin:1.2rem 0}
+.final{min-width:12rem;border-radius:18px;padding:1rem 1.4rem;border:3px solid var(--tc);background:var(--tcb)}
+.final[data-team="0"]{--tc:var(--teamA);--tcb:var(--teamA-bg)} .final[data-team="1"]{--tc:var(--teamB);--tcb:var(--teamB-bg)}
+.final .tname{font-weight:900;color:var(--tc);font-size:1.2rem}
+.final .pts{font-size:2.8rem;font-weight:900;font-variant-numeric:tabular-nums}
+.end-grid{display:grid;gap:1rem;margin-top:1rem}
+@media(min-width:1000px){.end-grid{grid-template-columns:1fr 1fr}}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:1rem}
+th,td{border-bottom:1px solid var(--line);padding:.5rem .6rem;text-align:left}
+thead th{font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:0;font-weight:900}
+.table-wrap{overflow-x:auto}
+details{border:1px solid var(--line);border-radius:14px;padding:.7rem 1rem;margin-bottom:.6rem;background:var(--surface-2)}
+summary{cursor:pointer;font-weight:750;font-size:1.05rem}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:40}
+
+/* Pearls */
+.flip-wrap{perspective:1600px}
+.flip-card{width:100%;min-height:min(56vh,30rem);border:0;padding:0;background:transparent;display:block;position:relative;transform-style:preserve-3d;transition:transform .6s ease;border-radius:24px}
+.flip-card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:24px;padding:2rem 2.2rem;display:flex;flex-direction:column;justify-content:center;text-align:left;box-shadow:var(--shadow);border:1px solid var(--line)}
+.face.front{background:var(--surface)}
+.face.back{background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 22%,var(--surface)),var(--surface));transform:rotateY(180deg);border:3px solid var(--gold)}
+.face .side-label{font-size:.85rem;font-weight:900;letter-spacing:.12em;color:var(--muted);margin-bottom:.8rem;text-transform:uppercase}
+.face .front-text{font-size:clamp(1.1rem,1.5vw,1.9rem);white-space:pre-line;font-weight:550}
+.face .back-text{font-size:clamp(1.6rem,2.6vw,3rem);font-weight:850;line-height:1.2}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body data-view="start">
+<header class="topbar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>SAB Wheel</span><span class="brand-sub" id="brand-sub"></span></div>
+  <div class="hostbar" role="toolbar" aria-label="Display controls">
+    <button id="btn-text-dn" type="button" aria-label="Smaller text">A−</button>
+    <button id="btn-text-up" type="button" aria-label="Larger text">A+</button>
+    <button id="btn-theme" type="button">Theme: Auto</button>
+    <button id="btn-sound" type="button" aria-pressed="true">Sound: On</button>
+    <button id="btn-full" type="button">Full screen</button>
+    <button id="btn-keys" type="button" aria-expanded="false" aria-controls="keys-pop">Keys</button>
+  </div>
+</header>
+<div id="keys-pop" class="card keys-pop" role="dialog" aria-label="Keyboard shortcuts" hidden>
+  <h3>Keyboard shortcuts</h3>
+  <dl>
+    <dt><kbd>Enter</kbd></dt><dd>Main action: spin, lock in, continue</dd>
+    <dt><kbd>1</kbd>–<kbd>4</kbd></dt><dd>Choose an answer option</dd>
+    <dt><kbd>A</kbd>–<kbd>E</kbd> then <kbd>1</kbd>–<kbd>5</kbd></dt><dd>Match questions: pick an item, then its match</dd>
+    <dt><kbd>A</kbd>–<kbd>Z</kbd></dt><dd>Call a letter (letter screen)</dd>
+    <dt><kbd>←</kbd> <kbd>→</kbd> <kbd>Space</kbd></dt><dd>Rapid Pearls: move and flip</dd>
+    <dt><kbd>Esc</kbd></dt><dd>Close this panel</dd>
+  </dl>
+</div>
+<div id="bank-errors" class="error-banner" role="alert" hidden></div>
+
+<main>
+  <!-- ============ START ============ -->
+  <section id="screen-start" aria-labelledby="start-title">
+    <div class="hero">
+      <div class="card">
+        <h1 id="start-title" class="hero-title">Spin. Answer.<br><span>Solve the board.</span></h1>
+        <p class="hero-sub" id="start-topic"></p>
+        <div class="stat-row" id="start-stats"></div>
+        <div class="form-grid">
+          <div class="field team-field a"><label for="teamA">Team 1</label><input id="teamA" type="text" value="Team Cocci" maxlength="22"></div>
+          <div class="field team-field b"><label for="teamB">Team 2</label><input id="teamB" type="text" value="Team Clusters" maxlength="22"></div>
+          <div class="field"><span class="small" style="font-weight:750" id="lbl-puzzles">Puzzles to play</span><div class="seg" role="group" aria-labelledby="lbl-puzzles" id="seg-puzzles"></div></div>
+          <div class="field"><span class="small" style="font-weight:750" id="lbl-timer">Question timer</span><div class="seg" role="group" aria-labelledby="lbl-timer" id="seg-timer"></div></div>
+          <div class="field full"><span class="small" style="font-weight:750" id="lbl-pool">Question pool</span><div class="seg" role="group" aria-labelledby="lbl-pool" id="seg-pool"></div></div>
+        </div>
+        <div class="actions" style="margin-top:1.2rem">
+          <button id="btn-start" class="btn-primary btn-xl" type="button">Start game</button>
+          <button id="btn-pearls" class="btn-lg" type="button">Rapid Pearls review</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>How to play</h2>
+        <div class="rules">
+          <div class="rule"><b>1 · Spin</b><span>Bigger wedges pull harder questions (●○○ to ●●●).</span></div>
+          <div class="rule"><b>2 · Answer</b><span>Talk it over as a team, then lock in.</span></div>
+          <div class="rule"><b>3 · Call a letter</b><span>Correct = bank the wedge + call a letter. Consonants +50 each. Vowels cost 100.</span></div>
+          <div class="rule"><b>4 · Steal</b><span>Miss, and the other team can steal for half.</span></div>
+          <div class="rule"><b>5 · Solve</b><span>Solve on your turn for +500. Both teams bank that puzzle's points.</span></div>
+          <div class="rule"><b>Special wedges</b><span><i class="wedge-dot" style="background:#111"></i>Bankrupt · <i class="wedge-dot" style="background:#f2f2f2"></i>Lose a turn · <i class="wedge-dot" style="background:#ffd23f"></i>Steal / Double · <i class="wedge-dot" style="background:#14a3b8"></i>Free spin</span></div>
+        </div>
+        <p class="small muted" style="margin-top:1rem">Mixed-level tip: rotate who reads the question and who calls the final answer each turn.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="screen-game" hidden aria-label="Game">
+    <div class="arena">
+      <div class="team" data-team="0" id="team-0" aria-live="polite"></div>
+      <div class="board" aria-label="Puzzle board">
+        <div class="cat"><span id="puzzle-cat"></span></div>
+        <div class="words" id="puzzle-words" aria-hidden="true"></div>
+        <p class="sr-only" id="puzzle-sr"></p>
+        <div class="used-letters" id="used-letters"></div>
+      </div>
+      <div class="team" data-team="1" id="team-1" aria-live="polite"></div>
+    </div>
+    <div class="stage">
+      <div id="view-wheel" class="wheel-view">
+        <div class="wheel-box"><svg id="wheel" viewBox="-212 -222 424 434" role="img" aria-label="Prize wheel"></svg></div>
+        <div class="wheel-side">
+          <div class="turn-callout" id="turn-callout"></div>
+          <div id="landed-slot"></div>
+          <p class="message" id="wheel-msg" role="status"></p>
+          <div class="side-actions">
+            <button id="btn-spin" class="btn-primary btn-xl" type="button">Spin the wheel</button>
+            <button id="btn-solve" class="btn-lg" type="button">Solve the puzzle</button>
+          </div>
+          <div class="legend" aria-hidden="true"><span>●○○ 100–200</span><span>●●○ 300–400</span><span>●●● 500+, Double</span></div>
+        </div>
+      </div>
+      <div id="view-question" class="panel" hidden></div>
+      <div id="view-letters" class="panel" hidden></div>
+      <div id="view-solve" class="panel" hidden></div>
+    </div>
+    <div class="game-foot">
+      <span id="q-left"></span>
+      <button id="btn-end" class="btn-ghost" type="button">End game</button>
+    </div>
+  </section>
+
+  <!-- ============ END ============ -->
+  <section id="screen-end" hidden aria-labelledby="winner">
+    <div class="card winner-card">
+      <p class="small muted" style="font-weight:800;letter-spacing:.12em;text-transform:uppercase">Final results</p>
+      <h1 class="winner" id="winner"></h1>
+      <div class="finals" id="finals"></div>
+      <p class="muted" id="end-note"></p>
+      <div class="actions" style="justify-content:center">
+        <button id="btn-retry" class="btn-primary btn-lg" type="button">Retry missed</button>
+        <button id="btn-copy" class="btn-lg" type="button">Copy results</button>
+        <button id="btn-again" class="btn-lg" type="button">New game</button>
+      </div>
+      <p id="copy-status" class="small" role="status" style="margin-top:.6rem"></p>
+    </div>
+    <div class="end-grid">
+      <div class="card"><h2>By domain <span class="small muted">(correct / attempted)</span></h2><div class="table-wrap" id="tbl-domain"></div></div>
+      <div class="card"><h2>By Bloom level <span class="small muted">(correct / attempted)</span></h2><div class="table-wrap" id="tbl-bloom"></div></div>
+    </div>
+    <div class="card" style="margin-top:1rem"><h2>Missed on first attempt</h2><div id="missed-list"></div></div>
+  </section>
+
+  <!-- ============ RETRY MISSED ============ -->
+  <section id="screen-review" hidden aria-labelledby="review-title">
+    <div class="panel">
+      <div class="qhead"><h2 id="review-title" style="margin:0">Retry missed</h2><span class="chip" id="review-progress"></span></div>
+      <div id="review-body"></div>
+    </div>
+  </section>
+
+  <!-- ============ RAPID PEARLS ============ -->
+  <section id="screen-pearls" hidden aria-labelledby="pearls-title">
+    <div class="qhead"><h2 id="pearls-title" style="margin:0;font-size:1.8rem">Rapid Pearls</h2><span class="chip" id="pearl-progress"></span></div>
+    <div class="flip-wrap"><button id="pearl-card" class="flip-card" type="button" aria-pressed="false"><div class="face front" id="pearl-front"></div><div class="face back" id="pearl-back"></div></button></div>
+    <div class="actions" style="justify-content:center;margin-top:1rem">
+      <button id="pearl-prev" class="btn-lg" type="button">← Previous</button>
+      <button id="pearl-flip" class="btn-primary btn-lg" type="button">Flip</button>
+      <button id="pearl-next" class="btn-lg" type="button">Next →</button>
+      <button id="pearl-exit" class="btn-ghost btn-lg" type="button">Back to start</button>
+    </div>
+  </section>
+
+  <div id="announcer" class="sr-only" aria-live="polite"></div>
+</main>
+<canvas id="confetti" aria-hidden="true" hidden></canvas>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   QUESTION BANK: edit content here only. The logic below never needs
+   changes. Only items with status "ready" load.
+   Difficulty (1-3) maps to wheel value: 100-200 → 1, 300-400 → 2,
+   500+ → 3 (STEAL → 2, DOUBLE → 3).
+   rationale.distractors: for mcq/case_mcq, one entry per WRONG option,
+   in the same order the wrong options appear in "options".
+   ===================================================================== */
+const BANK = {
+  "meta": {
+    "topic": "Staphylococcus aureus bacteremia (MSSA & MRSA)",
+    "learner_level": "Mixed: PGY1, PGY2 ID, APPE students",
+    "handout_title": "SAB topic discussion reading packet (14 articles)",
+    "guidelines_referenced": [
+      "ASHP/IDSA/PIDS/SIDP revised vancomycin monitoring consensus guideline (AJHP 2020)",
+      "IDSA/ESCMID 2026 Consensus Statement 1: Risk Stratification of Patients with SAB",
+      "IDSA MRSA treatment guidelines 2011 (as cited in Tong et al, JAMA 2025)"
+    ],
+    "version": 2
+  },
+  "items": [
+    {
+      "id": "Q01",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "Blood cultures from a patient on empiric vancomycin grow MSSA on day 3. There are no allergies and renal function is normal. What is the best definitive therapy?",
+      "options": [
+        "Switch to cefazolin 2 g IV q8h",
+        "Continue vancomycin, since the patient is improving",
+        "Switch to daptomycin 8 mg/kg IV q24h",
+        "Continue vancomycin and add gentamicin"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "In 122 VA hospitals, definitive beta-lactam therapy for MSSA was associated with 35% lower mortality than vancomycin (HR 0.65). Cefazolin 2 g q8h is a recommended MSSA regimen.",
+        "distractors": [
+          "Clinical improvement does not erase the mortality gap; vancomycin is inferior to beta-lactams as definitive MSSA therapy.",
+          "For MSSA, daptomycin is reserved for severe beta-lactam allergy, not preferred over cefazolin.",
+          "Up-front combination therapy has not improved outcomes, and low-dose gentamicin adds kidney injury."
+        ]
+      },
+      "pearl": "MSSA confirmed? Switch vancomycin to cefazolin or an antistaphylococcal penicillin. Definitive vancomycin carries higher mortality.",
+      "source": {
+        "type": "handout",
+        "locator": "McDanel, CID 2015 (Results); Tong, JAMA 2025 (Table 2)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q02",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "recall",
+      "difficulty": 2,
+      "stem": "In the 122-hospital VA cohort of MSSA bloodstream infections (McDanel, CID 2015), how did beta-lactams compare with vancomycin?",
+      "options": [
+        "Similar mortality as empiric therapy, but lower mortality as definitive therapy",
+        "Lower mortality as both empiric and definitive therapy",
+        "Similar mortality as definitive therapy after adjustment for source control",
+        "Lower mortality with nafcillin only, with no benefit from cefazolin"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Empiric beta-lactam vs vancomycin showed no difference (HR 1.03). Definitive beta-lactam: HR 0.65, falling to 0.57 for cefazolin or antistaphylococcal penicillins.",
+        "distractors": [
+          "Empiric therapy showed no mortality difference (HR 1.03).",
+          "Definitive vancomycin remained associated with higher mortality after adjustment.",
+          "The largest benefit was for cefazolin or antistaphylococcal penicillins as a group (HR 0.57)."
+        ]
+      },
+      "pearl": "Empiric vancomycin is fine; staying on it is the problem. The mortality signal is in definitive therapy.",
+      "source": {
+        "type": "handout",
+        "locator": "McDanel, CID 2015 (Abstract)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q03",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "recall",
+      "difficulty": 1,
+      "stem": "The SNAP trial (NEJM 2026) randomized adults with penicillin-resistant MSSA bacteremia to cefazolin or flucloxacillin/cloxacillin. What did it show?",
+      "options": [
+        "Cefazolin was noninferior for 90-day mortality and caused less acute kidney injury",
+        "Cefazolin was inferior in endocarditis because of the inoculum effect",
+        "Antistaphylococcal penicillins lowered 90-day mortality but caused more rash",
+        "No difference in either mortality or acute kidney injury"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "90-day mortality was 15.0% with cefazolin vs 17.0% (probability of noninferiority 99.2%). AKI was 13.9% vs 19.6% (aOR 0.67).",
+        "distractors": [
+          "The endocarditis subgroup effect was similar to the overall population, which tempers inoculum-effect concerns.",
+          "Mortality was numerically lower with cefazolin, not higher.",
+          "AKI was significantly less frequent with cefazolin."
+        ]
+      },
+      "pearl": "SNAP: cefazolin matches antistaphylococcal penicillins on survival and is kinder to kidneys.",
+      "source": {
+        "type": "handout",
+        "locator": "SNAP Trial Group, NEJM 2026 (Abstract; Discussion)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q04",
+      "type": "case_mcq",
+      "domain": "Monitoring & ADEs",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "71-year-old woman (64 kg) on nafcillin 2 g IV q4h for MSSA bacteremia. SCr has risen from 0.8 to 1.7 mg/dL on day 9. Cultures cleared on day 2, and she has no allergies.\n\nWhat is the best recommendation?",
+      "options": [
+        "Switch to cefazolin, dosed for her current renal function",
+        "Switch to vancomycin with AUC-guided dosing",
+        "Continue nafcillin; the rise is expected",
+        "Switch to daptomycin 8 mg/kg IV q24h"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Antistaphylococcal penicillins cause more AKI than cefazolin (SNAP 19.6% vs 13.9%; CloCeBa 12% vs 1%) with noninferior efficacy. Switching keeps optimal MSSA therapy with less nephrotoxicity.",
+        "distractors": [
+          "Vancomycin is inferior for MSSA and adds its own nephrotoxicity.",
+          "Continuing the likely culprit risks progressive kidney injury when an equally effective option exists.",
+          "Daptomycin is not preferred for MSSA when a beta-lactam can be used."
+        ]
+      },
+      "pearl": "Nafcillin or oxacillin causing AKI? Swap to cefazolin: same efficacy, less kidney injury.",
+      "source": {
+        "type": "handout",
+        "locator": "SNAP, NEJM 2026 & CloCeBa, Lancet 2025 (Abstracts); Tong, JAMA 2025 (Table 2)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q05",
+      "type": "match",
+      "domain": "Definitive therapy",
+      "bloom": "recall",
+      "difficulty": 1,
+      "stem": "Match each trial to its main finding.",
+      "pairs": [
+        [
+          "SNAP (NEJM 2026)",
+          "Bayesian platform trial: cefazolin noninferior to flucloxacillin/cloxacillin for 90-day mortality, with less AKI"
+        ],
+        [
+          "CloCeBa (Lancet 2025)",
+          "French RCT: cefazolin noninferior to cloxacillin on a day-90 composite, with fewer serious adverse events"
+        ],
+        [
+          "CAMERA2 (JAMA 2020)",
+          "Adding a beta-lactam to vancomycin or daptomycin for MRSA did not improve the composite outcome and increased AKI"
+        ],
+        [
+          "SABATO (Lancet Infect Dis 2024)",
+          "Early oral switch noninferior to continued IV therapy in low-risk SAB"
+        ],
+        [
+          "DOTS (JAMA 2025)",
+          "Two doses of dalbavancin not superior by DOOR, but noninferior for clinical efficacy"
+        ]
+      ],
+      "rationale": {
+        "correct": "These five trials anchor current SAB practice: cefazolin for MSSA, no routine up-front combination for MRSA, and options to shorten IV exposure in selected patients.",
+        "distractors": []
+      },
+      "pearl": "SNAP/CloCeBa: cefazolin. CAMERA2: no routine combination. SABATO: oral step-down if low risk. DOTS: dalbavancin after clearance.",
+      "source": {
+        "type": "handout",
+        "locator": "Abstracts of SNAP, CloCeBa, CAMERA2, SABATO, DOTS",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q06",
+      "type": "mcq",
+      "domain": "Stewardship",
+      "bloom": "recall",
+      "difficulty": 1,
+      "stem": "In Bai et al (CID 2015; 847 SAB patients at 6 hospitals), which finding was associated with Infectious Diseases consultation?",
+      "options": [
+        "More echocardiography and repeat blood cultures, plus lower in-hospital mortality",
+        "Higher rates of infectious foci removal, which explained the benefit",
+        "No mortality difference after propensity-score matching",
+        "Longer hospital stays because of additional workup"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "With ID consultation: echo 73% vs 56%, repeat cultures 41% vs 31%, appropriate duration 68% vs 54%. In-hospital mortality sHR was 0.72, and patients were discharged alive sooner (sHR 1.28).",
+        "distractors": [
+          "Infectious foci removal was not statistically different between groups.",
+          "The mortality benefit persisted after propensity matching (sHR 0.72).",
+          "ID consultation was associated with earlier discharge alive, not longer stays."
+        ]
+      },
+      "pearl": "ID consult in SAB means more echoes, more repeat cultures, correct durations, and fewer deaths.",
+      "source": {
+        "type": "handout",
+        "locator": "Bai, CID 2015 (Abstract)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q07",
+      "type": "mcq",
+      "domain": "Stewardship",
+      "bloom": "apply",
+      "difficulty": 1,
+      "stem": "A hospitalist asks whether ID consultation is needed for \"straightforward\" MSSA bacteremia from a removed peripheral IV, with cultures negative at 48 hours. What is the best response?",
+      "options": [
+        "Yes; ID consultation is recommended for all patients with SAB",
+        "No; ID consultation is only needed for MRSA",
+        "Only if bacteremia persists beyond 72 hours",
+        "Only if the TTE shows a vegetation"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "The JAMA review's diagnostic pathway lists ID consultation for all SAB. Observational data link it to better outcomes, with benefit seen mainly with bedside consultation rather than telehealth.",
+        "distractors": [
+          "The benefit is not limited to MRSA; the pathway covers all S. aureus bacteremia.",
+          "Waiting for persistence delays the workup that ID consultation drives early.",
+          "Endocarditis is only one complication; ID also guides repeat cultures, source control, imaging, and duration."
+        ]
+      },
+      "pearl": "\"Straightforward\" SAB still gets an ID consult, ideally at the bedside.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Figure 2; Practical Considerations)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q08",
+      "type": "mcq",
+      "domain": "Diagnostics",
+      "bloom": "apply",
+      "difficulty": 1,
+      "stem": "In a febrile hospitalized patient with a PICC, S. aureus grows in 1 of 2 blood culture sets. What is the best management?",
+      "options": [
+        "Treat as S. aureus bacteremia, repeat blood cultures every 24-48 h, and address the line",
+        "Treat as a likely contaminant because only 1 set is positive",
+        "Withhold therapy unless a repeat set is also positive",
+        "Treat only if the PICC tip culture grows S. aureus"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "S. aureus is rarely considered a blood culture contaminant; one positive set plus clinical signs defines SAB. Repeat cultures every 24-48 h until clear.",
+        "distractors": [
+          "The one-of-two logic applies to skin commensals, not S. aureus.",
+          "Waiting for a second positive set delays therapy for an infection with 15-30% mortality.",
+          "A tip culture does not decide whether SAB is real; the PICC is a likely source to remove."
+        ]
+      },
+      "pearl": "One bottle of S. aureus is real bacteremia until proven otherwise. Treat, repeat cultures, find the source.",
+      "source": {
+        "type": "handout",
+        "locator": "IDSA/ESCMID 2026 Consensus Statement 1 (Introduction); Tong, JAMA 2025 (Figure 2)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q09",
+      "type": "mcq",
+      "domain": "Dosing & PK/PD",
+      "bloom": "apply",
+      "difficulty": 1,
+      "stem": "Daptomycin is chosen for MRSA bacteremia. What dose is most appropriate for this invasive S. aureus infection?",
+      "options": [
+        "8-10 mg/kg IV q24h",
+        "6 mg/kg IV q24h, the FDA-labeled dose",
+        "6 mg/kg IV q24h plus gentamicin for synergy",
+        "3 mg/kg IV q12h to limit CK elevation"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Higher dosing of 8-10 mg/kg once daily is favored because daptomycin shows concentration-dependent killing. Inadequate dosing is a risk factor for treatment-emergent daptomycin resistance.",
+        "distractors": [
+          "6 mg/kg is the labeled dose, but higher dosing is favored for invasive S. aureus infection.",
+          "Low-dose gentamicin adds kidney injury without improving outcomes.",
+          "Splitting the daily dose lowers peak concentrations and undermines concentration-dependent killing."
+        ]
+      },
+      "pearl": "Invasive S. aureus on daptomycin: dose at least 8 mg/kg once daily. Underdosing invites resistance.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Table 2); Parsons, Nat Rev Dis Primers 2026 (Daptomycin)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q10",
+      "type": "mcq",
+      "domain": "Diagnostics",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A patient with a pacemaker has MSSA bacteremia that cleared within 24 hours. TTE shows no vegetation. What is the best next step?",
+      "options": [
+        "Obtain a TEE",
+        "No further echo; the TTE is negative",
+        "Repeat the TTE in 1 week",
+        "Obtain spine MRI instead of a TEE"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "All SAB patients get a TTE; TEE is indicated at high endocarditis risk, including cardiac devices (VIRSTA: 4 points). TTE sensitivity is only about 61% relative to TEE.",
+        "distractors": [
+          "A negative TTE does not exclude endocarditis or device infection in a high-risk patient.",
+          "Repeating the less sensitive test delays the diagnosis.",
+          "Spine MRI is for back pain, not a substitute for TEE."
+        ]
+      },
+      "pearl": "TTE for everyone. Get a TEE when risk is high: devices, persistent bacteremia, emboli, injection drug use, or VIRSTA >=3.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Echocardiography; Table 1; Figure 2)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q11",
+      "type": "case_mcq",
+      "domain": "Diagnostics",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "54-year-old woman, 68 kg, CrCl ~85 mL/min, hospitalized 6 days for a COPD exacerbation. She develops MSSA bacteremia from a peripheral IV, which is removed. She has no cardiac device, valve disease, injection drug use, emboli, or back pain. She is not in shock, and her CRP is 95 mg/L. Repeat cultures at 24 hours are negative, and the TTE is normal.\n\nWhat is the best plan for TEE?",
+      "options": [
+        "Reasonable to forgo TEE: her VIRSTA score is 0 and the TTE is unremarkable",
+        "Obtain a TEE; it is mandatory for every patient with SAB",
+        "Obtain a TEE; hospital-onset SAB adds 2 VIRSTA points",
+        "Forgo the TTE as well; VIRSTA <3 excludes endocarditis"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "A VIRSTA score <3 had a negative predictive value of 99.3% for endocarditis. With no clinical concern and a reassuring TTE, forgoing TEE is reasonable.",
+        "distractors": [
+          "Current IDSA guidance prefers but does not mandate TEE, and low-risk patients can forgo it.",
+          "Community or non-nosocomial health care-associated acquisition earns 2 points; hospital onset does not.",
+          "TTE is recommended for all SAB; VIRSTA decides TEE priority, not whether to image at all."
+        ]
+      },
+      "pearl": "VIRSTA <3, a clean TTE, and no clinical concern: TEE can be skipped. The TTE never can.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Table 1; Box)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q12",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 3,
+      "stem": "MRSA blood cultures are still positive on day 5 despite vancomycin at a therapeutic AUC. TTE and TEE are negative, and there are no intravascular lines. What is the priority?",
+      "options": [
+        "Search for undrained foci with thoracoabdominal CT or PET-CT and pursue source control",
+        "Add rifampin to vancomycin",
+        "Increase vancomycin to target an AUC of 700",
+        "Continue current therapy and recheck cultures in 1 week"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Persistent SAB should prompt a search for and control of infection sources. CT or PET-CT can reveal hidden foci, and each extra day of bacteremia raised the relative risk of death (1.16 per day).",
+        "distractors": [
+          "Adding rifampin did not improve outcomes in a 758-patient trial, and it adds drug interactions.",
+          "His AUC is already in range; exceeding 600 adds nephrotoxicity and does not fix an undrained source.",
+          "Each additional day of bacteremia raises mortality, so waiting a week is unsafe."
+        ]
+      },
+      "pearl": "Persistent bacteremia is a source-control problem first: image, drain, remove. Then reconsider antibiotics.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Persistent Bacteremia; Combination Therapy; Source Control; Figure 2)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q13",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "For MRSA bacteremia from a removed central line, a team proposes linezolid as definitive therapy \"so the patient can finish on the same drug by mouth.\" What is the best response?",
+      "options": [
+        "Recommend vancomycin or daptomycin; linezolid's role in MRSA bacteremia is controversial",
+        "Agree; linezolid's oral bioavailability makes it the preferred first-line agent",
+        "Agree; RCTs showed linezolid superior to vancomycin for bacteremia",
+        "Agree, provided rifampin is added for synergy"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "In an RCT of suspected catheter-related BSI, linezolid had higher mortality (21.5% vs 16%), prompting an FDA warning. It is not yet considered a first-line agent for MRSA bacteremia.",
+        "distractors": [
+          "Oral bioavailability does not establish efficacy for bacteremia; vancomycin, daptomycin, and ceftobiprole hold FDA approval.",
+          "RCTs showed at best similar cure, enrolled few bacteremic patients, and raised a mortality signal in catheter-related BSI.",
+          "Adjunctive rifampin has not improved outcomes and adds hepatotoxicity and drug interactions."
+        ]
+      },
+      "pearl": "Linezolid is not first-line for MRSA bacteremia. Remember the FDA warning in catheter-related BSI.",
+      "source": {
+        "type": "handout",
+        "locator": "Parsons, Nat Rev Dis Primers 2026 (Oxazolidinones); Tong, JAMA 2025 (Choice of Antibiotic)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q14",
+      "type": "mcq",
+      "domain": "Resistance & susceptibility",
+      "bloom": "recall",
+      "difficulty": 1,
+      "stem": "Against S. aureus, how is linezolid's activity generally characterized?",
+      "options": [
+        "Bacteriostatic protein synthesis inhibitor",
+        "Rapidly bactericidal cell wall synthesis inhibitor",
+        "Concentration-dependent bactericidal membrane depolarizer",
+        "Bactericidal RNA polymerase inhibitor"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Linezolid binds the 23S rRNA of the 50S subunit and is generally bacteriostatic against S. aureus, which is one reason bactericidal agents are favored for endovascular infection.",
+        "distractors": [
+          "This describes beta-lactams and glycopeptides, not oxazolidinones.",
+          "This describes daptomycin.",
+          "This describes rifampin."
+        ]
+      },
+      "pearl": "Linezolid is bacteriostatic against S. aureus. For bacteremia, reach for bactericidal options first.",
+      "source": {
+        "type": "pearl_uncited",
+        "locator": "Claude knowledge - verify (mechanism from Nat Rev Primer Table 3)",
+        "citation": ""
+      },
+      "status": "hold"
+    },
+    {
+      "id": "Q15",
+      "type": "mcq",
+      "domain": "Dosing & PK/PD",
+      "bloom": "apply",
+      "difficulty": 1,
+      "stem": "A team plans to dose vancomycin to a trough of 15-20 mg/L for MRSA bacteremia. What should you recommend, per the 2020 vancomycin guideline?",
+      "options": [
+        "Switch to AUC-guided dosing targeting AUC/MIC(BMD) 400-600, assuming an MIC of 1 mg/L",
+        "Proceed; a trough of 15-20 mg/L is the recommended target",
+        "Target a trough of 10-15 mg/L instead",
+        "Target an AUC of 600-800 for faster clearance"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "The guideline recommends AUC-guided dosing (Bayesian, or two levels with first-order equations) targeting 400-600. Trough-only monitoring at 15-20 mg/L is no longer recommended (A-II).",
+        "distractors": [
+          "Trough-only 15-20 mg/L is explicitly no longer recommended, based on efficacy and nephrotoxicity data.",
+          "No trough-only target is recommended for serious MRSA infection.",
+          "An AUC above 600 increases kidney injury risk without added efficacy."
+        ]
+      },
+      "pearl": "Serious MRSA: dose vancomycin to an AUC of 400-600. Trough-only monitoring at 15-20 is retired.",
+      "source": {
+        "type": "handout",
+        "locator": "Rybak, AJHP 2020 (Recommendations 1-4)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q16",
+      "type": "case_mcq",
+      "domain": "Dosing & PK/PD",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "52-year-old man, 90 kg actual body weight, SCr 1.0 mg/dL (CrCl ~95 mL/min), no allergies, in septic shock. Blood cultures show gram-positive cocci in clusters. The local MRSA rate is >5%.\n\nWhich vancomycin loading dose is most appropriate?",
+      "options": [
+        "2,250 mg IV once (25 mg/kg actual body weight)",
+        "1,000 mg IV once, then a trough before the fourth dose",
+        "3,150 mg IV once (35 mg/kg actual body weight)",
+        "1,500 mg IV once based on ideal body weight"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "The loading dose is 20-35 mg/kg of actual body weight, with a 3 g maximum. 25 mg/kg x 90 kg = 2,250 mg falls within range.",
+        "distractors": [
+          "A flat 1 g underdoses a serious infection, and trough-only monitoring is no longer recommended.",
+          "35 mg/kg in this patient exceeds the 3 g maximum loading dose.",
+          "Loading doses use actual body weight, not ideal body weight."
+        ]
+      },
+      "pearl": "Vancomycin load: 20-35 mg/kg of actual body weight, capped at 3 g.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Table 2); Rybak, AJHP 2020 (Loading Doses)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q17",
+      "type": "case_mcq",
+      "domain": "Dosing & PK/PD",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "70-year-old woman, 72 kg, SCr stable at 0.9 mg/dL, with MRSA bacteremia on day 4. She is on vancomycin 1,250 mg IV q12h. A two-level (peak/trough) calculation estimates AUC24 = 680 mg*h/L. Repeat cultures are negative.\n\nWhat is the best adjustment?",
+      "options": [
+        "Reduce to 1,000 mg IV q12h",
+        "Continue the current dose; a higher AUC improves clearance",
+        "Switch to trough-based dosing targeting 15-20 mg/L",
+        "Hold the next 2 doses, then resume the same regimen"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Revise the total daily dose proportionally: 680 x (2,000 / 2,500) = about 544 mg*h/L, which is within 400-600.",
+        "distractors": [
+          "An AUC above 600 adds nephrotoxicity risk without better efficacy.",
+          "Trough-only monitoring is no longer recommended for serious MRSA infections.",
+          "Resuming the same regimen returns the AUC above target."
+        ]
+      },
+      "pearl": "AUC out of range? Scale the total daily dose: new dose = current dose x (target AUC / current AUC).",
+      "source": {
+        "type": "handout",
+        "locator": "Rybak, AJHP 2020 (Recommendations 1-2; First-order PK equations)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q18",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 1,
+      "stem": "For MRSA bacteremia with ventilator-associated pneumonia as the source, which agent should NOT be used?",
+      "options": [
+        "Daptomycin",
+        "Vancomycin",
+        "Linezolid",
+        "Ceftaroline"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Pulmonary surfactant inactivates daptomycin, so it is not used for MRSA pneumonia.",
+        "distractors": [
+          "Vancomycin is a recommended treatment for MRSA pneumonia.",
+          "Linezolid is recommended for MRSA pneumonia and had higher clinical success than vancomycin in ZEPHyR.",
+          "Ceftaroline is active against MRSA and carries a pneumonia indication."
+        ]
+      },
+      "pearl": "Lung source means no daptomycin, because surfactant inactivates it. Septic pulmonary emboli are the exception.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Table 2); Parsons, Nat Rev Dis Primers 2026 (Pneumonia; Table 3)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q19",
+      "type": "match",
+      "domain": "Monitoring & ADEs",
+      "bloom": "recall",
+      "difficulty": 1,
+      "stem": "Match each agent to its signature adverse effect(s).",
+      "pairs": [
+        [
+          "Vancomycin",
+          "Acute kidney injury; dose with AUC monitoring"
+        ],
+        [
+          "Daptomycin",
+          "CK elevation and eosinophilic pneumonia"
+        ],
+        [
+          "Linezolid",
+          "Thrombocytopenia, neuropathy, serotonin syndrome"
+        ],
+        [
+          "Nafcillin / cloxacillin",
+          "AKI and injection-site thrombophlebitis"
+        ],
+        [
+          "Ceftaroline / ceftobiprole",
+          "Neutropenia with prolonged therapy"
+        ]
+      ],
+      "rationale": {
+        "correct": "These adverse-effect profiles (JAMA review Table 2; MRSA primer Table 3) drive each agent's monitoring plan and help choose between options for a given patient.",
+        "distractors": []
+      },
+      "pearl": "Vancomycin: kidneys. Daptomycin: CK and lungs. Linezolid: platelets and serotonin. Antistaphylococcal penicillins: kidneys and veins.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Table 2); Parsons, Nat Rev Dis Primers 2026 (Table 3)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q20",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "A team wants to add 7 days of cefazolin to vancomycin for MRSA bacteremia \"to clear it faster.\" What is the best evidence-based response?",
+      "options": [
+        "Not routinely recommended: combination cleared bacteremia faster but did not improve outcomes and increased AKI",
+        "Recommended: CAMERA2 showed lower 90-day mortality with combination therapy",
+        "Recommended only with flucloxacillin, since cefazolin combinations caused the most AKI",
+        "Not recommended, because combination therapy prolonged bacteremia"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "CAMERA2 (n=352) found no improvement in the primary composite (35% vs 39%) despite less persistent bacteremia at day 5 (11% vs 20%), with more AKI (23% vs 6%). Eight RCTs show no outcome benefit for up-front combination therapy.",
+        "distractors": [
+          "90-day mortality was 21% vs 16%, numerically higher with combination therapy.",
+          "Combinations with antistaphylococcal penicillins carry greater nephrotoxicity than those with cefazolin.",
+          "Combination therapy reduced persistent bacteremia at day 5; it did not prolong it."
+        ]
+      },
+      "pearl": "Beta-lactam add-on for MRSA: faster clearance, no outcome benefit, more AKI. Not routine up front.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2020 (Abstract); Tong, JAMA 2025 (Box); Parsons, Nat Rev Dis Primers 2026 (Combination therapy)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q21",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "Your patient with MRSA bacteremia received 36 hours of empiric cefazolin with vancomycin before MRSA was identified. In the 2026 post hoc analysis of beta-lactam exposure in CAMERA2 (CMI 2026), which pattern was observed?",
+      "options": [
+        "Early (empiric) exposure: faster clearance without a significant AKI increase; a 7-day post-randomization course: higher AKI",
+        "No beta-lactam exposure was associated with the fastest clearance",
+        "AKI risk was the same regardless of beta-lactam timing or duration",
+        "Early exposure carried the highest AKI risk; later exposure did not"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "All exposure groups cleared faster than no beta-lactam (aHR 1.59-1.85). The AKI aOR was 1.24 (95% CI 0.27-6.60) for Early, vs 6.01 for Late and 7.93 for Throughout. These post hoc findings are hypothesis-generating.",
+        "distractors": [
+          "Every beta-lactam exposure group cleared faster than the group with no beta-lactam.",
+          "AKI risk rose with longer post-randomization courses.",
+          "Late and Throughout exposure, not Early, carried the significant AKI signal."
+        ]
+      },
+      "pearl": "A short empiric beta-lactam overlap looks low risk for the kidneys; prolonged combination is where AKI climbs.",
+      "source": {
+        "type": "handout",
+        "locator": "Petersiel, CMI 2026 (Abstract)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q22",
+      "type": "mcq",
+      "domain": "Stewardship",
+      "bloom": "analyze",
+      "difficulty": 2,
+      "stem": "Four patients are on day 6 of IV therapy for MSSA bacteremia. All have CrCl >60 mL/min. Which one best matches the SABATO eligibility criteria for an early oral switch?",
+      "options": [
+        "Source was a peripheral IV, now removed; cleared within 48 h; afebrile; no implants",
+        "Has a prosthetic aortic valve; cleared within 24 h",
+        "Blood cultures still positive 96 h after starting appropriate therapy",
+        "Injects drugs and has vertebral osteomyelitis"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "SABATO switched low-risk patients to oral therapy after 5-7 days of IV therapy, for 14 days total. Oral options were co-trimoxazole first, then clindamycin (MSSA) or linezolid (MRSA). Failure was 13% vs 12% (noninferior).",
+        "distractors": [
+          "Prosthetic heart valves were an exclusion.",
+          "Prolonged bacteremia (positive >72 h after appropriate therapy) was an exclusion.",
+          "Injection drug use and deep-seated foci were exclusions."
+        ]
+      },
+      "pearl": "SABATO-style oral step-down is only for truly low-risk SAB: source removed, quick clearance, no implants, no deep foci.",
+      "source": {
+        "type": "handout",
+        "locator": "Kaasch, Lancet Infect Dis 2024 (Abstract; Procedures); Tong, JAMA 2025 (Box)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q23",
+      "type": "mcq",
+      "domain": "Stewardship",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A patient who injects drugs has MRSA bacteremia with vertebral osteomyelitis, with no endocarditis or CNS infection. Cultures cleared on day 5, and he declines a PICC. Which dalbavancin plan matches the DOTS trial?",
+      "options": [
+        "1,500 mg IV on days 1 and 8, given after blood culture clearance",
+        "1,500 mg IV once on hospital day 1, before clearance",
+        "1,500 mg IV weekly for 6 weeks",
+        "1,000 mg IV once, then oral linezolid"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "DOTS randomized patients who cleared bacteremia after 72 hours to 10 days of initial therapy: dalbavancin 1,500 mg on days 1 and 8 vs 4-8 weeks of standard IV therapy. Clinical efficacy was 73% vs 72% (noninferior), but DOOR was not superior.",
+        "distractors": [
+          "DOTS required clearance after initial therapy; dalbavancin was not given before clearance.",
+          "Two doses maintain concentrations above the MIC for up to 6 weeks; weekly dosing was not the regimen.",
+          "DOTS tested two 1,500 mg doses, not a single dose followed by oral linezolid."
+        ]
+      },
+      "pearl": "DOTS: clear the bacteremia first, then dalbavancin 1,500 mg on days 1 and 8. Not for left-sided endocarditis, CNS infection, or retained infected hardware.",
+      "source": {
+        "type": "handout",
+        "locator": "Turner, JAMA 2025 (Abstract); Parsons, Nat Rev Dis Primers 2026 (Lipoglycopeptides)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q24",
+      "type": "mcq",
+      "domain": "Stewardship",
+      "bloom": "recall",
+      "difficulty": 2,
+      "stem": "In the DOTS economic analysis (CID 2026), how did dalbavancin compare with standard therapy on cost?",
+      "options": [
+        "Higher drug costs were offset by less inpatient care and OPAT, with the largest savings in patients who inject drugs",
+        "Net costs were higher because dalbavancin is more expensive",
+        "Costs were neutral overall, with no difference in antibiotic days",
+        "Savings came mainly from avoided readmissions for relapse"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Drug costs were $2,343 higher, but patients had 2.2 fewer SAB-related hospital days and 24.4 fewer antibiotic days. Net costs were about $4,600-5,900 lower, and about $22,000 lower with injection drug use.",
+        "distractors": [
+          "Net costs were lower, not higher, in both the home-based and clinic-based OPAT scenarios.",
+          "Dalbavancin recipients received antibiotics on about 24 fewer days.",
+          "The analysis attributed savings to reduced inpatient care and less OPAT use."
+        ]
+      },
+      "pearl": "Dalbavancin's higher drug cost is offset by fewer hospital and OPAT days, especially for patients who inject drugs.",
+      "source": {
+        "type": "handout",
+        "locator": "Reed, CID 2026 (Abstract)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q25",
+      "type": "order",
+      "domain": "Diagnostics",
+      "bloom": "apply",
+      "difficulty": 1,
+      "stem": "Put these blood culture results in the order they typically become available, earliest first.",
+      "sequence": [
+        "Blood culture bottle flags positive",
+        "Gram stain: gram-positive cocci in clusters",
+        "Rapid molecular test: S. aureus, with mecA detected or not",
+        "Conventional phenotypic susceptibility results"
+      ],
+      "rationale": {
+        "correct": "Rapid molecular tests on positive bottles report the species and mecA within hours (median 3.9 h from Gram stain vs 25.4 h conventionally). This cut time to targeted therapy from 25.5 h to 5 h.",
+        "distractors": []
+      },
+      "pearl": "Use a rapid mecA result to narrow to a beta-lactam within hours. Don't wait a day for phenotypic susceptibilities.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Diagnosis)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q26",
+      "type": "mcq",
+      "domain": "Diagnostics",
+      "bloom": "analyze",
+      "difficulty": 3,
+      "stem": "A patient admitted from home has MSSA bacteremia that clears within 24 hours. She has no device, no prosthetic material, no injection drug use, and a normal TTE. Under the 2026 IDSA/ESCMID framework, how should she be classified?",
+      "options": [
+        "Increased risk: community-onset SAB is a key risk factor, so keep looking for deep foci",
+        "Low risk: she cleared within 48 hours and has no devices",
+        "Uncomplicated SAB under prior IDSA criteria, so the evaluation is complete",
+        "Low risk, unless the TTE shows a vegetation"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "The 2026 consensus names 3 key risk factors: community-onset SAB, a positive culture >=48 h after the first, and an intracardiac device. It replaces \"uncomplicated/complicated\" with \"low risk\" and \"increased risk.\"",
+        "distractors": [
+          "Rapid clearance and no device do not override community onset, which is a key risk factor.",
+          "The panel calls \"uncomplicated/complicated\" imprecise and inadequate to guide management.",
+          "A normal TTE does not make community-onset SAB low risk."
+        ]
+      },
+      "pearl": "2026 framework: community onset, a positive culture at >=48 hours, or an intracardiac device each mean increased risk. Look harder for deep foci.",
+      "source": {
+        "type": "handout",
+        "locator": "IDSA/ESCMID 2026 Consensus Statement 1 (Executive Summary; Introduction)",
+        "citation": ""
+      },
+      "status": "hold"
+    },
+    {
+      "id": "Q27",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "A patient on chemotherapy has MSSA bacteremia with erythema at a tunneled catheter's exit site. Oncology wants to keep the line. What is the best recommendation?",
+      "options": [
+        "Remove the catheter promptly",
+        "Retain the catheter and extend therapy to 6 weeks",
+        "Retain the catheter if cultures clear within 72 hours",
+        "Retain the catheter and add rifampin for biofilm activity"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Indwelling catheters should be promptly removed in SAB. Retention was associated with more hematogenous complications (RR 2.28), and removal after more than 3 days with more relapse (12.7% vs 4.7%).",
+        "distractors": [
+          "Longer therapy does not substitute for source control of a biofilm-coated device.",
+          "Even delays beyond 3 days were associated with higher relapse.",
+          "Adjunctive rifampin has not improved outcomes in RCTs and adds interactions, a real concern with chemotherapy."
+        ]
+      },
+      "pearl": "S. aureus plus a central line means the line comes out. Antibiotics cannot sterilize a biofilm.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Source Control; Figure 1)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q28",
+      "type": "case_mcq",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "68-year-old man (84 kg) with MRSA bacteremia from a debrided foot infection. On day 2 of vancomycin, SCr has risen from 1.0 to 1.6 mg/dL (CrCl ~50 mL/min). He has no pneumonia.\n\nWhat is the best change?",
+      "options": [
+        "Switch to daptomycin 8-10 mg/kg IV q24h now",
+        "Continue vancomycin; switching after day 5 is equally effective",
+        "Switch to linezolid as preferred first-line therapy",
+        "Add gentamicin so the vancomycin dose can be lowered"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Daptomycin, dosed at 8-10 mg/kg for invasive infection, is FDA-approved for MRSA bacteremia with less AKI risk than vancomycin. In a meta-analysis, switching within 3-5 days was associated with lower mortality; the overall effect was a non-significant trend (OR 0.81).",
+        "distractors": [
+          "Switching after 5 days was not associated with lower mortality, and nephrotoxicity is accumulating now.",
+          "Linezolid's role in MRSA bacteremia remains controversial.",
+          "Adding gentamicin causes kidney injury without outcome benefit."
+        ]
+      },
+      "pearl": "If vancomycin is hurting the kidneys early, switch to daptomycin early. The observational survival signal favored early switches.",
+      "source": {
+        "type": "handout",
+        "locator": "Adamu, PLoS One 2024 (Abstract); Parsons, Nat Rev Dis Primers 2026 (Daptomycin); Tong, JAMA 2025 (Table 2)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q29",
+      "type": "match",
+      "domain": "Definitive therapy",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "Match each scenario to the preferred definitive therapy.",
+      "pairs": [
+        [
+          "MSSA bacteremia, no beta-lactam allergy",
+          "Cefazolin or an antistaphylococcal penicillin"
+        ],
+        [
+          "MSSA bacteremia, prior penicillin anaphylaxis",
+          "Vancomycin or daptomycin"
+        ],
+        [
+          "MRSA bacteremia, pneumonia source",
+          "Vancomycin, AUC-guided"
+        ],
+        [
+          "MRSA bacteremia, early vancomycin AKI, no pneumonia",
+          "Daptomycin 8-10 mg/kg once daily"
+        ],
+        [
+          "Cleared SAB, no left-sided endocarditis, avoiding a PICC",
+          "Dalbavancin 1,500 mg on days 1 and 8"
+        ]
+      ],
+      "rationale": {
+        "correct": "Agent choice follows susceptibility, allergy severity, source, and toxicity. Use beta-lactams for MSSA; vancomycin or daptomycin for severe allergy or MRSA; no daptomycin for a lung source; and dalbavancin after clearance in DOTS-like patients.",
+        "distractors": []
+      },
+      "pearl": "Four questions pick the drug: MSSA or MRSA? How severe is the allergy? Lung source? How are the kidneys? Once cleared, consider dalbavancin.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Table 2); Turner, JAMA 2025 (Abstract); Adamu, PLoS One 2024",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q30",
+      "type": "mcq",
+      "domain": "Resistance & susceptibility",
+      "bloom": "apply",
+      "difficulty": 2,
+      "stem": "An MSSA bloodstream isolate tests penicillin-susceptible. When is IV benzylpenicillin an appropriate definitive choice?",
+      "options": [
+        "Only when penicillin susceptibility is phenotypically confirmed by disk diffusion",
+        "Whenever the isolate is methicillin-susceptible",
+        "Never; penicillin is not active against S. aureus",
+        "Only in combination with gentamicin"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "The JAMA review lists benzylpenicillin 2.4 g (4 million U) q4h only for isolates phenotypically confirmed as penicillin-susceptible by disk diffusion testing.",
+        "distractors": [
+          "Many MSSA are penicillin-resistant (SNAP enrolled only penicillin-resistant MSSA), so methicillin susceptibility alone doesn't qualify.",
+          "Confirmed penicillin-susceptible isolates can be treated with benzylpenicillin.",
+          "Gentamicin combinations add kidney injury without outcome benefit."
+        ]
+      },
+      "pearl": "Penicillin-susceptible MSSA? Use benzylpenicillin only after phenotypic confirmation by disk diffusion.",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Table 2); SNAP, NEJM 2026 (Abstract)",
+        "citation": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "Q31",
+      "type": "mcq",
+      "domain": "Definitive therapy",
+      "bloom": "recall",
+      "difficulty": 2,
+      "stem": "Which antibiotic received FDA approval for S. aureus bacteremia in April 2024, joining vancomycin and daptomycin?",
+      "options": [
+        "Ceftobiprole",
+        "Ceftaroline",
+        "Dalbavancin",
+        "Linezolid"
+      ],
+      "answer_index": 0,
+      "rationale": {
+        "correct": "Ceftobiprole was noninferior to daptomycin in its trial (treatment success 70% vs 69%) and was approved for SAB on April 3, 2024. It is active against both MSSA and MRSA.",
+        "distractors": [
+          "Ceftaroline is used off-label as MRSA salvage therapy and is not approved for SAB.",
+          "Dalbavancin is FDA-approved for ABSSSI; DOTS studied it for SAB.",
+          "Linezolid's role in MRSA bacteremia remains controversial, with an FDA warning for catheter-related BSI."
+        ]
+      },
+      "pearl": "FDA-approved for MRSA bacteremia: vancomycin, daptomycin, and ceftobiprole (2024).",
+      "source": {
+        "type": "handout",
+        "locator": "Tong, JAMA 2025 (Choice of Antibiotic); Parsons, Nat Rev Dis Primers 2026 (Ceftaroline and ceftobiprole)",
+        "citation": ""
+      },
+      "status": "ready"
+    }
+  ]
+};
+
+/* =====================================================================
+   PUZZLES: each phrase is a teachable pearl (capital letters and spaces only),
+   shown with its pearl and source after a solve.
+   ===================================================================== */
+const PUZZLES = [
+  { category: "Interpretation", phrase: "NEVER A CONTAMINANT",
+    pearl: "Even 1 positive set is real SAB. Treat it, repeat cultures, and look for the source.",
+    source: "IDSA/ESCMID 2026 Consensus Statement 1 (Introduction)" },
+  { category: "Head to head", phrase: "CEFAZOLIN IS KINDER TO KIDNEYS",
+    pearl: "Cefazolin matched antistaphylococcal penicillins on mortality with less AKI (SNAP 13.9% vs 19.6%; CloCeBa 1% vs 12%).",
+    source: "SNAP, NEJM 2026; CloCeBa, Lancet 2025" },
+  { category: "Workup", phrase: "TTE FOR ALL TEE BY RISK",
+    pearl: "Every SAB patient gets a TTE. TEE for high risk: devices, persistent bacteremia, emboli, injection drug use, or VIRSTA ≥3.",
+    source: "Tong, JAMA 2025 (Echocardiography; Table 1)" },
+  { category: "Best practice", phrase: "ID CONSULT FOR EVERY SAB",
+    pearl: "ID consultation is linked to more echoes, repeat cultures, correct durations, and lower in-hospital mortality.",
+    source: "Bai, CID 2015; Tong, JAMA 2025 (Figure 2)" },
+  { category: "Follow-up", phrase: "REPEAT CULTURES UNTIL CLEAR",
+    pearl: "Repeat blood cultures every 24-48 h until negative. Bacteremia lasting 2-4 days nearly doubled 90-day mortality (39% vs 22%).",
+    source: "Tong, JAMA 2025 (Persistent Bacteremia)" },
+  { category: "Less is more", phrase: "NO ROUTINE COMBINATION THERAPY",
+    pearl: "Eight RCTs showed no outcome benefit from up-front combination therapy. CAMERA2 cleared bacteremia faster but caused more AKI.",
+    source: "Tong, JAMA 2025 (Box); Tong, JAMA 2020" }
+];
+
+/* =====================================================================
+   WHEEL WEDGES: clockwise from the top.
+   kind: value | bankrupt | lose | free | steal | double
+   ===================================================================== */
+const WEDGES = [
+  { label: "300", kind: "value", value: 300, color: "#d9362f", ink: "#ffffff" },
+  { label: "BANKRUPT", kind: "bankrupt", color: "#111111", ink: "#ffffff" },
+  { label: "500", kind: "value", value: 500, color: "#1f8a4c", ink: "#ffffff" },
+  { label: "200", kind: "value", value: 200, color: "#2563c9", ink: "#ffffff" },
+  { label: "STEAL", kind: "steal", color: "#ffd23f", ink: "#111111" },
+  { label: "400", kind: "value", value: 400, color: "#7e3fb8", ink: "#ffffff" },
+  { label: "100", kind: "value", value: 100, color: "#d9600f", ink: "#ffffff" },
+  { label: "FREE SPIN", kind: "free", color: "#14a3b8", ink: "#0b1b1f" },
+  { label: "600", kind: "value", value: 600, color: "#c42a6e", ink: "#ffffff" },
+  { label: "200", kind: "value", value: 200, color: "#1f8a4c", ink: "#ffffff" },
+  { label: "LOSE A TURN", kind: "lose", color: "#f2f2f2", ink: "#111111" },
+  { label: "300", kind: "value", value: 300, color: "#2563c9", ink: "#ffffff" },
+  { label: "DOUBLE", kind: "double", color: "#ffd23f", ink: "#111111" },
+  { label: "400", kind: "value", value: 400, color: "#d9362f", ink: "#ffffff" },
+  { label: "750", kind: "value", value: 750, color: "#7e3fb8", ink: "#ffffff" },
+  { label: "100", kind: "value", value: 100, color: "#d9600f", ink: "#ffffff" }
+];
+
+/* Point rules in one place. */
+const RULES = {
+  consonantPerLetter: 50, vowelCost: 100, solveBonus: 500,
+  stealWedgeMax: 300, stealWedgeFloor: 100, doubleFloor: 200,
+  stealFraction: 0.5, stealOnSpecial: 150
+};
+
+/* =====================================================================
+   UTILITIES
+   ===================================================================== */
+const $ = (s) => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+const VOWELS = new Set(["A", "E", "I", "O", "U"]);
+const MCQ_TYPES = ["mcq", "case_mcq"];
+const LETTERS = "ABCDEFGHIJ";
+const PAIR_COLORS = ["#2563eb", "#c2410c", "#15803d", "#7c3aed", "#be123c", "#0e7490", "#a16207", "#4d7c0f"];
+const reduceMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+function el(tag, attrs, ...children) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") n.className = v;
+    else if (k === "style") n.setAttribute("style", v);
+    else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const c of children.flat()) {
+    if (c == null || c === false) continue;
+    n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return n;
+}
+function svgEl(tag, attrs) { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v); return n; }
+function range(n) { return Array.from({ length: n }, (_, i) => i); }
+/* Fisher-Yates shuffle; returns a new array. */
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function announce(msg) { const a = $("#announcer"); a.textContent = ""; setTimeout(() => (a.textContent = msg), 30); }
+function fmt(n) { return Number(n).toLocaleString("en-US"); }
+function normalizePhrase(s) { return String(s).toUpperCase().replace(/[^A-Z]/g, ""); }
+function show(id) {
+  ["#screen-start", "#screen-game", "#screen-end", "#screen-review", "#screen-pearls"].forEach((s) => ($(s).hidden = s !== id));
+  document.body.dataset.view = id.replace("#screen-", "");
+  try { window.scrollTo({ top: 0 }); } catch (e) { /* not supported */ }
+}
+function scrollIntoViewSafe(node) { try { node.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth", block: "nearest" }); } catch (e) { /* not supported */ } }
+
+/* Sound: tiny WebAudio blips generated in-browser (no files, works offline). */
+const Sound = (() => {
+  let ctx = null, on = true;
+  function ac() {
+    if (!on) return null;
+    try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === "suspended") ctx.resume(); return ctx; } catch (e) { return null; }
+  }
+  function tone(freq, dur, type, gain, when) {
+    const c = ac(); if (!c) return;
+    const t = c.currentTime + (when || 0), o = c.createOscillator(), g = c.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(gain || 0.07, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  return {
+    isOn: () => on, setOn: (v) => { on = v; },
+    tick: () => tone(1500, 0.025, "square", 0.025),
+    correct: () => [660, 880, 1320].forEach((f, i) => tone(f, 0.2, "triangle", 0.09, i * 0.09)),
+    wrong: () => { tone(185, 0.38, "sawtooth", 0.05); tone(140, 0.4, "sawtooth", 0.04, 0.06); },
+    ding: (i) => tone(1175, 0.28, "sine", 0.07, (i || 0) * 0.13),
+    bankrupt: () => [520, 390, 260, 170].forEach((f, i) => tone(f, 0.24, "square", 0.045, i * 0.13)),
+    fanfare: () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, 0.24, "triangle", 0.09, i * 0.11))
+  };
+})();
+
+/* =====================================================================
+   VALIDATOR: checks every item; invalid IDs are listed on screen and
+   excluded. Returns [{id, msg}].
+   ===================================================================== */
+function validateBank(bank) {
+  const errors = [];
+  if (!bank || !Array.isArray(bank.items)) return [{ id: "(BANK)", msg: "BANK.items is missing or not an array" }];
+  const seen = new Set();
+  const isStr = (x) => typeof x === "string" && x.trim() !== "";
+  bank.items.forEach((it, i) => {
+    const id = it && isStr(it.id) ? it.id : `(item #${i + 1})`;
+    const e = [];
+    if (!it || typeof it !== "object") { errors.push({ id, msg: "not an object" }); return; }
+    ["id", "type", "domain", "bloom", "stem", "pearl", "status"].forEach((f) => { if (!isStr(it[f])) e.push(`missing ${f}`); });
+    if (seen.has(id)) e.push("duplicate id");
+    seen.add(id);
+    if (!["mcq", "case_mcq", "match", "order"].includes(it.type)) e.push(`invalid type "${it.type}"`);
+    if (!["recall", "apply", "analyze"].includes(it.bloom)) e.push(`invalid bloom "${it.bloom}"`);
+    if (![1, 2, 3].includes(it.difficulty)) e.push("difficulty must be 1, 2, or 3");
+    if (!["ready", "hold"].includes(it.status)) e.push(`invalid status "${it.status}"`);
+    if (!it.rationale || !isStr(it.rationale.correct)) e.push("missing rationale.correct");
+    if (!it.source || !["handout", "pearl_cited", "pearl_uncited"].includes(it.source.type)) e.push("invalid source.type");
+    else if (it.source.type === "handout" && !isStr(it.source.locator)) e.push("handout source needs a locator");
+    else if (it.source.type === "pearl_cited" && !isStr(it.source.citation)) e.push("pearl_cited source needs a citation");
+    if (MCQ_TYPES.includes(it.type)) {
+      if (!Array.isArray(it.options) || it.options.length !== 4 || !it.options.every(isStr)) e.push("needs exactly 4 non-empty options");
+      if (!Number.isInteger(it.answer_index) || it.answer_index < 0 || it.answer_index > 3) e.push("answer_index must be 0-3");
+      if (!it.rationale || !Array.isArray(it.rationale.distractors) || it.rationale.distractors.length !== 3) e.push("needs 3 distractor rationales");
+      if (Array.isArray(it.options) && new Set(it.options).size !== it.options.length) e.push("duplicate options");
+    }
+    if (it.type === "match") {
+      if (!Array.isArray(it.pairs) || it.pairs.length < 2 || it.pairs.length > 8 || !it.pairs.every((p) => Array.isArray(p) && p.length === 2 && isStr(p[0]) && isStr(p[1]))) e.push("pairs must be 2-8 [left, right] string pairs");
+      else if (new Set(it.pairs.map((p) => p[1])).size !== it.pairs.length) e.push("right-side match values must be unique");
+    }
+    if (it.type === "order") {
+      if (!Array.isArray(it.sequence) || it.sequence.length < 2 || !it.sequence.every(isStr)) e.push("sequence must have 2+ steps");
+      else if (new Set(it.sequence).size !== it.sequence.length) e.push("sequence steps must be unique");
+    }
+    if (e.length) errors.push({ id, msg: e.join("; ") });
+  });
+  return errors;
+}
+
+/* =====================================================================
+   ITEM RENDERERS. Each returns a controller:
+   { isComplete(), isCorrect(), disable(), markFeedback(picks) }
+   MCQ options are shuffled at render. ctl.order[displayPos] = original
+   index, so correctness is always checked against the ORIGINAL
+   answer_index. Shuffling cannot change which option is correct.
+   ===================================================================== */
+function renderItem(host, item, opts = {}) {
+  host.innerHTML = "";
+  const stemId = `stem-${item.id}-${Math.random().toString(36).slice(2, 7)}`;
+  host.append(el("p", { class: "stem", id: stemId }, item.stem));
+  const ctl = { item, disabled: false, onChange: opts.onChange || (() => {}) };
+  if (MCQ_TYPES.includes(item.type)) renderMcq(host, item, opts, ctl, stemId);
+  else if (item.type === "match") renderMatch(host, item, ctl, stemId);
+  else renderOrder(host, item, ctl, stemId);
+  return ctl;
+}
+
+function renderMcq(host, item, opts, ctl, stemId) {
+  ctl.order = opts.order || shuffle(range(item.options.length));
+  ctl.response = null;
+  const elim = opts.eliminated || [];
+  const grid = el("div", { class: "options", role: "radiogroup", "aria-labelledby": stemId });
+  ctl.buttons = ctl.order.map((orig, pos) => {
+    const out = elim.includes(orig);
+    const b = el("button", { type: "button", class: "opt" + (out ? " eliminated" : ""), role: "radio", "aria-checked": "false", disabled: out },
+      el("span", { class: "keycap", "aria-hidden": "true" }, String(pos + 1)),
+      el("span", { class: "opt-text" }, item.options[orig]),
+      out ? el("span", { class: "mark bad" }, "✗ Ruled out") : null);
+    b.addEventListener("click", () => ctl.select(pos));
+    grid.append(b);
+    return b;
+  });
+  host.append(grid);
+  ctl.select = (pos) => {
+    if (ctl.disabled || !ctl.buttons[pos] || ctl.buttons[pos].disabled) return;
+    ctl.response = pos;
+    ctl.buttons.forEach((b, i) => { b.setAttribute("aria-checked", String(i === pos)); b.classList.toggle("selected", i === pos); });
+    ctl.onChange();
+  };
+  ctl.isComplete = () => ctl.response !== null;
+  ctl.pickedOriginal = () => (ctl.response === null ? null : ctl.order[ctl.response]);
+  ctl.isCorrect = () => ctl.response !== null && ctl.order[ctl.response] === item.answer_index;
+  ctl.disable = () => { ctl.disabled = true; ctl.buttons.forEach((b) => (b.disabled = true)); };
+  // Marks the correct option and every wrong pick (picks = original indices).
+  ctl.markFeedback = (picks) => {
+    ctl.buttons.forEach((b, pos) => {
+      const orig = ctl.order[pos];
+      b.classList.remove("selected", "eliminated");
+      b.querySelectorAll(".mark").forEach((m) => m.remove());
+      if (orig === item.answer_index) { b.classList.add("is-answer"); b.append(el("span", { class: "mark ok" }, "✓ Correct")); }
+      else if (picks.includes(orig)) { b.classList.add("is-wrong"); b.append(el("span", { class: "mark bad" }, "✗ Picked")); }
+    });
+  };
+}
+
+/* Match: tap-to-pair. Left items are lettered (A, B, C…), right items are
+   numbered (1, 2, 3…) and shuffled. Everything stays visible on screen;
+   each pairing shows the letter on its match, in the same color. */
+function renderMatch(host, item, ctl, stemId) {
+  const n = item.pairs.length;
+  const rOrder = shuffle(range(n)); // display position -> original right index
+  ctl.rOrder = rOrder;
+  ctl.assign = new Array(n).fill(null); // left i -> original right index
+  ctl.active = 0;
+  const wrap = el("div", { class: "match", role: "group", "aria-labelledby": stemId });
+  const left = el("div", { class: "match-col" }, el("div", { class: "col-head" }, "Pick an item"));
+  const right = el("div", { class: "match-col" }, el("div", { class: "col-head" }, "Then tap its match"));
+  ctl.leftBtns = item.pairs.map((p, i) => {
+    const b = el("button", { type: "button", class: "m-card m-left", style: `--pc:${PAIR_COLORS[i % PAIR_COLORS.length]}` },
+      el("span", { class: "letter-chip", "aria-hidden": "true" }, LETTERS[i]), el("span", { class: "m-text" }, p[0]), el("span", { class: "m-slot" }, "?"));
+    b.addEventListener("click", () => ctl.selectLeft(i));
+    left.append(b);
+    return b;
+  });
+  ctl.rightBtns = rOrder.map((ri, pos) => {
+    const b = el("button", { type: "button", class: "m-card m-right" },
+      el("span", { class: "keycap", "aria-hidden": "true" }, String(pos + 1)), el("span", { class: "m-text" }, item.pairs[ri][1]), el("span", { class: "m-slot" }, ""));
+    b.addEventListener("click", () => ctl.pickRight(pos));
+    right.append(b);
+    return b;
+  });
+  wrap.append(left, right);
+  host.append(wrap);
+  const paint = () => {
+    ctl.leftBtns.forEach((b, i) => {
+      const a = ctl.assign[i];
+      b.classList.toggle("active", i === ctl.active && !ctl.disabled);
+      b.classList.toggle("filled", a !== null);
+      b.setAttribute("aria-pressed", String(i === ctl.active));
+      b.querySelector(".m-slot").textContent = a === null ? "?" : String(rOrder.indexOf(a) + 1);
+      b.setAttribute("aria-label", `${LETTERS[i]}: ${item.pairs[i][0]}. ${a === null ? "Not matched yet" : "Matched to " + (rOrder.indexOf(a) + 1)}`);
+    });
+    ctl.rightBtns.forEach((b, pos) => {
+      const ri = rOrder[pos], owner = ctl.assign.indexOf(ri), slot = b.querySelector(".m-slot");
+      slot.innerHTML = "";
+      b.classList.toggle("taken", owner !== -1);
+      b.style.setProperty("--pc", owner === -1 ? "var(--line)" : PAIR_COLORS[owner % PAIR_COLORS.length]);
+      if (owner !== -1) slot.append(el("span", { class: "letter-chip", style: `--pc:${PAIR_COLORS[owner % PAIR_COLORS.length]}` }, LETTERS[owner]));
+      b.setAttribute("aria-label", `${pos + 1}: ${item.pairs[ri][1]}${owner !== -1 ? ". Matched with " + LETTERS[owner] : ""}`);
+    });
+  };
+  // Pair left i with original right index ri; a right card can only belong to one left item.
+  ctl.setPair = (li, ri) => {
+    if (ctl.disabled) return;
+    ctl.assign.forEach((v, k) => { if (v === ri) ctl.assign[k] = null; });
+    ctl.assign[li] = ri;
+    const next = ctl.assign.findIndex((v) => v === null);
+    ctl.active = next === -1 ? li : next;
+    paint();
+    announce(`${LETTERS[li]} matched to ${rOrder.indexOf(ri) + 1}`);
+    ctl.onChange();
+  };
+  ctl.selectLeft = (i) => { if (ctl.disabled || i < 0 || i >= n) return; ctl.active = i; paint(); };
+  ctl.pickRight = (pos) => { if (ctl.disabled || pos < 0 || pos >= n) return; ctl.setPair(ctl.active, rOrder[pos]); };
+  ctl.isComplete = () => ctl.assign.every((v) => v !== null);
+  ctl.isCorrect = () => ctl.assign.every((v, i) => v === i);
+  ctl.disable = () => { ctl.disabled = true; [...ctl.leftBtns, ...ctl.rightBtns].forEach((b) => (b.disabled = true)); paint(); };
+  ctl.markFeedback = () => {
+    ctl.leftBtns.forEach((b, i) => {
+      const ok = ctl.assign[i] === i;
+      b.classList.add(ok ? "is-answer" : "is-wrong");
+      b.querySelector(".m-slot").textContent = ok ? `✓ ${rOrder.indexOf(i) + 1}` : `✗ → ${rOrder.indexOf(i) + 1}`;
+    });
+  };
+  paint();
+}
+
+/* Order: big rows with move up/down. ctl.arr holds original step indices
+   in displayed order; correct when arr[i] === i. */
+function renderOrder(host, item, ctl, stemId) {
+  let arr = shuffle(range(item.sequence.length));
+  while (arr.every((v, i) => v === i)) arr = shuffle(range(item.sequence.length));
+  ctl.arr = arr;
+  const ol = el("ol", { class: "order-list", "aria-labelledby": stemId });
+  host.append(el("p", { class: "small muted", style: "margin-top:-.4rem" }, "Use the arrows to put the steps in order (first at top)."), ol);
+  const draw = (focusPos, dir) => {
+    ol.innerHTML = "";
+    ctl.arr.forEach((orig, pos) => {
+      const txt = item.sequence[orig];
+      const up = el("button", { type: "button", "aria-label": `Move up: ${txt}`, disabled: pos === 0 || ctl.disabled }, "▲");
+      const dn = el("button", { type: "button", "aria-label": `Move down: ${txt}`, disabled: pos === ctl.arr.length - 1 || ctl.disabled }, "▼");
+      up.addEventListener("click", () => move(pos, -1));
+      dn.addEventListener("click", () => move(pos, 1));
+      const li = el("li", { class: focusPos === pos ? "moved" : "" }, el("span", { class: "pos", "aria-hidden": "true" }, String(pos + 1)), el("span", { class: "txt" }, txt), up, dn);
+      if (ctl.marked) li.classList.add(orig === pos ? "is-answer" : "is-wrong");
+      ol.append(li);
+      if (focusPos === pos) (dir < 0 ? (pos === 0 ? dn : up) : (pos === ctl.arr.length - 1 ? up : dn)).focus();
+    });
+  };
+  const move = (pos, d) => {
+    const np = pos + d;
+    if (ctl.disabled || np < 0 || np >= ctl.arr.length) return;
+    [ctl.arr[pos], ctl.arr[np]] = [ctl.arr[np], ctl.arr[pos]];
+    draw(np, d);
+    announce(`Moved to position ${np + 1}`);
+    ctl.onChange();
+  };
+  draw();
+  ctl.isComplete = () => true;
+  ctl.isCorrect = () => ctl.arr.every((v, i) => v === i);
+  ctl.disable = () => { ctl.disabled = true; draw(); };
+  ctl.markFeedback = () => { ctl.marked = true; draw(); };
+}
+
+/* Feedback: verdict in words + icon (not color alone), rationale, pearl, source. */
+function renderFeedback(item, correct, headline) {
+  const box = el("div", { class: "feedback" });
+  box.append(el("div", { class: "verdict-banner " + (correct ? "ok" : "bad"), role: "status" },
+    el("span", { class: "vi", "aria-hidden": "true" }, correct ? "✓" : "✗"), el("span", {}, headline)));
+  const why = el("div", { class: "fb-block" }, el("h3", {}, "Why"), el("p", {}, item.rationale.correct));
+  let other = null;
+  if (MCQ_TYPES.includes(item.type)) {
+    const wrong = range(item.options.length).filter((i) => i !== item.answer_index);
+    other = el("div", { class: "fb-block" }, el("h3", {}, "Why not the others"),
+      el("ul", {}, wrong.map((oi, k) => el("li", {}, el("b", {}, item.options[oi] + ": "), item.rationale.distractors[k]))));
+  } else if (item.type === "match") {
+    other = el("div", { class: "fb-block" }, el("h3", {}, "Correct matches"), el("ul", {}, item.pairs.map((p, i) => el("li", {}, el("b", {}, `${LETTERS[i]}. ${p[0]}: `), p[1]))));
+  } else {
+    other = el("div", { class: "fb-block" }, el("h3", {}, "Correct order"), el("ol", {}, item.sequence.map((s) => el("li", {}, s))));
+  }
+  box.append(el("div", { class: "fb-grid" }, why, other));
+  box.append(el("div", { class: "pearl" }, el("span", { class: "pl" }, "Pearl"), item.pearl));
+  box.append(sourceBadge(item));
+  return box;
+}
+function sourceBadge(item) {
+  const s = item.source;
+  if (s.type === "handout") return el("span", { class: "badge" }, `Handout: ${s.locator}`);
+  if (s.type === "pearl_cited") { const short = s.citation.length > 70 ? s.citation.slice(0, 67) + "…" : s.citation; return el("span", { class: "badge", title: s.citation }, `Cited: ${short}`); }
+  return el("span", { class: "badge unverified" }, "Unverified: Claude knowledge, verify");
+}
+
+/* =====================================================================
+   GAME STATE (memory only)
+   ===================================================================== */
+const state = {
+  pool: [], ready: [], teams: [], active: 0, settings: { puzzles: 3, timer: 0, pool: "all" }, used: new Set(),
+  puzzleQueue: [], puzzle: null, guessed: new Set(), puzzlesSolved: 0, flipLetter: null,
+  wheelAngle: 0, spinning: false, q: null, log: [], timerId: null, primary: null, view: "start", endNote: "", scale: 1
+};
+function setPrimary(btn) { state.primary = btn; }
+
+/* =====================================================================
+   SETUP
+   ===================================================================== */
+function init() {
+  const errors = validateBank(BANK);
+  const bad = new Set(errors.map((e) => e.id));
+  if (errors.length) {
+    const box = $("#bank-errors"); box.hidden = false;
+    box.append(el("b", {}, `${errors.length} invalid item(s) excluded from play:`), el("ul", {}, errors.map((e) => el("li", {}, `${e.id}: ${e.msg}`))));
+  }
+  // Puzzle phrases must be letters and spaces only, with a pearl and source.
+  PUZZLES.forEach((p, i) => { if (!puzzleOk(p)) errors.push({ id: `Puzzle #${i + 1}`, msg: "phrase must be capital letters and spaces, with category, pearl, and source" }); });
+  if (errors.length) {
+    const box = $("#bank-errors"); box.hidden = false; box.innerHTML = "";
+    box.append(el("b", {}, `${errors.length} invalid item(s) or puzzle(s) excluded:`), el("ul", {}, errors.map((e) => el("li", {}, `${e.id}: ${e.msg}`))));
+  }
+  state.ready = BANK.items.filter((it) => it.status === "ready" && !bad.has(it.id));
+  const hold = BANK.items.filter((it) => it.status === "hold").length;
+  $("#start-topic").textContent = `${BANK.meta.topic} · ${BANK.meta.learner_level}`;
+  $("#brand-sub").textContent = BANK.meta.topic;
+  const cases = state.ready.filter((i) => i.type === "case_mcq").length;
+  $("#start-stats").append(
+    el("div", { class: "stat" }, el("b", {}, String(state.ready.length)), "ready questions"),
+    el("div", { class: "stat" }, el("b", {}, String(cases)), "patient cases"),
+    el("div", { class: "stat" }, el("b", {}, String(new Set(state.ready.map((i) => i.domain)).size)), "domains"),
+    hold ? el("div", { class: "stat" }, el("b", {}, String(hold)), "on hold (not loaded)") : null);
+  buildSeg("#seg-puzzles", range(Math.min(5, validPuzzles().length)).map((i) => ({ v: i + 1, t: String(i + 1) })), "puzzles", Math.min(3, validPuzzles().length));
+  buildSeg("#seg-timer", [{ v: 0, t: "Off" }, { v: 45, t: "45 s" }, { v: 60, t: "60 s" }, { v: 90, t: "90 s" }], "timer", 0);
+  buildSeg("#seg-pool", [{ v: "all", t: `All questions (${state.ready.length})` }, { v: "cases", t: `Cases only (${cases})` }], "pool", "all");
+  $("#btn-start").disabled = state.ready.length === 0;
+  $("#btn-pearls").disabled = state.ready.length === 0;
+  buildWheel();
+  wire();
+  setPrimary($("#btn-start"));
+}
+/* Segmented buttons instead of dropdowns: all choices visible at once. */
+function buildSeg(sel, choices, key, initial) {
+  const host = $(sel);
+  state.settings[key] = initial;
+  const btns = choices.map((c) => {
+    const b = el("button", { type: "button", "aria-pressed": String(c.v === initial) }, c.t);
+    b.addEventListener("click", () => { state.settings[key] = c.v; btns.forEach((x) => x.setAttribute("aria-pressed", String(x === b))); });
+    host.append(b);
+    return b;
+  });
+}
+
+function wire() {
+  $("#btn-start").addEventListener("click", startGame);
+  $("#btn-pearls").addEventListener("click", startPearls);
+  $("#btn-spin").addEventListener("click", spin);
+  $("#btn-solve").addEventListener("click", () => openSolve(state.active));
+  $("#btn-end").addEventListener("click", () => { if (confirm("End the game now? Current puzzle points will be banked.")) endGame("Game ended by host."); });
+  $("#btn-retry").addEventListener("click", () => startReview(missedItems()));
+  $("#btn-copy").addEventListener("click", copyResults);
+  $("#btn-again").addEventListener("click", () => { stopConfetti(); state.view = "start"; show("#screen-start"); setPrimary($("#btn-start")); });
+  // Display controls for the room
+  const scales = [0.85, 1, 1.15, 1.3, 1.5];
+  const setScale = (d) => { const i = Math.max(0, Math.min(scales.length - 1, scales.indexOf(state.scale) + d)); state.scale = scales[i]; document.documentElement.style.setProperty("--scale", String(state.scale)); announce(`Text size ${Math.round(state.scale * 100)}%`); };
+  $("#btn-text-up").addEventListener("click", () => setScale(1));
+  $("#btn-text-dn").addEventListener("click", () => setScale(-1));
+  const themes = ["Auto", "Light", "Dark"];
+  let ti = 0;
+  $("#btn-theme").addEventListener("click", () => {
+    ti = (ti + 1) % 3;
+    if (ti === 0) document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", themes[ti].toLowerCase());
+    $("#btn-theme").textContent = `Theme: ${themes[ti]}`;
+  });
+  $("#btn-sound").addEventListener("click", () => { Sound.setOn(!Sound.isOn()); $("#btn-sound").setAttribute("aria-pressed", String(Sound.isOn())); $("#btn-sound").textContent = `Sound: ${Sound.isOn() ? "On" : "Off"}`; });
+  $("#btn-full").addEventListener("click", () => {
+    try {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen();
+    } catch (e) { announce("Full screen is not available in this browser"); }
+  });
+  document.addEventListener("fullscreenchange", () => { $("#btn-full").textContent = document.fullscreenElement ? "Exit full screen" : "Full screen"; });
+  $("#btn-keys").addEventListener("click", () => { const p = $("#keys-pop"); p.hidden = !p.hidden; $("#btn-keys").setAttribute("aria-expanded", String(!p.hidden)); });
+  document.addEventListener("keydown", onKey);
+}
+
+function startGame() {
+  stopConfetti();
+  const nameA = $("#teamA").value.trim() || "Team 1", nameB = $("#teamB").value.trim() || "Team 2";
+  state.teams = [{ name: nameA, round: 0, total: 0 }, { name: nameB, round: 0, total: 0 }];
+  state.pool = state.settings.pool === "cases" ? state.ready.filter((i) => i.type === "case_mcq") : state.ready.slice();
+  state.active = Math.random() < 0.5 ? 0 : 1;
+  state.used = new Set(); state.log = []; state.puzzlesSolved = 0; state.q = null; state.endNote = "";
+  state.puzzleQueue = shuffle(validPuzzles());
+  nextPuzzle();
+  show("#screen-game");
+  showWheel(`${state.teams[state.active].name} spins first.`);
+}
+
+/* =====================================================================
+   WHEEL. Drawn once. A positive SVG rotation turns it clockwise. The
+   wedge under the top pointer is the one whose original angle a
+   satisfies (a + rotation) ≡ 0 (mod 360).
+   ===================================================================== */
+const SEG = 360 / WEDGES.length;
+function puzzleOk(p) { return !!p && /^[A-Z ]+$/.test(p.phrase || "") && !!p.pearl && !!p.source && !!p.category; }
+const validPuzzles = () => PUZZLES.filter(puzzleOk);
+function polar(r, deg) { const t = (deg * Math.PI) / 180; return { x: r * Math.sin(t), y: -r * Math.cos(t) }; }
+function buildWheel() {
+  const svg = $("#wheel");
+  const defs = svgEl("defs");
+  defs.innerHTML = '<radialGradient id="rim" cx="50%" cy="50%" r="50%"><stop offset="86%" stop-color="#2a2f45"/><stop offset="100%" stop-color="#0d0f19"/></radialGradient>' +
+    '<radialGradient id="hubg" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#fff7d6"/><stop offset="70%" stop-color="#f2b705"/><stop offset="100%" stop-color="#a77a00"/></radialGradient>' +
+    '<radialGradient id="shine" cx="35%" cy="25%" r="75%"><stop offset="0%" stop-color="#ffffff" stop-opacity=".22"/><stop offset="60%" stop-color="#ffffff" stop-opacity="0"/></radialGradient>';
+  svg.append(defs);
+  svg.append(svgEl("circle", { cx: 0, cy: 0, r: 208, fill: "url(#rim)" }));
+  const g = svgEl("g", { id: "wheel-rot" });
+  const r = 190;
+  WEDGES.forEach((w, i) => {
+    const a0 = i * SEG, a1 = (i + 1) * SEG, p0 = polar(r, a0), p1 = polar(r, a1);
+    g.append(svgEl("path", { d: `M0 0 L${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A${r} ${r} 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} Z`, fill: w.color, stroke: "#ffffff", "stroke-width": "2.5" }));
+    const t = svgEl("text", {
+      transform: `rotate(${a0 + SEG / 2}) translate(0,-${w.kind === "value" ? 142 : 116}) rotate(-90)`,
+      "text-anchor": "middle", "dominant-baseline": "central", fill: w.ink,
+      "font-size": w.kind === "value" ? "25" : "13.5", "font-weight": "900", "font-family": "system-ui, sans-serif", "letter-spacing": w.kind === "value" ? "0" : ".5"
+    });
+    t.textContent = w.label;
+    g.append(t);
+  });
+  g.append(svgEl("circle", { cx: 0, cy: 0, r: 190, fill: "url(#shine)" }));
+  g.append(svgEl("circle", { cx: 0, cy: 0, r: 34, fill: "url(#hubg)", stroke: "#3a2c00", "stroke-width": "3" }));
+  const hub = svgEl("text", { x: 0, y: 1, "text-anchor": "middle", "dominant-baseline": "central", "font-size": "15", "font-weight": "900", fill: "#2b2100", "font-family": "system-ui, sans-serif" });
+  hub.textContent = "SAB";
+  g.append(hub);
+  svg.append(g);
+  // Rim lights (static, blink while spinning)
+  for (let i = 0; i < 32; i++) { const p = polar(199, i * 11.25 + 5.625); svg.append(svgEl("circle", { class: "rim-light", cx: p.x.toFixed(2), cy: p.y.toFixed(2), r: 3.6 })); }
+  // Pointer (fixed, wiggles on each wedge boundary)
+  const ptr = svgEl("g", { id: "pointer" });
+  ptr.append(svgEl("path", { d: "M-19 -220 L19 -220 L0 -172 Z", fill: "#f2b705", stroke: "#1a1400", "stroke-width": "3.5", "stroke-linejoin": "round" }));
+  ptr.append(svgEl("circle", { cx: 0, cy: -212, r: 5, fill: "#1a1400" }));
+  svg.append(ptr);
+}
+function wedgeUnderPointer(angle) { const a = (((-angle) % 360) + 360) % 360; return Math.floor(a / SEG) % WEDGES.length; }
+/* Picks the landing wedge first, then a rotation that lands inside it
+   (with jitter, never on a border), so the result is uniform and exact. */
+function targetAngleFor(idx, current) {
+  const jitter = (Math.random() - 0.5) * SEG * 0.7;
+  const a = idx * SEG + SEG / 2 + jitter;
+  const delta = ((((-a) - current) % 360) + 360) % 360;
+  return current + 360 * (4 + Math.floor(Math.random() * 2)) + delta;
+}
+function spin() {
+  if (state.spinning || state.view !== "wheel") return;
+  state.spinning = true;
+  $("#btn-spin").disabled = true; $("#btn-solve").disabled = true;
+  $("#wheel-msg").textContent = "Spinning…";
+  $("#landed-slot").innerHTML = "";
+  const svg = $("#wheel"); svg.classList.add("spinning");
+  const idx = Math.floor(Math.random() * WEDGES.length);
+  const start = state.wheelAngle, end = targetAngleFor(idx, start);
+  const dur = reduceMotion() ? 600 : 4800;
+  const g = $("#wheel-rot"), ptr = $("#pointer");
+  const t0 = performance.now();
+  const ease = (t) => 1 - Math.pow(1 - t, 3.4);
+  let lastSeg = Math.floor(start / SEG);
+  const frame = (now) => {
+    const t = Math.min(1, (now - t0) / dur);
+    const ang = start + (end - start) * ease(t);
+    g.setAttribute("transform", `rotate(${ang})`);
+    const s = Math.floor(ang / SEG);
+    if (s !== lastSeg) { lastSeg = s; Sound.tick(); ptr.classList.remove("tick"); void ptr.getBoundingClientRect(); ptr.classList.add("tick"); }
+    if (t < 1) requestAnimationFrame(frame);
+    else {
+      state.wheelAngle = end % 360;
+      g.setAttribute("transform", `rotate(${state.wheelAngle})`);
+      svg.classList.remove("spinning");
+      state.spinning = false;
+      onLand(wedgeUnderPointer(state.wheelAngle));
+    }
+  };
+  requestAnimationFrame(frame);
+}
+
+/* =====================================================================
+   TURN FLOW
+   ===================================================================== */
+function landedChip(w) { return el("span", { class: "landed", style: `background:${w.color};color:${w.ink}` }, `Landed: ${w.kind === "value" ? w.label + " pts" : w.label}`); }
+function onLand(idx) {
+  const w = WEDGES[idx], team = state.teams[state.active];
+  announce(`Landed on ${w.label}.`);
+  if (w.kind === "bankrupt") {
+    const lost = team.round; team.round = 0; Sound.bankrupt();
+    if (lost) popScore(state.active, `−${fmt(lost)}`, false);
+    return passTurn(`BANKRUPT! ${team.name} loses ${fmt(lost)} puzzle points.`, w);
+  }
+  if (w.kind === "lose") { Sound.wrong(); return passTurn(`LOSE A TURN for ${team.name}.`, w); }
+  if (w.kind === "free") { Sound.ding(); showWheel(`FREE SPIN! ${team.name}, spin again.`); $("#landed-slot").append(landedChip(w)); return; }
+  if (w.kind === "value") return askQuestion({ kind: "value", value: w.value, label: w.label, wedge: w, target: w.value <= 200 ? 1 : w.value <= 400 ? 2 : 3 });
+  if (w.kind === "steal") return askQuestion({ kind: "steal", label: "STEAL", wedge: w, target: 2 });
+  if (w.kind === "double") return askQuestion({ kind: "double", label: "DOUBLE", wedge: w, target: 3 });
+}
+
+/* Picks an unused item closest to the target difficulty. */
+function pickItem(target) {
+  const unused = state.pool.filter((it) => !state.used.has(it.id));
+  for (let d = 0; d <= 2; d++) { const c = unused.filter((it) => Math.abs(it.difficulty - target) === d); if (c.length) return c[Math.floor(Math.random() * c.length)]; }
+  return null;
+}
+function askQuestion(ctx) {
+  const item = pickItem(ctx.target);
+  if (!item) return endGame("Question bank exhausted.");
+  state.used.add(item.id);
+  state.q = { item, ctx, team: state.active, attempt: 0, picks: [], order: null };
+  renderQuestion();
+}
+function prizeText(ctx, steal) {
+  if (ctx.kind === "value") return steal ? `${fmt(Math.floor(ctx.value * RULES.stealFraction))} pts` : `${fmt(ctx.value)} pts + a letter`;
+  if (steal) return `${RULES.stealOnSpecial} pts`;
+  return ctx.kind === "steal" ? `steal up to ${RULES.stealWedgeMax} pts` : "double your puzzle points";
+}
+
+function renderQuestion() {
+  const q = state.q, item = q.item;
+  const answering = q.attempt === 0 ? q.team : 1 - q.team;
+  setView("question");
+  const v = $("#view-question");
+  v.innerHTML = "";
+  const stars = "●".repeat(item.difficulty) + "○".repeat(3 - item.difficulty);
+  const ring = el("div", { class: "timer-ring", id: "timer", hidden: !state.settings.timer, "aria-label": "Time remaining" });
+  ring.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><circle class="trk" cx="20" cy="20" r="17" fill="none" stroke-width="4"/><circle class="bar" cx="20" cy="20" r="17" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="0"/></svg><span></span>';
+  v.append(el("div", { class: "qhead" },
+    el("div", { class: "row" },
+      el("span", { class: "who", "data-team": String(answering) }, q.attempt ? `STEAL: ${state.teams[answering].name}` : state.teams[answering].name),
+      el("span", { class: "landed", style: `background:${q.ctx.wedge.color};color:${q.ctx.wedge.ink};font-size:1rem` }, q.ctx.label),
+      el("span", { class: "prize" }, `for ${prizeText(q.ctx, q.attempt === 1)}`)),
+    el("div", { class: "row" },
+      el("span", { class: "chip" }, item.domain),
+      el("span", { class: "chip", "aria-label": `Difficulty ${item.difficulty} of 3` }, el("span", { class: "stars", "aria-hidden": "true" }, stars)),
+      ring)));
+  const host = el("div");
+  v.append(host);
+  const lock = el("button", { class: "btn-primary btn-xl", type: "button", disabled: true }, "Lock in answer");
+  q.ctl = renderItem(host, item, { order: q.order, eliminated: q.picks, onChange: () => { lock.disabled = !q.ctl.isComplete(); } });
+  if (q.ctl.order) q.order = q.ctl.order; // keep the same option order for a steal attempt
+  lock.disabled = !q.ctl.isComplete();
+  lock.addEventListener("click", () => lockIn(false));
+  v.append(el("div", { class: "actions", id: "q-actions" }, lock, el("span", { class: "small muted" }, item.type === "match" ? "Keys: A–E pick, 1–5 match, Enter locks in" : MCQ_TYPES.includes(item.type) ? "Keys: 1–4 choose, Enter locks in" : "Enter locks in")));
+  setPrimary(lock);
+  startTimer();
+  scrollIntoViewSafe(v);
+}
+
+function startTimer() {
+  stopTimer();
+  const secs = state.settings.timer;
+  if (!secs) return;
+  let left = secs;
+  const ring = $("#timer"), bar = ring.querySelector(".bar"), num = ring.querySelector("span");
+  const paint = () => { num.textContent = String(left); bar.setAttribute("stroke-dashoffset", String(106.8 * (1 - left / secs))); ring.classList.toggle("low", left <= 10); };
+  paint();
+  state.timerId = setInterval(() => {
+    left--; paint();
+    if (left === 10) announce("10 seconds left");
+    if (left > 0 && left <= 5) Sound.tick();
+    if (left <= 0) { stopTimer(); announce("Time is up"); lockIn(true); }
+  }, 1000);
+}
+function stopTimer() { if (state.timerId) { clearInterval(state.timerId); state.timerId = null; } }
+
+/* Records one attempt (used for end-screen stats). */
+function logAttempt(item, team, correct, steal) { state.log.push({ id: item.id, team, correct, steal, domain: item.domain, bloom: item.bloom }); }
+
+function lockIn(timedOut) {
+  const q = state.q;
+  if (!q || q.locked) return;
+  stopTimer();
+  const correct = !timedOut && q.ctl.isComplete() && q.ctl.isCorrect();
+  const answering = q.attempt === 0 ? q.team : 1 - q.team;
+  if (MCQ_TYPES.includes(q.item.type) && q.ctl.pickedOriginal() !== null) q.picks.push(q.ctl.pickedOriginal());
+  logAttempt(q.item, answering, correct, q.attempt === 1);
+  if (correct || q.attempt === 1) return finishQuestion(correct);
+
+  // First attempt wrong: keep the answer hidden and offer the other team a steal.
+  Sound.wrong();
+  q.ctl.disable();
+  q.locked = true;
+  const other = state.teams[1 - q.team];
+  const acts = $("#q-actions");
+  acts.innerHTML = "";
+  const stealBtn = el("button", { class: "btn-gold btn-xl", type: "button" }, `${other.name}: steal!`);
+  const skipBtn = el("button", { class: "btn-lg", type: "button" }, "No steal, reveal answer");
+  stealBtn.addEventListener("click", () => { q.attempt = 1; q.locked = false; renderQuestion(); });
+  skipBtn.addEventListener("click", () => finishQuestion(false, true));
+  acts.append(el("div", { class: "steal-banner", role: "status" },
+    el("div", {}, el("div", { class: "big" }, el("span", { "aria-hidden": "true" }, "✗ "), timedOut ? "Time's up!" : "Not quite!"),
+      el("div", { style: "font-weight:700;font-size:1.15rem" }, `${other.name} can steal for ${prizeText(q.ctx, true)}. The answer stays hidden.`)),
+    el("div", { class: "row" }, stealBtn, skipBtn)));
+  setPrimary(stealBtn);
+  stealBtn.focus();
+  announce(`Incorrect. ${other.name} may steal.`);
+}
+
+/* Applies points for a resolved question, then shows the full feedback. */
+function finishQuestion(correct, skippedSteal) {
+  const q = state.q;
+  q.locked = true;
+  q.ctl.disable();
+  const ownerIdx = q.team, stealIdx = 1 - q.team, owner = state.teams[ownerIdx], stealer = state.teams[stealIdx];
+  let headline = "", letterPhase = false;
+  if (correct && q.attempt === 0) {
+    if (q.ctx.kind === "value") { owner.round += q.ctx.value; letterPhase = true; popScore(ownerIdx, `+${fmt(q.ctx.value)}`, true); headline = `Correct! ${owner.name} +${fmt(q.ctx.value)}`; }
+    else if (q.ctx.kind === "steal") {
+      const amt = Math.min(RULES.stealWedgeMax, stealer.round);
+      if (amt > 0) { stealer.round -= amt; owner.round += amt; popScore(ownerIdx, `+${fmt(amt)}`, true); popScore(stealIdx, `−${fmt(amt)}`, false); headline = `Correct! ${owner.name} steals ${fmt(amt)} from ${stealer.name}`; }
+      else { owner.round += RULES.stealWedgeFloor; popScore(ownerIdx, `+${RULES.stealWedgeFloor}`, true); headline = `Correct! Nothing to steal, so +${RULES.stealWedgeFloor}`; }
+    } else {
+      if (owner.round > 0) { const was = owner.round; owner.round *= 2; popScore(ownerIdx, `×2`, true); headline = `Correct! ${owner.name} doubles ${fmt(was)} → ${fmt(owner.round)}`; }
+      else { owner.round += RULES.doubleFloor; popScore(ownerIdx, `+${RULES.doubleFloor}`, true); headline = `Correct! Nothing to double, so +${RULES.doubleFloor}`; }
+    }
+    Sound.correct();
+  } else if (correct && q.attempt === 1) {
+    const amt = q.ctx.kind === "value" ? Math.floor(q.ctx.value * RULES.stealFraction) : RULES.stealOnSpecial;
+    stealer.round += amt; popScore(stealIdx, `+${fmt(amt)}`, true); Sound.correct();
+    headline = `Stolen! ${stealer.name} +${fmt(amt)}`;
+  } else {
+    Sound.wrong();
+    headline = q.attempt === 1 ? "Steal missed. No points this time." : skippedSteal ? "No steal. Here's the answer." : "Not quite.";
+  }
+  renderScores();
+  const v = $("#view-question");
+  q.ctl.markFeedback(q.picks);
+  $("#q-actions").remove();
+  const fb = renderFeedback(q.item, correct, headline);
+  v.append(fb);
+  const cont = el("button", { class: "btn-primary btn-xl", type: "button" }, letterPhase ? `${owner.name}: call a letter →` : "Next turn →");
+  cont.addEventListener("click", () => (letterPhase ? showLetters(q.team) : passTurn(headline)));
+  v.append(el("div", { class: "actions", style: "margin-top:1rem" }, cont));
+  setPrimary(cont);
+  scrollIntoViewSafe(fb);
+  announce(headline);
+}
+
+function passTurn(msg, wedge) {
+  state.active = 1 - state.active;
+  showWheel(msg);
+  if (wedge) $("#landed-slot").append(landedChip(wedge));
+}
+
+/* =====================================================================
+   PUZZLE BOARD
+   ===================================================================== */
+function nextPuzzle() { state.puzzle = state.puzzleQueue.shift(); state.guessed = new Set(); state.flipLetter = null; renderBoard(); }
+function renderBoard(revealAll) {
+  const p = state.puzzle;
+  $("#puzzle-cat").textContent = p.category;
+  const words = $("#puzzle-words");
+  words.innerHTML = "";
+  let k = 0;
+  p.phrase.split(" ").forEach((w) => {
+    const wd = el("div", { class: "word" });
+    [...w].forEach((ch) => {
+      const shown = revealAll || state.guessed.has(ch);
+      const isNew = shown && (state.flipLetter === ch || (revealAll === "flip" && !state.guessed.has(ch)));
+      const t = el("div", { class: "tile" + (shown ? "" : " hidden") + (isNew ? " flip" : "") }, shown ? ch : "");
+      if (isNew) { t.style.animationDelay = `${k * 0.12}s`; if (state.flipLetter === ch) Sound.ding(k); k++; }
+      wd.append(t);
+    });
+    words.append(wd);
+  });
+  state.flipLetter = null;
+  $("#puzzle-sr").textContent = `Puzzle, category ${p.category}: ` + p.phrase.split(" ").map((w) => [...w].map((c) => (revealAll || state.guessed.has(c) ? c : "blank")).join(" ")).join(", next word, ");
+  $("#used-letters").textContent = state.guessed.size ? "CALLED  " + [...state.guessed].sort().join(" ") : "";
+}
+function puzzleComplete() { return [...new Set(normalizePhrase(state.puzzle.phrase))].every((c) => state.guessed.has(c)); }
+
+function showLetters(teamIdx) {
+  setView("letters");
+  const t = state.teams[teamIdx], v = $("#view-letters");
+  v.innerHTML = "";
+  v.append(el("div", { class: "qhead" }, el("span", { class: "who", "data-team": String(teamIdx) }, `${t.name}: call a letter`),
+    el("span", { class: "muted", style: "font-weight:700" }, `Consonants +${RULES.consonantPerLetter} each · Vowels cost ${RULES.vowelCost}`)));
+  const grid = el("div", { class: "letters", role: "group", "aria-label": "Letters" });
+  let any = false;
+  for (let c = 65; c <= 90; c++) {
+    const L = String.fromCharCode(c), vowel = VOWELS.has(L);
+    const off = state.guessed.has(L) || (vowel && t.round < RULES.vowelCost);
+    if (!off) any = true;
+    const b = el("button", { type: "button", class: vowel ? "vowel" : "", disabled: off, "aria-label": `${L}${vowel ? `, vowel, costs ${RULES.vowelCost}` : ""}${state.guessed.has(L) ? ", already called" : ""}` }, L);
+    b.addEventListener("click", () => guessLetter(teamIdx, L));
+    grid.append(b);
+  }
+  v.append(grid);
+  const solve = el("button", { type: "button", class: "btn-lg" }, "Solve instead");
+  solve.addEventListener("click", () => openSolve(teamIdx));
+  const skip = el("button", { type: "button", class: "btn-ghost btn-lg" }, "Skip letter, end turn");
+  skip.addEventListener("click", () => passTurn(`${t.name} passes.`));
+  v.append(el("div", { class: "actions" }, solve, skip, !any ? el("span", { class: "muted" }, "No letters available. Solve or end the turn.") : null));
+  state.letterTeam = teamIdx;
+  setPrimary(null);
+  const first = grid.querySelector("button:not([disabled])");
+  if (first) first.focus();
+  scrollIntoViewSafe(v);
+}
+
+function guessLetter(teamIdx, L) {
+  if (state.view !== "letters" || state.guessed.has(L)) return;
+  const t = state.teams[teamIdx], vowel = VOWELS.has(L);
+  if (vowel && t.round < RULES.vowelCost) return;
+  const count = [...normalizePhrase(state.puzzle.phrase)].filter((c) => c === L).length;
+  state.guessed.add(L);
+  state.flipLetter = count ? L : null;
+  let msg;
+  if (vowel) { t.round -= RULES.vowelCost; popScore(teamIdx, `−${RULES.vowelCost}`, false); msg = count ? `${count} ${L}${count > 1 ? "'s" : ""}!` : `No ${L}.`; }
+  else { const pts = count * RULES.consonantPerLetter; t.round += pts; if (pts) popScore(teamIdx, `+${pts}`, true); msg = count ? `${count} ${L}${count > 1 ? "'s" : ""}! +${pts}` : `No ${L}.`; }
+  if (!count) Sound.wrong();
+  renderBoard(); renderScores(); announce(msg);
+  if (puzzleComplete()) return solvePuzzle(teamIdx, `${msg} That completes the puzzle!`);
+  setView("letters");
+  const v = $("#view-letters");
+  v.innerHTML = "";
+  const solve = el("button", { class: "btn-primary btn-xl", type: "button" }, "Solve the puzzle");
+  const end = el("button", { class: "btn-lg", type: "button" }, "End turn");
+  solve.addEventListener("click", () => openSolve(teamIdx));
+  end.addEventListener("click", () => passTurn(`${t.name}: ${msg}`));
+  v.append(el("div", { class: "qhead" }, el("span", { class: "who", "data-team": String(teamIdx) }, t.name)),
+    el("p", { class: "letter-result", role: "status" }, msg),
+    el("p", { style: "font-size:1.2rem;font-weight:650" }, "Solve now, or end your turn?"),
+    el("div", { class: "actions" }, solve, end));
+  state.view = "letters-done";
+  setPrimary(end);
+  end.focus();
+}
+
+function openSolve(teamIdx) {
+  if (state.spinning) return;
+  setView("solve");
+  const t = state.teams[teamIdx], v = $("#view-solve");
+  v.innerHTML = "";
+  const inp = el("input", { type: "text", id: "solve-input", class: "solve-input", autocomplete: "off", autocapitalize: "characters", spellcheck: "false" });
+  const submit = el("button", { class: "btn-primary btn-xl", type: "button" }, "Submit solve");
+  const cancel = el("button", { class: "btn-lg", type: "button" }, "Cancel");
+  v.append(el("div", { class: "qhead" }, el("span", { class: "who", "data-team": String(teamIdx) }, `${t.name}: solve the puzzle`), el("span", { class: "chip" }, `Category: ${state.puzzle.category}`)),
+    el("div", { class: "field" }, el("label", { for: "solve-input", style: "font-size:1.1rem" }, "Type the full phrase"), inp),
+    el("p", { class: "muted", style: "margin-top:.5rem" }, "Spacing and capitalization don't matter. A wrong solve ends your turn."),
+    el("div", { class: "actions" }, submit, cancel));
+  submit.addEventListener("click", () => {
+    if (normalizePhrase(inp.value) === normalizePhrase(state.puzzle.phrase)) solvePuzzle(teamIdx, `${t.name} solved it!`);
+    else { Sound.wrong(); passTurn(`"${inp.value.trim() || "(blank)"}" is not it.`); }
+  });
+  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit.click(); } });
+  // Cancel returns to where the team came from: letter picker, end of turn
+  // (letter already used), or the wheel (solve chosen instead of spinning).
+  const from = state.prevView;
+  cancel.addEventListener("click", () => {
+    if (from === "letters") showLetters(teamIdx);
+    else if (from === "letters-done") passTurn(`${t.name} ends turn.`);
+    else showWheel(`${t.name}, your spin.`);
+  });
+  setPrimary(submit);
+  inp.focus();
+}
+
+/* Solver gets the bonus; both teams bank their puzzle points. */
+function solvePuzzle(teamIdx, msg) {
+  const t = state.teams[teamIdx];
+  t.round += RULES.solveBonus;
+  popScore(teamIdx, `+${RULES.solveBonus}`, true);
+  state.teams.forEach((x) => { x.total += x.round; x.round = 0; });
+  state.puzzlesSolved++;
+  renderBoard("flip"); renderScores(); Sound.fanfare();
+  setView("solve");
+  const v = $("#view-solve");
+  v.innerHTML = "";
+  const done = state.puzzlesSolved >= state.settings.puzzles || state.puzzleQueue.length === 0;
+  const noQs = state.pool.every((it) => state.used.has(it.id));
+  v.append(el("p", { class: "letter-result", role: "status" }, el("span", { "aria-hidden": "true" }, "★ "), msg),
+    el("p", { style: "font-size:1.6rem;font-weight:850;letter-spacing:.04em" }, state.puzzle.phrase),
+    el("p", { style: "font-size:1.15rem" }, `${t.name} +${RULES.solveBonus} bonus. Puzzle points are banked for both teams.`),
+    // Every solved phrase is a teachable pearl: show the teaching point and its source.
+    el("div", { class: "pearl" }, el("span", { class: "pl" }, `Pearl · ${state.puzzle.category}`), state.puzzle.pearl),
+    el("span", { class: "badge" }, `Handout: ${state.puzzle.source}`));
+  const btn = el("button", { class: "btn-primary btn-xl", type: "button" }, done || noQs ? "See final results" : "Next puzzle →");
+  btn.addEventListener("click", () => {
+    if (done || noQs) return endGame(noQs && !done ? "Question bank exhausted." : "");
+    nextPuzzle();
+    state.active = 1 - teamIdx;
+    showWheel(`New puzzle! ${state.teams[state.active].name} spins first.`);
+  });
+  v.append(el("div", { class: "actions" }, btn));
+  setPrimary(btn); btn.focus();
+  announce(msg);
+}
+
+/* =====================================================================
+   VIEW HELPERS
+   ===================================================================== */
+function setView(name) {
+  if (name === "solve") state.prevView = state.view;
+  state.view = name;
+  document.body.dataset.view = name === "question" ? "question" : name === "solve" ? "solve" : "game";
+  $("#view-wheel").hidden = name !== "wheel";
+  $("#view-question").hidden = name !== "question";
+  $("#view-letters").hidden = !(name === "letters" || name === "letters-done");
+  $("#view-solve").hidden = name !== "solve";
+  renderScores();
+}
+function showWheel(msg) {
+  stopTimer();
+  state.q = null;
+  setView("wheel");
+  const t = state.teams[state.active];
+  const call = $("#turn-callout");
+  call.innerHTML = "";
+  call.style.setProperty("--tc", state.active === 0 ? "var(--teamA)" : "var(--teamB)");
+  call.append(el("span", { class: "tn" }, t.name), el("br"), "you're up!");
+  $("#wheel-msg").textContent = msg || "";
+  $("#landed-slot").innerHTML = "";
+  $("#btn-spin").disabled = false; $("#btn-solve").disabled = false;
+  setPrimary($("#btn-spin"));
+  $("#btn-spin").focus();
+  if (msg) announce(msg);
+}
+function renderScores() {
+  state.teams.forEach((t, i) => {
+    const p = $(`#team-${i}`);
+    const pops = [...p.querySelectorAll(".pop")];
+    p.innerHTML = "";
+    p.classList.toggle("active", i === state.active);
+    p.setAttribute("aria-label", `${t.name}: ${t.round} puzzle points, ${t.total} banked${i === state.active ? ", up now" : ""}`);
+    p.append(el("div", { class: "tname" }, t.name), el("span", { class: "upnow" }, "▶ UP NOW"),
+      el("div", { class: "score" }, fmt(t.round)), el("div", { class: "score-label" }, "This puzzle"),
+      el("div", { class: "banked" }, `Banked: ${fmt(t.total)}`), ...pops);
+  });
+  const left = state.pool.filter((it) => !state.used.has(it.id)).length;
+  $("#q-left").textContent = `Puzzle ${Math.min(state.puzzlesSolved + 1, state.settings.puzzles)} of ${state.settings.puzzles} · ${left} questions left`;
+}
+function popScore(teamIdx, text, good) {
+  const p = $(`#team-${teamIdx}`); if (!p) return;
+  const n = el("span", { class: "pop " + (good ? "good" : "bad"), "aria-hidden": "true" }, text);
+  p.append(n);
+  setTimeout(() => n.remove(), 1400);
+}
+
+/* =====================================================================
+   RESULTS
+   ===================================================================== */
+function endGame(note) {
+  stopTimer();
+  state.teams.forEach((x) => { x.total += x.round; x.round = 0; });
+  state.endNote = note || "";
+  state.view = "end";
+  const [a, b] = state.teams;
+  $("#winner").textContent = a.total === b.total ? `It's a tie at ${fmt(a.total)}!` : `${(a.total > b.total ? a : b).name} wins!`;
+  const finals = $("#finals"); finals.innerHTML = "";
+  const st = computeStats();
+  state.teams.forEach((t, i) => finals.append(el("div", { class: "final", "data-team": String(i) }, el("div", { class: "tname" }, t.name), el("div", { class: "pts" }, fmt(t.total)), el("div", { class: "muted" }, `${st.overall[i].c} / ${st.overall[i].n} correct`))));
+  $("#end-note").textContent = [state.endNote, `${state.used.size} questions played. Points include wedges, letters, and solve bonuses.`].filter(Boolean).join(" ");
+  $("#tbl-domain").innerHTML = ""; $("#tbl-bloom").innerHTML = "";
+  $("#tbl-domain").append(statTable("Domain", st.domain, st.overall));
+  $("#tbl-bloom").append(statTable("Bloom", st.bloom, st.overall));
+  const ml = $("#missed-list"); ml.innerHTML = "";
+  const missed = missedEntries();
+  if (!missed.length) ml.append(el("p", {}, "None. Every question was answered correctly on the first try."));
+  missed.forEach(({ item, team, stolen }) => {
+    ml.append(el("details", {}, el("summary", {}, `${item.id} · ${item.domain} · missed by ${state.teams[team].name}${stolen ? " (stolen)" : ""}`),
+      el("p", { style: "white-space:pre-line;margin-top:.6rem" }, item.stem), el("p", {}, el("b", {}, "Answer: "), answerText(item)), el("p", {}, item.rationale.correct),
+      el("div", { class: "pearl" }, el("span", { class: "pl" }, "Pearl"), item.pearl), sourceBadge(item)));
+  });
+  $("#btn-retry").disabled = missed.length === 0;
+  $("#copy-status").textContent = "";
+  show("#screen-end");
+  Sound.fanfare();
+  startConfetti();
+  setPrimary($("#btn-copy"));
+}
+function answerText(item) {
+  if (MCQ_TYPES.includes(item.type)) return item.options[item.answer_index];
+  if (item.type === "match") return item.pairs.map((p) => `${p[0]} → ${p[1]}`).join("; ");
+  return item.sequence.map((s, i) => `${i + 1}. ${s}`).join("  ");
+}
+/* Per-team correct/attempted by domain and Bloom, from the attempt log.
+   Each attempt (including steals) counts once for the team that answered,
+   so domain totals and Bloom totals each sum to the overall total. */
+function computeStats() {
+  const blank = () => [{ c: 0, n: 0 }, { c: 0, n: 0 }];
+  const domain = {}, bloom = {}, overall = blank();
+  state.log.forEach((L) => {
+    (domain[L.domain] = domain[L.domain] || blank())[L.team].n++;
+    (bloom[L.bloom] = bloom[L.bloom] || blank())[L.team].n++;
+    overall[L.team].n++;
+    if (L.correct) { domain[L.domain][L.team].c++; bloom[L.bloom][L.team].c++; overall[L.team].c++; }
+  });
+  return { domain, bloom, overall };
+}
+function statTable(label, groups, overall) {
+  const tbl = el("table", {}, el("thead", {}, el("tr", {}, el("th", { scope: "col" }, label), state.teams.map((t) => el("th", { scope: "col" }, t.name)))));
+  const tb = el("tbody");
+  Object.keys(groups).sort().forEach((k) => tb.append(el("tr", {}, el("th", { scope: "row" }, k), groups[k].map((g) => el("td", {}, `${g.c} / ${g.n}`)))));
+  tb.append(el("tr", {}, el("th", { scope: "row" }, "Total"), overall.map((g) => el("td", {}, `${g.c} / ${g.n}`))));
+  tbl.append(tb);
+  return tbl;
+}
+/* An item is "missed" if the first answering team got it wrong. */
+function missedEntries() {
+  const out = [];
+  state.log.forEach((L, i) => {
+    if (L.steal || L.correct) return;
+    const next = state.log[i + 1];
+    const stolen = !!(next && next.steal && next.id === L.id && next.correct);
+    out.push({ item: state.ready.find((it) => it.id === L.id), team: L.team, stolen });
+  });
+  return out;
+}
+function missedItems() { const seen = new Set(); return missedEntries().map((m) => m.item).filter((it) => !seen.has(it.id) && seen.add(it.id)); }
+function resultsText() {
+  const s = computeStats();
+  const lines = [`SAB Wheel results: ${BANK.meta.topic}`, new Date().toLocaleString(), ""];
+  state.teams.forEach((t, i) => lines.push(`${t.name}: ${fmt(t.total)} pts, ${s.overall[i].c}/${s.overall[i].n} correct`));
+  lines.push("", "By domain (correct/attempted):");
+  Object.keys(s.domain).sort().forEach((k) => lines.push(`  ${k}: ` + state.teams.map((t, i) => `${t.name} ${s.domain[k][i].c}/${s.domain[k][i].n}`).join(", ")));
+  lines.push("", "By Bloom level:");
+  Object.keys(s.bloom).sort().forEach((k) => lines.push(`  ${k}: ` + state.teams.map((t, i) => `${t.name} ${s.bloom[k][i].c}/${s.bloom[k][i].n}`).join(", ")));
+  const m = missedEntries();
+  lines.push("", m.length ? "Missed on first attempt:" : "Missed on first attempt: none");
+  m.forEach(({ item, team, stolen }) => lines.push(`  ${item.id} (${item.domain}): ${state.teams[team].name}${stolen ? ", stolen" : ""}. Pearl: ${item.pearl}`));
+  return lines.join("\n");
+}
+function copyResults() {
+  const text = resultsText();
+  const ok = () => ($("#copy-status").textContent = "✓ Results copied to clipboard.");
+  const fallback = () => {
+    const ta = el("textarea", { style: "position:fixed;left:-9999px" }); ta.value = text;
+    document.body.append(ta); ta.select();
+    try { document.execCommand("copy"); ok(); } catch (e) { $("#copy-status").textContent = "Copy failed. Select and copy the text below."; $("#copy-status").append(el("pre", { style: "white-space:pre-wrap;text-align:left" }, text)); }
+    ta.remove();
+  };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(ok, fallback); else fallback();
+}
+
+/* Confetti (skipped with reduced motion). */
+let confettiRAF = null;
+function startConfetti() {
+  if (reduceMotion()) return;
+  const c = $("#confetti"); let ctx;
+  try { ctx = c.getContext("2d"); } catch (e) { return; }
+  if (!ctx) return;
+  c.hidden = false; c.width = window.innerWidth; c.height = window.innerHeight;
+  const colors = ["#d9362f", "#f2b705", "#1f8a4c", "#2563c9", "#7e3fb8", "#14a3b8", "#c42a6e"];
+  const parts = range(170).map(() => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * 0.5, w: 6 + Math.random() * 8, h: 8 + Math.random() * 10, vy: 2 + Math.random() * 3.5, vx: -1.5 + Math.random() * 3, r: Math.random() * 6, vr: -0.15 + Math.random() * 0.3, col: colors[Math.floor(Math.random() * colors.length)] }));
+  const t0 = performance.now();
+  const step = (now) => {
+    ctx.clearRect(0, 0, c.width, c.height);
+    parts.forEach((p) => { p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.col; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore(); });
+    if (now - t0 < 4500) confettiRAF = requestAnimationFrame(step); else stopConfetti();
+  };
+  confettiRAF = requestAnimationFrame(step);
+}
+function stopConfetti() { if (confettiRAF) cancelAnimationFrame(confettiRAF); confettiRAF = null; const c = $("#confetti"); if (c) c.hidden = true; }
+
+/* =====================================================================
+   RETRY MISSED (solo review, no wheel)
+   ===================================================================== */
+const review = { items: [], i: 0, correct: 0 };
+function startReview(items) {
+  if (!items.length) return;
+  stopConfetti();
+  review.items = shuffle(items); review.i = 0; review.correct = 0;
+  state.view = "review";
+  show("#screen-review");
+  renderReviewItem();
+}
+function renderReviewItem() {
+  const body = $("#review-body");
+  body.innerHTML = "";
+  if (review.i >= review.items.length) {
+    $("#review-progress").textContent = "Done";
+    const back = el("button", { class: "btn-primary btn-xl", type: "button" }, "Back to results");
+    back.addEventListener("click", () => { state.view = "end"; show("#screen-end"); setPrimary($("#btn-copy")); });
+    body.append(el("p", { class: "letter-result" }, `${review.correct} / ${review.items.length} correct on retry`), el("div", { class: "actions" }, back));
+    setPrimary(back); back.focus();
+    return;
+  }
+  const item = review.items[review.i];
+  $("#review-progress").textContent = `${review.i + 1} of ${review.items.length}`;
+  const host = el("div");
+  body.append(host);
+  const lock = el("button", { class: "btn-primary btn-xl", type: "button", disabled: true }, "Lock in answer");
+  const ctl = renderItem(host, item, { onChange: () => (lock.disabled = !ctl.isComplete()) });
+  state.reviewCtl = ctl;
+  lock.disabled = !ctl.isComplete();
+  const acts = el("div", { class: "actions" }, lock);
+  body.append(acts);
+  lock.addEventListener("click", () => {
+    const ok = ctl.isComplete() && ctl.isCorrect();
+    if (ok) { review.correct++; Sound.correct(); } else Sound.wrong();
+    ctl.disable();
+    ctl.markFeedback(MCQ_TYPES.includes(item.type) && ctl.pickedOriginal() !== null ? [ctl.pickedOriginal()] : []);
+    acts.remove();
+    const fb = renderFeedback(item, ok, ok ? "Correct!" : "Not quite.");
+    body.append(fb);
+    const next = el("button", { class: "btn-primary btn-xl", type: "button" }, "Next →");
+    next.addEventListener("click", () => { review.i++; renderReviewItem(); });
+    body.append(el("div", { class: "actions", style: "margin-top:1rem" }, next));
+    setPrimary(next); scrollIntoViewSafe(fb);
+  });
+  setPrimary(lock);
+}
+
+/* =====================================================================
+   RAPID PEARLS (flip cards)
+   ===================================================================== */
+const pearls = { cards: [], i: 0, flipped: false };
+function startPearls() {
+  pearls.cards = shuffle(state.ready); pearls.i = 0; pearls.flipped = false;
+  state.view = "pearls";
+  show("#screen-pearls");
+  $("#pearl-card").onclick = flipPearl;
+  $("#pearl-flip").onclick = flipPearl;
+  $("#pearl-prev").onclick = () => movePearl(-1);
+  $("#pearl-next").onclick = () => movePearl(1);
+  $("#pearl-exit").onclick = () => { state.view = "start"; show("#screen-start"); setPrimary($("#btn-start")); };
+  renderPearl();
+  setPrimary($("#pearl-flip"));
+  $("#pearl-card").focus();
+}
+function renderPearl() {
+  const c = pearls.cards[pearls.i], card = $("#pearl-card");
+  const front = $("#pearl-front"), back = $("#pearl-back");
+  front.innerHTML = ""; back.innerHTML = "";
+  const stem = c.stem.length > 320 ? c.stem.slice(0, 317) + "…" : c.stem;
+  front.append(el("span", { class: "side-label" }, `Card ${pearls.i + 1} · ${c.domain}`), el("span", { class: "front-text" }, stem), el("span", { class: "muted", style: "margin-top:1.2rem;font-weight:700" }, "What's the takeaway? Tap to flip."));
+  back.append(el("span", { class: "side-label" }, "Pearl"), el("span", { class: "back-text" }, c.pearl), el("span", { style: "margin-top:1.2rem" }, sourceBadge(c)));
+  card.classList.toggle("flipped", pearls.flipped);
+  card.setAttribute("aria-pressed", String(pearls.flipped));
+  card.setAttribute("aria-label", pearls.flipped ? `Pearl: ${c.pearl}` : `Card ${pearls.i + 1}, ${c.domain}. ${c.stem}. Press to reveal the pearl.`);
+  front.setAttribute("aria-hidden", String(pearls.flipped)); back.setAttribute("aria-hidden", String(!pearls.flipped));
+  $("#pearl-progress").textContent = `${pearls.i + 1} of ${pearls.cards.length}`;
+}
+function flipPearl() { pearls.flipped = !pearls.flipped; renderPearl(); announce(pearls.flipped ? pearls.cards[pearls.i].pearl : "Front"); }
+function movePearl(d) { pearls.i = (pearls.i + d + pearls.cards.length) % pearls.cards.length; pearls.flipped = false; renderPearl(); }
+
+/* =====================================================================
+   KEYBOARD: 1-9 choose MCQ option / match target, A-H pick match item,
+   Enter = main action, A-Z call a letter, arrows/space in Rapid Pearls.
+   ===================================================================== */
+function onKey(e) {
+  if (e.key === "Escape" && !$("#keys-pop").hidden) { $("#keys-pop").hidden = true; $("#btn-keys").setAttribute("aria-expanded", "false"); $("#btn-keys").focus(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target, tag = t && t.tagName;
+  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+  if (state.view === "pearls" && !$("#screen-pearls").hidden) {
+    if (e.key === "ArrowRight") { movePearl(1); e.preventDefault(); }
+    else if (e.key === "ArrowLeft") { movePearl(-1); e.preventDefault(); }
+    else if ((e.key === " " || e.key === "Enter") && !(tag === "BUTTON" && t.id !== "pearl-card")) { flipPearl(); e.preventDefault(); }
+    return;
+  }
+  const ctl = state.view === "question" && state.q && !state.q.locked ? state.q.ctl : state.view === "review" && state.reviewCtl && !state.reviewCtl.disabled ? state.reviewCtl : null;
+  if (ctl && /^[1-9]$/.test(e.key)) {
+    if (ctl.select) ctl.select(Number(e.key) - 1); else if (ctl.pickRight) ctl.pickRight(Number(e.key) - 1);
+    e.preventDefault(); return;
+  }
+  if (ctl && ctl.selectLeft && /^[a-hA-H]$/.test(e.key)) { ctl.selectLeft(LETTERS.indexOf(e.key.toUpperCase())); e.preventDefault(); return; }
+  if (state.view === "letters" && /^[a-zA-Z]$/.test(e.key)) { guessLetter(state.letterTeam, e.key.toUpperCase()); e.preventDefault(); return; }
+  if (e.key === "Enter" && state.primary && !state.primary.disabled && !state.primary.closest("[hidden]")) {
+    // Enter on an answer card, or with nothing focused, triggers the main action.
+    if (tag !== "BUTTON" || t.classList.contains("opt") || t.classList.contains("m-card")) { e.preventDefault(); state.primary.click(); }
+  }
+}
+
+/* Debug/test hooks (read-only use). */
+window.SABWheel = { BANK, PUZZLES, WEDGES, RULES, state, validateBank, renderItem, shuffle, wedgeUnderPointer, targetAngleFor, onLand, lockIn, finishQuestion, guessLetter, openSolve, solvePuzzle, computeStats, missedEntries, resultsText, startGame, endGame };
+
+init();
+</script>
+</body>
+</html>
