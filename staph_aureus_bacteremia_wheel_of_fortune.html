@@ -158,7 +158,7 @@ svg.spinning .rim-light:nth-of-type(odd){animation-delay:.25s}
 .message{font-size:1.35rem;font-weight:650;min-height:1.6em;margin:0}
 .landed{display:inline-flex;align-items:center;gap:.5rem;font-size:1.25rem;font-weight:850;border-radius:14px;padding:.35em .9em;border:2px solid rgba(0,0,0,.15)}
 .side-actions{display:flex;flex-wrap:wrap;gap:.8rem}
-.legend{display:flex;flex-wrap:wrap;gap:.45rem .9rem;font-size:.88rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem;font-size:1rem;font-weight:650;color:var(--muted)}
 
 /* ---------- Question / panels ---------- */
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.3rem 1.5rem}
@@ -328,7 +328,7 @@ summary{cursor:pointer;font-weight:750;font-size:1.05rem}
       <div class="card">
         <h2>How to play</h2>
         <div class="rules">
-          <div class="rule"><b>1 · Spin</b><span>Bigger wedges pull harder questions (●○○ to ●●●).</span></div>
+          <div class="rule"><b>1 · Spin</b><span>Higher-point wedges ask harder questions: <i class="wedge-dot" style="background:#15803d"></i>green = easy, <i class="wedge-dot" style="background:#2563c9"></i>blue = medium, <i class="wedge-dot" style="background:#b4237a"></i>magenta = hard. The dots on each wedge show it too.</span></div>
           <div class="rule"><b>2 · Answer</b><span>Talk it over as a team, then lock in.</span></div>
           <div class="rule"><b>3 · Call a letter</b><span>Correct = bank the wedge + call a letter. Consonants +50 each. Vowels cost 100.</span></div>
           <div class="rule"><b>4 · Steal</b><span>Miss, and the other team can steal for half.</span></div>
@@ -363,7 +363,12 @@ summary{cursor:pointer;font-weight:750;font-size:1.05rem}
             <button id="btn-spin" class="btn-primary btn-xl" type="button">Spin the wheel</button>
             <button id="btn-solve" class="btn-lg" type="button">Solve the puzzle</button>
           </div>
-          <div class="legend" aria-hidden="true"><span>●○○ 100–200</span><span>●●○ 300–400</span><span>●●● 500+, Double</span></div>
+          <div class="legend" aria-label="Wedge difficulty key">
+            <span><i class="wedge-dot" style="background:#15803d"></i>100–200 · Easy ●○○</span>
+            <span><i class="wedge-dot" style="background:#2563c9"></i>300–400 · Medium ●●○</span>
+            <span><i class="wedge-dot" style="background:#b4237a"></i>500–750 · Hard ●●●</span>
+            <span><i class="wedge-dot" style="background:#ffd23f"></i>Steal ●●○ · Double ●●●</span>
+          </div>
         </div>
       </div>
       <div id="view-question" class="panel" hidden></div>
@@ -1436,23 +1441,31 @@ const PUZZLES = [
    kind: value | bankrupt | lose | free | steal | double
    ===================================================================== */
 const WEDGES = [
-  { label: "300", kind: "value", value: 300, color: "#d9362f", ink: "#ffffff" },
+  { label: "300", kind: "value", value: 300, color: "#2563c9", ink: "#ffffff" },
   { label: "BANKRUPT", kind: "bankrupt", color: "#111111", ink: "#ffffff" },
-  { label: "500", kind: "value", value: 500, color: "#1f8a4c", ink: "#ffffff" },
-  { label: "200", kind: "value", value: 200, color: "#2563c9", ink: "#ffffff" },
+  { label: "500", kind: "value", value: 500, color: "#b4237a", ink: "#ffffff" },
+  { label: "200", kind: "value", value: 200, color: "#15803d", ink: "#ffffff" },
   { label: "STEAL", kind: "steal", color: "#ffd23f", ink: "#111111" },
-  { label: "400", kind: "value", value: 400, color: "#7e3fb8", ink: "#ffffff" },
-  { label: "100", kind: "value", value: 100, color: "#d9600f", ink: "#ffffff" },
+  { label: "400", kind: "value", value: 400, color: "#2563c9", ink: "#ffffff" },
+  { label: "100", kind: "value", value: 100, color: "#15803d", ink: "#ffffff" },
   { label: "FREE SPIN", kind: "free", color: "#14a3b8", ink: "#0b1b1f" },
-  { label: "600", kind: "value", value: 600, color: "#c42a6e", ink: "#ffffff" },
-  { label: "200", kind: "value", value: 200, color: "#1f8a4c", ink: "#ffffff" },
+  { label: "600", kind: "value", value: 600, color: "#b4237a", ink: "#ffffff" },
+  { label: "200", kind: "value", value: 200, color: "#15803d", ink: "#ffffff" },
   { label: "LOSE A TURN", kind: "lose", color: "#f2f2f2", ink: "#111111" },
   { label: "300", kind: "value", value: 300, color: "#2563c9", ink: "#ffffff" },
   { label: "DOUBLE", kind: "double", color: "#ffd23f", ink: "#111111" },
-  { label: "400", kind: "value", value: 400, color: "#d9362f", ink: "#ffffff" },
-  { label: "750", kind: "value", value: 750, color: "#7e3fb8", ink: "#ffffff" },
-  { label: "100", kind: "value", value: 100, color: "#d9600f", ink: "#ffffff" }
+  { label: "400", kind: "value", value: 400, color: "#2563c9", ink: "#ffffff" },
+  { label: "750", kind: "value", value: 750, color: "#b4237a", ink: "#ffffff" },
+  { label: "100", kind: "value", value: 100, color: "#15803d", ink: "#ffffff" }
 ];
+/* Question difficulty for each wedge (null = no question). Value wedges are
+   color-coded by tier: green = easy, blue = medium, magenta = hard. */
+function wedgeTier(w) {
+  if (w.kind === "value") return w.value <= 200 ? 1 : w.value <= 400 ? 2 : 3;
+  if (w.kind === "steal") return 2;
+  if (w.kind === "double") return 3;
+  return null;
+}
 
 /* Point rules in one place. */
 const RULES = {
@@ -1887,12 +1900,19 @@ function buildWheel() {
     const a0 = i * SEG, a1 = (i + 1) * SEG, p0 = polar(r, a0), p1 = polar(r, a1);
     g.append(svgEl("path", { d: `M0 0 L${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A${r} ${r} 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} Z`, fill: w.color, stroke: "#ffffff", "stroke-width": "2.5" }));
     const t = svgEl("text", {
-      transform: `rotate(${a0 + SEG / 2}) translate(0,-${w.kind === "value" ? 142 : 116}) rotate(-90)`,
+      transform: `rotate(${a0 + SEG / 2}) translate(0,-${w.kind === "value" ? 126 : 112}) rotate(-90)`,
       "text-anchor": "middle", "dominant-baseline": "central", fill: w.ink,
       "font-size": w.kind === "value" ? "25" : "13.5", "font-weight": "900", "font-family": "system-ui, sans-serif", "letter-spacing": w.kind === "value" ? "0" : ".5"
     });
     t.textContent = w.label;
     g.append(t);
+    // Difficulty dots near the rim, drawn across the wedge
+    const tier = wedgeTier(w);
+    if (tier) {
+      const d = svgEl("text", { transform: `rotate(${a0 + SEG / 2}) translate(0,-178)`, "text-anchor": "middle", "dominant-baseline": "central", fill: w.ink, "font-size": "9.5", "font-weight": "900", "letter-spacing": "1" });
+      d.textContent = "●".repeat(tier) + "○".repeat(3 - tier);
+      g.append(d);
+    }
   });
   g.append(svgEl("circle", { cx: 0, cy: 0, r: 190, fill: "url(#shine)" }));
   g.append(svgEl("circle", { cx: 0, cy: 0, r: 34, fill: "url(#hubg)", stroke: "#3a2c00", "stroke-width": "3" }));
@@ -1963,7 +1983,7 @@ function onLand(idx) {
   }
   if (w.kind === "lose") { Sound.wrong(); return passTurn(`LOSE A TURN for ${team.name}.`, w); }
   if (w.kind === "free") { Sound.ding(); showWheel(`FREE SPIN! ${team.name}, spin again.`); $("#landed-slot").append(landedChip(w)); return; }
-  if (w.kind === "value") return askQuestion({ kind: "value", value: w.value, label: w.label, wedge: w, target: w.value <= 200 ? 1 : w.value <= 400 ? 2 : 3 });
+  if (w.kind === "value") return askQuestion({ kind: "value", value: w.value, label: w.label, wedge: w, target: wedgeTier(w) });
   if (w.kind === "steal") return askQuestion({ kind: "steal", label: "STEAL", wedge: w, target: 2 });
   if (w.kind === "double") return askQuestion({ kind: "double", label: "DOUBLE", wedge: w, target: 3 });
 }
