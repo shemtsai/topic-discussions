@@ -18,9 +18,10 @@ Each activity is deployed via **GitHub Pages** and can be accessed using its HTM
 - `endemic_mycoses.html` → [https://shemtsai.github.io/topic-discussions/endemic_mycoses](https://shemtsai.github.io/topic-discussions/endemic_mycoses)
 - `spectrum_of_activity.html` → [https://shemtsai.github.io/topic-discussions/spectrum_of_activity](https://shemtsai.github.io/topic-discussions/spectrum_of_activity)
 - `vancomycin.html` → [https://shemtsai.github.io/topic-discussions/vancomycin](https://shemtsai.github.io/topic-discussions/vancomycin)
+- `staph_aureus_bacteremia_wheel_of_fortune.html` → [https://shemtsai.github.io/topic-discussions/staph_aureus_bacteremia_wheel_of_fortune](https://shemtsai.github.io/topic-discussions/staph_aureus_bacteremia_wheel_of_fortune)
   
 ## How to Use
 
 1. Open the activity in your browser using the deployed GitHub Pages link.  
 2. Follow on-screen instructions to participate in quizzes or games.  
-3. Use the content as a **discussion starter** or learning tool with trainees.
+3. Use the content as a **discussion starter** or learning tool with trainees. (I usually will correct any answers I think are not fully clinically accurate and/or expand on topics
